@@ -1,0 +1,55 @@
+#edit-body-format, .wysiwyg-toggle-wrapper, #edit-header-text-format, #edit-footer-text-format{
+  display: none;
+}
+
+.page-admin-certificates-generate-certificates .form-item-class label{
+  float: left !important;
+}
+
+#create-certificates label, #generate-certificates label, #edit-certificate label, #generate-certificates-cw label, #generate-certificates-sw label{
+  display: inline-block;
+  padding-right: 10px;
+  margin-right: 20px !important;
+  width: 200px;
+}
+
+#set-rp label{
+  display: inline-block;
+  padding-right: 10px;
+  margin-right: 20px !important;
+  width: 250px;
+}
+
+.form-item-header label, .form-item-footer label, .form-item-class label{
+  float: left;
+}
+
+.page-admin-certificates-generate-certificates #overlay{
+  margin-left: 20%;
+  width: 60%;
+}
+
+.page-admin-certificates-generate-certificates #content{
+  width: 90%;
+  margin-left: 5%;
+}
+
+#generate-certificates-sw #edit-fs{
+  width: 50%;
+  float: left;
+}
+
+#generate-certificates-cw #edit-fs{
+  width: 50%;
+  float: left;
+}
+
+#generate-certificates-sw #page_size .form-wrapper{
+  width: 94% !important;
+  float: left;
+}
+
+#generate-certificates-sw fieldset{
+  width: 38%;
+  float: right;
+}

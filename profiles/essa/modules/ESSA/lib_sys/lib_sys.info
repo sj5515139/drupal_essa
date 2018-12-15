@@ -1,0 +1,10 @@
+name = Library Management System
+description = Managing Library.
+core = 7.x
+package = ESSA Library Management System
+files[] = lib_sys.module
+stylesheets[all][] = lib_sys.css
+dependencies[] = views
+dependencies[] = lib_support
+dependencies[] = barcode
+dependencies[] = print

@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the ESSA Print Setup feature.
+ */
+
+include_once 'essa_print_setup.features.inc';

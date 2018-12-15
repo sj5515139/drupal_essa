@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the leave_staff_view feature.
+ */
+
+include_once 'leave_staff_view.features.inc';

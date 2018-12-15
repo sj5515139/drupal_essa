@@ -1,0 +1,11 @@
+name = Student Attendance
+description = Managing student attendance.
+core = 7.x
+package = ESSA
+files[] = student_attendance.module
+stylesheets[all][] = student_attendance.css
+stylesheets[all][] = css/font-awesome.min.css
+dependencies[] = views
+dependencies[] = date_api
+dependencies[] = date_views
+dependencies[] = school_master

@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the menu_pages feature.
+ */
+
+include_once 'menu_pages.features.inc';

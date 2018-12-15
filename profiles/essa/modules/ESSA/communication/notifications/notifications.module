@@ -1,0 +1,98 @@
+<?php
+/**
+ * @file
+ *   Simple source for Taskbar activity.
+ */
+
+/**
+ * Implements hook_taskbar_activity_source().
+ */
+function notifications_taskbar_activity_source() {
+  return array(
+    array(
+      'name' => 'ESSA',
+      'description' => 'ESSA notifications source',
+      'callbacks' => array(
+        'count' => 'notifications_taskbar_activity_count',
+        'list' => 'notifications_taskbar_activity_list',
+        'mark' => 'notifications_taskbar_activity_mark',
+      ),
+    ),
+  );
+}
+
+/**
+ */
+function notifications_taskbar_activity_count($unread = FALSE) {
+  
+	$session = variable_get('essa_sid');
+  $notifications_table = 'essa_'.$session.'_notifications';
+	$count = 0;
+	global $user;
+	$notifications =  db_query(
+		"SELECT * from {$notifications_table} where uid = :uid AND status = 0;", array(':uid' => $user->uid)
+	);
+  foreach($notifications as $notification){
+		$count++;
+  }
+  
+  return $count;
+}
+
+/**
+ */
+function notifications_taskbar_activity_list($count = 5, $start = 0) {
+  $list = array();
+  $session = variable_get('essa_sid');
+  $notifications_table = 'essa_'.$session.'_notifications';
+	global $user;
+	$notifications =  db_query(
+		"SELECT * from {$notifications_table} where uid = :uid AND status = 0;", array(':uid' => $user->uid)
+	);
+  foreach($notifications as $notification){
+    $list[] = l(t($notification->message), $notification->destination_url);
+  }
+	
+  return $list;
+}
+
+function notifications_taskbar_activity_mark_all() {
+	$session = variable_get('essa_sid');
+  $notifications_table = 'essa_'.$session.'_notifications';
+  $response = array('status' => 200);
+  try {
+    global $user;
+
+    $query = db_update($notifications_table)
+      ->fields(array('status' => 1))
+      ->condition('uid', $user->uid)
+			->condition('status', 0)
+      ->execute();
+  }
+  catch (Exception $e) {
+    $response['status'] = 500;
+    $response['error'] = $e->getMessage();
+  }
+  drupal_json_output($response);
+  drupal_exit();
+}
+
+/**
+ */
+function notifications_taskbar_activity_mark() {
+  //variable_set('essa_notification1','ok');
+}
+
+/*
+ $_COOKIE['notifications_read'] = 1;
+  setcookie('notifications_read', 1, REQUEST_TIME + 120, '/');
+	$notifications_table = 'essa_'.$session.'_notifications';
+	global $user;
+	if(isset($_COOKIE['notifications_read']) == 1){
+		db_update($notifications_table) // Table name no longer needs {}
+      ->fields(array('status' => 'READ'))
+      ->condition('uid', $user->uid, '=')
+			->execute();
+	}
+	*/
+

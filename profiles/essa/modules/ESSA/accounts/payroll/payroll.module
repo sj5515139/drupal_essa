@@ -1,0 +1,396 @@
+<?php
+
+
+/**
+ *Implements hook_permission()
+ */
+function payroll_permission(){
+  return array(
+    'administer payroll' => array(
+      'title' => t('Administer Salaray Accounts'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+		'manage salary' => array(
+      'title' => t('Manage Salary'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_admin_paths()
+ */
+function payroll_admin_paths() {
+  $paths = array(
+    'admin/accounts/payroll/salary_structure' => FALSE,
+		'admin/accounts/payroll/emp_sal' => FALSE,
+		'edit_emp_sal' => TRUE,
+		'admin/accounts/payroll/payslip' => FALSE,
+  );
+	
+	$session_id = (string)variable_get('essa_sid');
+	$sal_table = 'essa_'.$session_id.'_pr_salary_structure';
+	$salary = db_query("
+    SELECT * from {$sal_table};
+  ");
+	
+  foreach($salary as $sal){
+		$path_section = array('admin/accounts/payroll/salary_structure/'.$sal->sal_id => FALSE);
+		$paths = array_merge($paths, $path_section);
+	}
+	return $paths;
+}
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function payroll_theme() {
+  return array(
+    'sal_head_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'sal_type_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'emp_sal_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'edit_emp_sal_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'batch_increment_table'  => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'emp_sal_earnings_table'  => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'emp_sal_deduction_table'  => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+  );
+}
+
+/**
+ *Implements hook_menu.
+ */
+function payroll_menu(){
+	$items = array();
+	$items['admin/accounts/payroll/salary_structure'] = array(
+	  'title' => t('Salary Structure'),
+	  'description' => t('Managing Employee Structure'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('salary_structure'),
+		'access arguments' => array('administer salary'),
+    'file' => 'salary_structure.admin.inc',
+    'file path' => drupal_get_path('module','payroll').'/includes/salary_structure',
+	);
+	
+	$items['delete-sal-structure'] = array(
+    'title' => 'Delete Salary Category',
+    'page callback' => 'delete_sal_type_pagecallback',
+    'access arguments' => array('administer salary'),
+    'file' => 'salary_structure.admin.inc',
+    'file path' => drupal_get_path('module','payroll').'/includes/salary_structure',
+  );
+  
+	$items['admin/accounts/payroll/salary_structure/add_new'] = array(
+	  'title' => t('Add New'),
+	  'description' => t('Adding new salary type'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('add_salary_type'),
+		'access arguments' => array('administer salary'),
+    'file' => 'add_salary_type.admin.inc',
+    'file path' => drupal_get_path('module','payroll').'/includes/salary_structure',
+		'type' => MENU_LOCAL_ACTION,
+	);
+	
+	$session_id = (string)variable_get('essa_sid');
+	$sal_table = 'essa_'.$session_id.'_pr_salary_structure';
+	$sal_detail_table = 'essa_'.$session_id.'_pr_salary_detail';
+	$basic_info_table = 'essa_'.$session_id.'_basicinfo';
+	$salary = db_query("
+    SELECT * from {$sal_table};
+  ");
+	
+  foreach($salary as $sal){
+		$weight = 100;
+		$items['admin/accounts/payroll/salary_structure/'.$sal->sal_id] = array(
+      'title' => $sal->title,
+      'description' => t('Manage Salary Structure.'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('salary_category',4),
+      'access arguments' => array('administer salary'),
+    	'file' => 'salary_category.admin.inc',
+      'file path' => drupal_get_path('module','payroll').'/includes/salary_structure',
+			'weight' => $weight,
+    );
+		$weight++;
+		
+		$items['admin/accounts/payroll/salary_structure/'.$sal->sal_id.'/salary_head'] = array(
+      'title' => 'Create Salary Head',
+      'description' => t('Manage Salary Structure.'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('salary_head',4),
+      'access arguments' => array('administer salary'),
+    	'file' => 'salary_head.admin.inc',
+      'file path' => drupal_get_path('module','payroll').'/includes/salary_structure',
+			'type' => MENU_LOCAL_ACTION,
+    );
+	
+		$items['delete-sal-head'.$sal->sal_id] = array(
+		  'title' => 'Delete Salary Head',
+		  'page callback' => 'delete_sal_head_pagecallback',
+		  'access arguments' => array('administer salary'),
+		  'file' => 'salary_category.admin.inc',
+		  'file path' => drupal_get_path('module','payroll').'/includes/salary_structure',
+		);
+		
+		$salary_head = db_query("
+		  SELECT * from {$sal_detail_table} where sal_id = :sal_id;", array(':sal_id' => $sal->sal_id)
+		);
+		foreach($salary_head as $sh){
+			$items['admin/accounts/payroll/salary_structure/'.$sal->sal_id.'/'.$sh->sal_head] = array(
+			  'title' => 'Edit '.$sh->sal_head,
+			  'description' => t('Edit Salary Head.'),
+			  'page callback' => 'drupal_get_form',
+			  'page arguments' => array('edit_salary_head',4,5),
+			  'access arguments' => array('administer salary'),
+				'file' => 'edit_salary_head.admin.inc',
+			  'file path' => drupal_get_path('module','payroll').'/includes/salary_structure',
+			);
+		}
+	}
+	
+	$items['admin/accounts/payroll/emp_sal'] = array(
+	  'title' => t('Employee Salary'),
+	  'description' => t('Employee Salary Details'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('emp_salary'),
+		'access arguments' => array('administer salary'),
+    'file' => 'emp_salary.admin.inc',
+    'file path' => drupal_get_path('module','payroll').'/includes/emp_salary',
+	);
+	
+	$items['admin/accounts/payroll/emp_sal/incentive'] = array(
+	  'title' => t('Incentives'),
+	  'description' => t('Employee incentives'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('incentive'),
+		'access arguments' => array('administer salary'),
+    'file' => 'incentive.admin.inc',
+    'file path' => drupal_get_path('module','payroll').'/includes/emp_salary',
+		'weight' => 1,
+		'type' => MENU_LOCAL_TASK,
+	);
+	
+	$items['admin/accounts/payroll/emp_sal/deduction'] = array(
+	  'title' => t('Deductions'),
+	  'description' => t('Employee Salary deductions'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('deductions'),
+		'access arguments' => array('administer salary'),
+    'file' => 'deductions.admin.inc',
+    'file path' => drupal_get_path('module','payroll').'/includes/emp_salary',
+		'weight' => 2,
+		'type' => MENU_LOCAL_TASK,
+	);
+	
+	$items['admin/accounts/payroll/emp_sal/bonus'] = array(
+	  'title' => t('Bonus'),
+	  'description' => t('Bonus'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('bonus'),
+		'access arguments' => array('administer salary'),
+    'file' => 'bonus.admin.inc',
+    'file path' => drupal_get_path('module','payroll').'/includes/emp_salary',
+		'weight' => 3,
+		'type' => MENU_LOCAL_TASK,
+	);
+	
+	$items['admin/accounts/payroll/emp_sal/batch_increment'] = array(
+	  'title' => t('Batch Increment'),
+	  'description' => t('Batch Increment'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('batch_increment'),
+		'access arguments' => array('administer salary'),
+    'file' => 'batch_increment.admin.inc',
+    'file path' => drupal_get_path('module','payroll').'/includes/emp_salary',
+		'weight' => 4,
+		'type' => MENU_LOCAL_TASK,
+	);
+	
+	$items['edit_emp_sal'] = array(
+	  'title' => t('Edit Employee Salary'),
+	  'description' => t('Edit Employee Salary Details'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('edit_emp_salary'),
+		'access arguments' => array('administer salary'),
+    'file' => 'edit_emp_salary.admin.inc',
+    'file path' => drupal_get_path('module','payroll').'/includes/emp_salary',
+		//'type' => MENU_CALLBACK,
+	);
+	
+	$items['admin/accounts/payroll/payslip'] = array(
+	  'title' => t('Generate Payslip'),
+	  'description' => t('Generating monthly payslip'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('generate_payslip'),
+		'access arguments' => array('administer salary'),
+    'file' => 'generate_payslip.admin.inc',
+    'file path' => drupal_get_path('module','payroll').'/includes',
+		'weight' => -90,
+	);
+	
+	$basic_info = db_query("
+    SELECT * from {$basic_info_table};"
+  );
+	foreach($basic_info as $info){
+		$fin_yr_st = $info->financialyearstart;
+		$fin_yr_ed = $info->financialyearend;
+	}
+	
+	$start    = (new DateTime($fin_yr_st))->modify('first day of this month');
+	$end      = (new DateTime($fin_yr_ed))->modify('first day of next month');
+	$interval = DateInterval::createFromDateString('1 month');
+	$period   = new DatePeriod($start, $interval, $end);
+
+	foreach ($period as $dt) {
+	  $options[] = $dt->format("M, Y");
+	}
+	
+	foreach($options as $month){
+		$items['admin/accounts/payroll/payslip/'.$month] = array(
+			'title' => t($month),
+			'description' => t('Generating monthly payslip'),
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('generate_payslip',4),
+			'access arguments' => array('administer salary'),
+			'file' => 'generate_payslip.admin.inc',
+			'file path' => drupal_get_path('module','payroll').'/includes',
+		);
+	}
+	/*
+	$items['admin/accounts/payroll/tnc'] = array(
+	  'title' => t('T&C'),
+	  'description' => t('Terms & Conditions for advance & loan'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('tnc'),
+		'access arguments' => array('administer salary'),
+    'file' => 'tnc.admin.inc',
+    'file path' => drupal_get_path('module','payroll').'/includes/loan&advance',
+	);
+	*/
+	return $items;
+}
+
+/**
+ *Implements hook_cron
+ */
+function payroll_cron(){
+	$session_id = (string)variable_get('essa_sid');
+	$sal_table = 'essa_'.$session_id.'_pr_salary_structure';
+	$emp_table = 'essa_'.$session_id.'_master_staff_table';
+	$sal_detail_table = 'essa_'.$session_id.'_pr_salary_detail';
+	$emp_sal_table = 'essa_'.$session_id.'_pr_emp_sal';
+	$batch_increment_table = 'essa_'.$session_id.'_pr_batch_increment';
+	$basic_info_table = 'essa_'.$session_id.'_basicinfo';
+	
+	$basic_info = db_query("
+    SELECT * from {$basic_info_table};"
+  );
+	foreach($basic_info as $info){
+		$fin_yr_st = $info->financialyearstart;
+		$fin_yr_ed = $info->financialyearend;
+	}
+	
+	$dt_range = array();
+	$st_mon = substr($fin_yr_st, -6);
+	$ed_mon = substr($fin_yr_ed, -6);
+	
+	$batch_increment = db_query("
+		SELECT * from {$batch_increment_table};"
+	);
+	foreach($batch_increment as $bi){
+		$dt_range[substr($bi->batch, 0, 4).$st_mon] = '20'.substr($bi->batch, -2).$ed_mon;;
+	}
+	
+	$employees = db_query("
+    SELECT * from {$emp_table} where status = 1;"
+  );
+	foreach($employees as $emp){
+		if($emp->type == 'Teaching'){
+			$sal_grade = $emp->grade;
+		}else{
+			$sal_grade = $emp->nt_grade;
+		}
+		
+		foreach($dt_range as $st_dt => $ed_dt){
+			$joining_dt = date('Y-m-d', strtotime($emp->joining_date));
+    	$start_dt = date('Y-m-d', strtotime($st_dt));
+			
+			$end_dt = date('Y-m-d', strtotime($ed_dt));
+			$batch = substr($start_dt, 0, 4).' - '.substr(substr($end_dt, 0, 4), -2);
+			
+			if (($joining_dt > $start_dt) && ($joining_dt < $end_dt)){
+				$emp_id[$batch] = $emp->emp_id;
+			}
+		}
+		
+		if(isset($emp_id)){
+			foreach($emp_id as $batch => $id){
+				$salary_type = db_query("
+				  SELECT * from {$sal_table} where title = :t;", array(':t' => $sal_grade)
+				);
+				foreach($salary_type as $st){
+					$salary_head = db_query("
+					  SELECT * from {$batch_increment_table} where sal_id = :si and batch = :b;", array(':si' => $st->sal_id, ':b' => $batch)
+					);
+						
+					foreach($salary_head as $sh){
+						db_merge($emp_sal_table)
+						  ->key(array('emp_id' => $id, 'sal_head' => $sh->sal_head))
+							->fields (array(
+								'emp_id' => $id,
+								'sal_id' => $st->sal_id,
+								'sal_head' => $sh->sal_head,
+								'amount' => $sh->amount,
+								'percent' => $sh->percent,
+							)
+						)	
+						->execute();
+					}
+				}
+			}
+		}else{
+			$salary_type = db_query("
+			  SELECT * from {$sal_table} where title = :t;", array(':t' => $sal_grade)
+			);
+			foreach($salary_type as $st){
+				$salary_head = db_query("
+				  SELECT * from {$sal_detail_table} where sal_id = :si;", array(':si' => $st->sal_id)
+				);
+					
+				foreach($salary_head as $sh){
+					db_merge($emp_sal_table)
+					  ->key(array('emp_id' => $emp->emp_id, 'sal_head' => $sh->sal_head))
+						->fields (array(
+							'emp_id' => $emp->emp_id,
+							'sal_id' => $st->sal_id,
+							'sal_head' => $sh->sal_head,
+							'amount' => $sh->amount,
+							'percent' => $sh->percent,
+						)
+					)	
+					->execute();
+				}
+			}
+		}
+	}
+}

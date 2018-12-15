@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the staff_search feature.
+ */
+
+include_once 'staff_search.features.inc';

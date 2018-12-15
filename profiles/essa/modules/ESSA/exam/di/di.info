@@ -1,0 +1,7 @@
+name = Discriptive Indicator Module
+description = Performing exams in the system.
+core = 7.x
+package = ESSA Exam
+files[] = di.module
+stylesheets[all][] = di.css
+dependencies[] = exam

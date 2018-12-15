@@ -1,0 +1,7 @@
+name = Re-Exam Module
+description = Performing re-exams in the system.
+core = 7.x
+package = ESSA Exam
+files[] = re_exam.module
+stylesheets[all][] = re_exam.css
+dependencies[] = exam

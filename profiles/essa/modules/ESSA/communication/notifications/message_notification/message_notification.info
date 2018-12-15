@@ -1,0 +1,9 @@
+name = Message Notifications
+description = Displays user specific notifications.
+core = 7.x
+package = ESSA notification
+files[] = message_notifications.module
+dependencies[] = taskbar_activity
+dependencies[] = views
+dependencies[] = taskbar
+dependencies[] = privatemsg

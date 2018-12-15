@@ -1,0 +1,185 @@
+<?php
+/**
+ * @file
+ *   ESSA Notifications.
+ */
+
+ /**
+ * Implements hook_schema().
+ */
+function notifications_schema() {
+  $session = variable_get('essa_sid');
+  
+  $schema['essa_'.$session.'_notifications'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'serial',
+	      'unsigned' => TRUE,
+	      'not null' => TRUE,
+	    ),
+			'uid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+      'rid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+      'message' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '255',
+       'not null' => FALSE,
+      ),
+      'status' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'int',
+       'length' => '11',
+       'not null' => FALSE,
+      ),
+      'module' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'source_url' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+      'destination_url' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+      'timestamp' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+      'source_uid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	$schema['essa_'.$session.'_system_alert'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'serial',
+	      'unsigned' => TRUE,
+	      'not null' => TRUE,
+	    ),
+			'source_uid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+      'rid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+      'message' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '255',
+       'not null' => FALSE,
+      ),
+			'alert_desc' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '255',
+       'not null' => FALSE,
+      ),
+      'priority' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '11',
+       'not null' => FALSE,
+      ),
+      'module' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'source_url' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+      'destination_url' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+      'timestamp' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+      'source_uid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  
+  return $schema;
+}
+/**
+ * Implements hook_install().
+ */
+function notifications_install() {
+  $settings = array(
+    'text' => 'Notifications',
+    'source' => 'ESSA',
+    'max items' => 15,
+  );
+  db_insert('taskbar_item')
+  ->fields(array(
+    'name' => 'ESSA',
+    'title' => 'ESSA Notifications',
+    'provider' => 'activity',
+    'region' => 'right',
+    'status' => 1,
+    'weight' => 10,
+    'settings' => serialize($settings),
+  ))
+  ->execute();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function notifications_uninstall() {
+  db_delete('taskbar_item')
+  ->condition('name', 'ESSA')
+  ->execute();
+}
+

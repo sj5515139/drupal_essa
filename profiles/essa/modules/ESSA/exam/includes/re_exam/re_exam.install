@@ -1,0 +1,58 @@
+<?php
+/**
+* Implements hook_schema.
+*/
+function re_exam_schema(){
+	$session = (string)variable_get('essa_sid');
+	$schema['essa_'.$session.'_exam_re_exam'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'term_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+				'length' => '50',
+        'not null' => TRUE,
+      ),
+      'exam_code' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'class' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'section' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'status' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('term_id', 'exam_code', 'adm_no'),
+  );
+
+	return $schema;
+}
+
+/**
+ *Implements hook_install
+ */
+function re_exam_install(){
+  
+}

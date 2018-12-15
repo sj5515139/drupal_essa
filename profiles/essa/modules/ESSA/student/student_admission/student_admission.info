@@ -1,0 +1,11 @@
+name = Student Admission
+description = Admitting Students to the system.
+core = 7.x
+package = ESSA
+files[] = student_admission.module
+stylesheets[all][] = student.css
+dependencies[] = views
+dependencies[] = date_api
+dependencies[] = date_views
+dependencies[] = school_master
+dependencies[] = hierarchical_select

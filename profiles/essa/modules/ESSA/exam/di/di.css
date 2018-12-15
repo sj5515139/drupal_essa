@@ -1,0 +1,17 @@
+#class-group label, #create-section label, #create-di label, #di label{
+	display: inline-block;
+	width: 250px;
+}
+
+.form-submit{
+	margin-left: 10px !important;
+}
+
+#create-di .form-item-sub-sec{
+	width: auto;
+	float: left;
+}
+
+.form-item-new-sub-sec input{
+	margin-top: 4px !important;
+}

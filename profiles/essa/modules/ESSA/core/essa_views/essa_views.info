@@ -1,0 +1,7 @@
+name = ESSA Views Integration
+description = Exposing ESSA Tables to Drupal Views.
+core = 7.x
+package = ESSA
+files[] = essa_views.module
+stylesheets[all][] = essa_views.css
+dependencies[] = views

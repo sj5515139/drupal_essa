@@ -1,0 +1,3494 @@
+<?php
+
+/**
+ *Implements hook_permission()
+ */
+function new_session_permission(){
+  $permissions = array(
+    'renew_licence' => array(
+      'title' => t('Generate all session Tables'),
+    ),
+  );
+  return $permissions;  
+}
+
+/**
+ *  Implements hook_menu()
+ */
+function new_session_menu(){
+  $items = array();
+	
+  $items['new_session'] = array(
+    'title' => 'Session ID',
+    'description' => 'This will generate database tables for new session.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('renew_licence'),
+    'access arguments' => array('renew licence'),
+  );
+	
+	$items['new'] = array(
+    'title' => 'New Session Settings',
+    'description' => 'This will generate database tables for new session.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('new_session_settings'),
+    'access arguments' => array('renew licence'),
+  );
+	
+	$items['form_redirect'] = array(
+    'title' => 'Form Redirect',
+    'description' => 'This will generate database tables for new session.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('form_redirect_page'),
+    'access arguments' => array('renew licence'),
+		'file' => 'form_redirect.admin.inc',
+    'file path' => drupal_get_path('module','new_session').'/includes',
+  );
+  
+  return $items;
+}
+
+/**
+ *Implements page callback()
+ */
+function renew_licence($form, &$form_state){	
+  $form = array();
+	
+	$form['fs'] = array(
+		'#title' => t('New Session'),
+		'#type' => 'fieldset',
+	);
+	
+	$form['fs']['new_session'] = array(
+    '#title' => 'Session Id',
+    '#description' => 'This will update the system for next academic session(FORMAT eg: "2015_16").',
+    '#type' => 'textfield',
+		'#required' => TRUE,
+  );
+	
+	
+	$form['fs']['general_setting'] = array(
+		'#title' => t('General Setting'),
+		'#type' => 'fieldset',
+	);
+	
+	$form['fs']['general_setting']['financialyear'] = array(
+		'#title' => t('Financial Year'),
+		'#type' => 'fieldset',
+	);  
+	
+	$form['fs']['general_setting']['financialyear']['financialyearstart'] = array(
+		'#type' => 'date_popup',
+		'#title' => t('Start Date'),
+		'#date_format' => 'd/m/Y',
+		'#required' => TRUE,
+		'#attributes' => array('placeholder' => 'From'),
+	);
+		
+	$form['fs']['general_setting']['financialyear']['financialyearend'] = array(
+		'#type' => 'date_popup',
+		'#title' => t('End Date'),
+		'#date_format' => 'd/m/Y',
+		'#required' => TRUE,
+		'#attributes' => array('placeholder' => 'To'),
+	);
+	
+	$form['fs']['general_setting']['academicyear'] = array(
+		'#title' => t('New Session'),
+		'#type' => 'fieldset',
+	);
+	
+	$form['fs']['general_setting']['academicyear'] = array(
+		'#title' => t('Academic Year'),
+		'#type' => 'fieldset',
+	);  
+
+	$form['fs']['general_setting']['academicyear']['academicyearstart'] = array(
+		'#type' => 'date_popup',
+		'#title' => t('Start Date'),
+		'#date_format' => 'd/m/Y',
+		'#required' => TRUE,
+		'#attributes' => array('placeholder' => 'From'),
+	);
+
+
+	$form['fs']['general_setting']['academicyear']['academicyearend'] = array(
+		'#type' => 'date_popup',
+		'#title' => t('End Date'),
+		'#date_format' => 'd/m/Y',
+		'#required' => TRUE,
+		'#attributes' => array('placeholder' => 'To'),
+	);
+  
+  $form['fs']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Generate new Session ID'),
+    '#submit' => array('new_session_submit'),
+  );
+  return $form;
+}
+
+
+/**
+ *Implements page callback()
+ */
+function new_session_settings($form, &$form_state){	
+
+
+	$form['fs'] = array(
+		'#type' => 'fieldset',
+	);
+	
+	$form['fs']['note'] = array(
+		'#type' => 'markup',
+		'#markup' => '<h3><b>Note : - </b> Mark the option if you wish to copy the previous session data in the new session.</h3>',
+	);
+	
+	$form['fs']['fs2'] = array(
+		'#type' => 'fieldset',
+		'#title' => 'Options',
+	);
+	
+	$options = array('Class List', 'Class-Section List', 'Class Teacher', 'Subject List', 'Subject Teacher', 
+	'Optional Subject Pair', 'Certificate Templates', 'Certificate Replacement Values', 'Academic Staff', 'Admin Staff');
+	
+	$form['fs']['fs2']['options'] = array(
+		'#type' => 'checkboxes',
+		'#options' => drupal_map_assoc($options),
+	);
+	
+	$form['fs']['save'] = array(
+		'#type' => 'submit',
+		'#value' => 'Submit',
+	);
+	
+	return $form;
+	
+	
+}
+
+function new_session_settings_submit($form, &$form_state){
+	$mark_option = array();
+	$unmark_option = array();
+
+	variable_set('essa_session_setup_unmark', $form_state['values']['options']);
+	
+	global $base_url;
+	$form_state['redirect'] = $base_url.'/form_redirect';
+	
+}
+
+/**
+ *Implements hook_submit()
+ */
+function new_session_submit($form, &$form_state){
+	
+	$old_session_id =  variable_get('essa_sid');
+	$session_table = 'essa_session_list';
+	$basic_info_table = 'essa_'.$old_session_id.'_basicinfo';
+	
+	db_insert($session_table)
+	->fields(array(
+		'session' => clean($form_state['values']['new_session']),
+	))
+	->execute();
+	
+	
+	$new_session = clean($form_state['values']['new_session']);
+	
+	// _____________________Creating basic_info_table_______________________________________
+	$query = db_query('CREATE TABLE essa_'.clean($form_state['values']['new_session']).'_basicinfo LIKE '. $basic_info_table);
+	
+	// _____________________Saving data into new basic_info_table_______________________________________
+	
+	$query = db_query('INSERT essa_'.$new_session.'_basicinfo(nameofschool, slogan, logo, board, 
+	affiliation_no, school_code, state_board, establishment_year, hostel_facility, transport_facility, house1, house2, house3, house4, 
+	line1, line2, city, state, pincode, country, contactofschool, office_email, website, fax, notice_period) SELECT nameofschool, slogan, logo, board, 
+	affiliation_no, school_code, state_board, establishment_year, hostel_facility, transport_facility, house1, house2, house3, house4, 
+	line1, line2, city, state, pincode, country, contactofschool, office_email, website, fax, notice_period FROM '.$basic_info_table);
+	
+	$query = db_query('SELECT * FROM {essa_'.$new_session.'_basicinfo}');
+	foreach($query as $q){
+		$school_name = $q->nameofschool;
+	}
+		
+	db_merge('essa_'.$new_session.'_basicinfo')
+	->key(array('nameofschool' => $school_name))
+	->fields(array(
+		'financialyearstart' => $form_state['values']['financialyearstart'],
+		'financialyearend' => $form_state['values']['financialyearend'],
+		'academicyearstart' => $form_state['values']['academicyearstart'],
+		'academicyearend' => $form_state['values']['academicyearend'],
+	))
+	->execute();
+	//_______________________________________________________________________________________________
+	
+	create_table($form, $form_state, $new_session);
+	save_data($form, $form_state, $old_session_id, $new_session);
+  variable_set('essa_sid', $new_session);
+	drupal_set_message('New Session has been created successfully.', 'status');
+}
+
+
+/**
+* Implementing function for creating table for all modules - create_table()
+*/
+function create_table($form, $form_state, $session_id){
+	//*************************** SCHEMAS OF SCHOOL MASTER MODULE ************************************************************
+	
+	// _________________________________________________Schema for class_list____________________________________________________
+  $schema['class_list_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'class_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => TRUE,
+      ),
+      'weight' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'int',
+       'not null' => FALSE,
+      ),
+      'no_of_sec' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'int',
+       'not null' => FALSE,
+      ),
+      'class_set_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('class_id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_class_list';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['class_list_table']);
+	}
+
+	// _________________________________________________Schema for class_section____________________________________________________
+  $schema['class_section_table'] = array(
+  'description' => 'TODO: please describe this table!',
+  'fields' => array(
+    'id' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'serial',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      ),
+    'sections' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+      ),
+    ),
+		'primary key' => array('id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_class_section';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['class_section_table']);
+	}
+
+  //_________________________________________________Schema for class_set____________________________________________________
+  $schema['class_set_table'] = array(
+  'description' => 'TODO: please describe this table!',
+  'fields' => array(
+    'class_set_id' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'char',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'from_class' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'char',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'to_class' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'char',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'no_of_period_regular' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'int',
+       'not null' => FALSE,
+    ),
+    'no_of_period_saturday' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'int',
+       'not null' => FALSE,
+    ),
+  ),
+  'primary key' => array('class_set_id'),
+  );
+
+	$name_of_table = 'essa_'.$session_id.'_class_set';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['class_set_table']);
+	}
+	
+  // _________________________________________________Schema for class_teacher____________________________________________________
+  $schema['class_teacher_table'] = array(
+	  'description' => 'TODO: please describe this table!',
+	  'fields' => array(
+	    'id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'serial',
+	      'unsigned' => TRUE,
+	      'not null' => TRUE,
+	    ),
+			'class' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'char',
+	      'length' => '50',
+	      'not null' => FALSE,
+	    ),
+	    'section' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '15',
+	      'not null' => FALSE,
+	    ),
+	    'teacher_nickname' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '20',
+	      'not null' => FALSE,
+	    ),
+      'teacher_fname' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '100',
+	      'not null' => FALSE,
+	    ),
+      'teacher_lname' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '100',
+	      'not null' => FALSE,
+	    ),
+	  ),
+	  'primary key' => array('id'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_class_teacher';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['class_teacher_table']);
+	}
+	
+	// _________________________________________________Schema for optional_subject_student____________________________________________________
+  $schema['optional_subject_student'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'serial',
+	      'unsigned' => TRUE,
+	      'not null' => TRUE,
+	    ),
+			'class_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => TRUE,
+      ),
+      'section' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '20',
+       'not null' => FALSE,
+      ),
+      'sub_id' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '50',
+       'not null' => FALSE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_optional_subject_student';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['optional_subject_student']);
+	}
+
+	// _________________________________________________Schema for subject_teacher_table____________________________________________________
+  $schema['subject_teacher_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+			'class' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'section' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '50',
+       'not null' => FALSE,
+      ),
+      'subject' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '50',
+       'not null' => FALSE,
+      ),
+      'teacher' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('class', 'section', 'subject'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_subject_teacher_table';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['subject_teacher_table']);
+	}
+
+	// _________________________________________________Schema for optional_subject_pair____________________________________________________
+  $schema['optional_subject_pair'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+			'class' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'pair_name' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '255',
+       'not null' => FALSE,
+      ),
+      'sub_1' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+      'sub_2' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+			'sub_3' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+			'sub_4' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+			'sub_5' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('class', 'pair_name'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_optional_subject_pair';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['optional_subject_pair']);
+	}
+	
+	// _________________________________________________Schema for staff_dept(academics)____________________________________________________
+  $schema['staff_dept_academics_table'] = array(
+	  'description' => 'TODO: please describe this table!',
+	  'fields' => array(
+	    'id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'serial',
+	      'unsigned' => TRUE,
+	      'not null' => TRUE,
+	    ),
+			'emp_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '50',
+	      'not null' => FALSE,
+	    ),
+	    'dept_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'int',
+	      'length' => '11',
+	      'not null' => FALSE,
+	    ),
+	    'dept_name' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '100',
+	      'not null' => FALSE,
+	    ),
+      'post_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'int',
+	      'length' => '11',
+	      'not null' => FALSE,
+	    ),
+      'post_name' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '100',
+	      'not null' => FALSE,
+	    ),
+	  ),
+	  'primary key' => array('id'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_staff_dept_academics';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['staff_dept_academics_table']);
+	}
+
+  // _________________________________________________Schema for staff_dept(admin)____________________________________________________
+  $schema['staff_dept_admin_table'] = array(
+	  'description' => 'TODO: please describe this table!',
+	  'fields' => array(
+	    'id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'serial',
+	      'unsigned' => TRUE,
+	      'not null' => TRUE,
+	    ),
+			'emp_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '50',
+	      'not null' => FALSE,
+	    ),
+	    'dept_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'int',
+	      'length' => '11',
+	      'not null' => FALSE,
+	    ),
+	    'dept_name' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '100',
+	      'not null' => FALSE,
+	    ),
+      'post_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'int',
+	      'length' => '11',
+	      'not null' => FALSE,
+	    ),
+      'post_name' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '100',
+	      'not null' => FALSE,
+	    ),
+	  ),
+	  'primary key' => array('id'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_staff_dept_admin';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['staff_dept_admin_table']);
+	}
+	
+	//**************************************** TRANSPORT MODULE SCHEMA *****************************************************
+	
+	// _________________________________________________Schema for bus_route____________________________________________________
+  $schema['bus_routes_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'route_id' => array(
+        'description' => 'TODO: please describe this field!',
+	      'type' => 'serial',
+	      'unsigned' => TRUE,
+	      'not null' => TRUE,
+      ),
+      'route_name' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+      'bus_no' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '10',
+       'not null' => FALSE,
+      ),
+      'driver' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+      'helper' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+      'route_desc' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '500',
+       'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('route_id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_bus_routes';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['bus_routes_table']);
+	}
+	
+	// _________________________________________________Schema for bus_stops____________________________________________________
+  $schema['bus_stops_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'bus_stop_id' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '50',
+       'not null' => TRUE,
+      ),
+      'route_id' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '50',
+       'not null' => FALSE,
+      ),
+      'stop_name' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+      'route_tid' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '50',
+       'not null' => FALSE,
+      ),
+      'stop_tid' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+      'distance_from_school' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'int',
+       'length' => '11',
+       'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('bus_stop_id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_bus_stops';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['bus_stops_table']);
+	}
+	
+	//**************************************** STUDENT MODULE SCHEMA *****************************************************
+	
+	// _________________________________________________Schema for Student Index____________________________________________________
+	
+	$schema['student_index_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'adm_no' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'records' => array(
+			 'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => TRUE,
+				'default' => '',
+			),
+		),
+		'primary key' => array('adm_no','records'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_student_index';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['student_index_table']);
+	}
+	
+	// _________________________________________________Schema for Student Remarks Table____________________________________________________
+	$schema['student_remarks_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+			'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'uid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'not null' => FALSE,
+      ),
+      'remarks' => array(
+        'description' => 'TODO: please describe this field!',
+	      'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'translatable' => TRUE,
+      ),
+      'remarks_by_uid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'not null' => FALSE,
+      ),
+			'remarks_by_emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+      'remarks_timestamp' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_student_remarks';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['student_remarks_table']);
+	}
+	
+	// __________________________________________Schema for Student Withdrawal Table_____________________________________
+	
+	$schema['student_withdrawal_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'id' => array(
+			 'description' => 'TODO: please describe this field!',
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'adm_no' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'type' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+				'default' => '',
+			),
+			'subject' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '255',
+				'not null' => FALSE,
+				'default' => '',
+			),
+			'reason' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'text',
+				'not null' => FALSE,
+				'size' => 'big',
+				'not null' => FALSE,
+			),
+			'status_fin' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+				'default' => '',
+			),
+			'status_fin_reason' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '255',
+				'not null' => FALSE,
+				'default' => '',
+			),
+			'fin_timestamp' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'int',
+				'length' => '11',
+				'not null' => FALSE,
+			),
+			'fin_uid' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'int',
+				'length' => '11',
+				'not null' => FALSE,
+			),
+			'status' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'status_reason' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '255',
+				'not null' => FALSE,
+			),
+			'status_timestamp' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'int',
+				'length' => '11',
+				'not null' => FALSE,
+			),
+			'status_uid' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'int',
+				'length' => '11',
+				'not null' => FALSE,
+			),
+		),
+    'primary key' => array('id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_student_withdrawal';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['student_withdrawal_table']);
+	}
+	
+	// __________________________________________Schema for Student Attendance Reason Table_____________________________________
+	
+	$schema['attendance_reason_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'roll_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+      'attendance'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+      'reason' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_attendance_reason';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['attendance_reason_table']);
+	}
+	
+	//____________________________________ Staff resignation table _________________________________________________
+	$schema['staff_resignation_table'] = array(
+			'description' => 'TODO: please describe this table!',
+			'fields' => array(
+				'id' => array(
+				 'description' => 'TODO: please describe this field!',
+				 'type' => 'serial',
+				 'unsigned' => TRUE,
+				 'not null' => TRUE,
+				),
+				'emp_id' => array(
+					'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '50',
+					'not null' => TRUE,
+					'default' => '',
+			),
+			'type' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '50',
+					'not null' => FALSE,
+					'default' => '',
+			),
+			'subject' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '255',
+					'not null' => FALSE,
+					'default' => '',
+			),
+			'reason' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'text',
+				'not null' => FALSE,
+				'size' => 'big',
+				'not null' => FALSE,
+			),
+			'status_fin' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '50',
+					'not null' => FALSE,
+					'default' => '',
+			),
+			'status_fin_reason' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '255',
+					'not null' => FALSE,
+					'default' => '',
+			),
+			'fin_timestamp' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'int',
+					'length' => '11',
+					'not null' => FALSE,
+			),
+			'fin_uid' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'int',
+					'length' => '11',
+					'not null' => FALSE,
+			),
+			'status' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '50',
+					'not null' => FALSE,
+			),
+			'status_reason' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '255',
+					'not null' => FALSE,
+			),
+			'status_timestamp' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'int',
+					'length' => '11',
+					'not null' => FALSE,
+			),
+			'status_uid' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'int',
+					'length' => '11',
+					'not null' => FALSE,
+			),
+			'wef' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'int',
+					'length' => '11',
+					'not null' => FALSE,
+			),
+		),
+    'primary key' => array('id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_staff_resignation';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['staff_resignation_table']);
+	}
+	
+	//____________________________________ Staff resignation table _________________________________________________
+	$schema['staff_attendance_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	$bi_table = 'essa_'.$session_id.'_basicinfo';
+  $bi_db = db_query(
+		"SELECT * from {$bi_table}"
+	);
+  foreach($bi_db as $bi){
+    $strDateFrom = $bi->academicyearstart;
+    $strDateTo = $bi->academicyearend;
+  }
+  
+  $aryRange=array();
+  $iDateFrom=mktime(1,0,0,substr($strDateFrom,5,2),     substr($strDateFrom,8,2),substr($strDateFrom,0,4));
+  $iDateTo=mktime(1,0,0,substr($strDateTo,5,2),     substr($strDateTo,8,2),substr($strDateTo,0,4));
+
+  if ($iDateTo>=$iDateFrom){
+    array_push($aryRange,date('Y_m_d',$iDateFrom)); // first entry
+    while ($iDateFrom<$iDateTo){
+      $iDateFrom+=86400; // add 24 hours
+      if(date('D',$iDateFrom) != 'Sun'){
+        array_push($aryRange,date('Y_m_d',$iDateFrom));
+      }
+    }
+  }
+  foreach($aryRange as $dates){
+    $date[$dates] = array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '5',
+      'not null' => TRUE,
+      'default' => '',
+    );
+  }
+  
+  $schema['staff_attendance_table']['fields'] = array_merge($schema['staff_attendance_table']['fields'], $date);
+  
+	$name_of_table = 'essa_'.$session_id.'_staff_attendance';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['staff_attendance_table']);
+	}
+	
+	//____________________________________ Staff attendance reason table _________________________________________________
+	
+  $schema['staff_attendance_reason_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'attendance'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+      'reason' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_staff_attendance_reason';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['staff_attendance_reason_table']);
+	}
+	
+	//**************************************** EXAM MODULE SCHEMA ***********************************************************
+	
+	//*******************************Exam Master*****************************************
+	$schema['exam_master_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'exam_name' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '100',
+		    'not null' => FALSE,
+		  ),
+			'date_from' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'date_to' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'class_from' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+			'class_to' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+			'term' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+			'weight' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'float',
+		  ),
+			'no_of_sitting' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '5',
+		    'not null' => FALSE,
+		  ),
+			'status' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '2',
+		    'not null' => FALSE,
+				'default' => '1',
+		  ),
+			'di_status' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+				'default' => '1',
+		  ),
+		),
+		'primary key' => array('exam_code','term'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_exam_master';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['exam_master_table']);
+	}
+	
+	//*******************************GRADE SETTINGS*****************************************
+	$schema['exam_grade_settings_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'id' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'grade' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '20',
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'marks_from' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'float',
+				'not null' => FALSE,
+			),
+			'marks_to' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'float',
+				'not null' => FALSE,
+			),
+			'grade_point' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'float',
+				'not null' => FALSE,
+			),
+		),
+		'primary key' => array('id'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_exam_grade_settings';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['exam_grade_settings_table']);
+	}
+	
+	//*******************************FULL MARKS*****************************************
+	$schema['exam_full_marks_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'term_id' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '20',
+				'not null' => TRUE,
+			),
+			'exam_code' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '20',
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'class' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => TRUE,
+			),
+			'subject_id' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => TRUE,
+			),
+			'full_marks' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'float',
+				'not null' => FALSE,
+			),
+		),
+		'primary key' => array('term_id', 'exam_code','class','subject_id'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_exam_full_marks';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['exam_full_marks_table']);
+	}
+	
+	//**********************************Imp Dates***********************************
+	$schema['exam_imp_dates_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+				'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'title' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'deadline' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+				'default' => NULL,
+		  ),
+			'principal' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'paper_setter' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'paper_checker' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'teachers' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'subject_teacher' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'class_teacher' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'student' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'parent' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'body' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'text',
+				'default' => NULL,
+		  ),
+			'before' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+				'default' => NULL,
+		  ),
+		),
+		'primary key' => array('term_id','exam_code', 'class', 'title'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_exam_imp_dates';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['exam_imp_dates_table']);
+	}
+	
+	//**********************************Exam Schedule***********************************
+	
+	$schema['exam_schedule_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		 'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'subject' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '100',
+		    'not null' => FALSE,
+		  ),
+			'date' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'sitting' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'time_from' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'time_to' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('term_id','exam_code','class','subject'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_exam_schedule';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['exam_schedule_table']);
+	}
+	
+	//**********************************Exam Status***********************************
+	$schema['exam_status_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		 'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+		  ),
+			'sec' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => TRUE,
+		  ),
+			'timestamp' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'uid' => array(
+		    'description' => 'TODO: please describe this field!',
+				'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'generate_result_status' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+				'length' => 10,
+		    'not null' => FALSE,
+		  ),
+			'publish_result_status' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+				'length' => 10,
+		    'not null' => FALSE,
+		  ),
+			'send_for_review' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+				'length' => 10,
+		    'not null' => FALSE,
+		  ),
+			'publish_on' => array(
+		    'description' => 'TODO: please describe this field!',
+				'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('term_id','exam_code','class','sec'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_exam_status';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['exam_status_table']);
+	}
+	
+	//**********************************EXAM MARKS UPLOAD STATUS***********************************
+	$schema['exam_marks_upload_status_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		 'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+		  ),
+			'sec' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => TRUE,
+		  ),
+			'sub_id' => array(
+				'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '100',
+		    'not null' => TRUE,
+			),
+			'upload_status' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+				'length' => 10,
+		    'not null' => FALSE,
+		  ),
+			'timestamp' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'uid' => array(
+		    'description' => 'TODO: please describe this field!',
+				'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('term_id','exam_code','class','sec','sub_id'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_exam_marks_upload_status';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['exam_marks_upload_status_table']);
+	}
+	
+	//**********************************Exam Timing***********************************
+	
+	$schema['exam_timing_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'sitting' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'time_from' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'time_to' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('exam_code','class','sitting'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_exam_timing';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['exam_timing_table']);
+	}
+	
+	//**********************************Paper Checker***********************************
+	
+	$schema['exam_paper_checkers_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'section' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'subject' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'teacher' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('term_id','exam_code','class','section','subject'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_exam_paper_checkers';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['exam_paper_checkers_table']);
+	}
+	
+	//**********************************Paper Setter***********************************
+	
+	$schema['exam_paper_setter_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'section' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'subject' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'teacher' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('term_id','exam_code','class','section','subject'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_exam_paper_setter';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['exam_paper_setter_table']);
+	}
+	
+	//**********************************Student Marks***********************************
+	
+	$schema['exam_student_marks_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'adm_no' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'subject' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'marks' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'remarks' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'text',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('exam_code','adm_no','subject'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_exam_student_marks';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['exam_student_marks_table']);
+	}
+	
+	//**********************************Exam terms***********************************
+	$schema['exam_terms_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		  'id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'serial',
+				'unsigned' => TRUE,
+        'not null' => TRUE,
+		  ),
+			'term_name' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => FALSE,
+		  ),
+			'term_1' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'term_2' => array(
+		    'description' => 'TODO: please describe this field!',
+				'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'class_from' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+			'class_to' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('id'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_exam_terms';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['exam_terms_table']);
+	}
+	
+	$schema['di_group_name_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'id' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+		  'group_name' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '100',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class_from' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+			'class_to' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('id'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_di_group_name';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['di_group_name_table']);
+	}
+	
+	$schema['di_group_section_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'id' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+		  'section_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'section_name' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => FALSE,
+		  ),
+			'group_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'is_marksheet' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('id'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_di_group_section';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['di_group_section_table']);
+	}
+	
+	$schema['di_indicators_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'id' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'group_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		  'section_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'serial_no' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'sub_section' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => FALSE,
+		  ),
+			'grade' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+				'default' => '',
+		  ),
+			'di' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => FALSE,
+				'default' => '',
+		  ),
+		),
+		'primary key' => array('id'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_di_indicators';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['di_indicators_table']);
+	}
+	
+	$schema['di_sa_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'sub_section' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '255',
+				'not null' => TRUE,
+			),
+			'group_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		  'section_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'serial_no' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'title' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => FALSE,
+		  ),
+			'sub_section_title' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => FALSE,
+		  ),
+			'sa' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'text',
+				'default' => NULL,
+		  ),
+		),
+		'primary key' => array('sub_section', 'group_id', 'section_id', 'serial_no'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_di_sa';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['di_sa_table']);
+	}
+	
+	//**************************************** FEE MODULE SCHEMA ***********************************************************
+	
+	//-------------------------------------------FEE FREQUENCY-------------------------------------------------
+  $schema['fees_frequency_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'freq_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'freq_name' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('freq_id'),
+  );
+  
+	$basic_info_table = 'essa_'.$session_id.'_basicinfo';
+	$binfo = db_query("
+    SELECT * from {$basic_info_table}"
+  );
+	foreach($binfo as $info){
+		$start_date = $info->academicyearstart;
+		$end_date = $info->academicyearend;
+	}
+	
+  $start = new DateTime($start_date);
+	$start->modify('first day of this month');
+	$end      = new DateTime($end_date);
+	$end->modify('first day of next month');
+	$interval = DateInterval::createFromDateString('1 month');
+	$period   = new DatePeriod($start, $interval, $end);
+	foreach ($period as $dt) {
+		$columns[] = $dt->format("M_Y");
+	}
+	foreach($columns as $col){
+		$fields[$col] = array(
+			$col => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		);
+	}
+	foreach($fields as $field){
+		$schema['fees_frequency_table']['fields'] = array_merge($schema['fees_frequency_table']['fields'], $field);
+	}
+  
+	$name_of_table = 'essa_'.$session_id.'_fees_frequency';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_frequency_table']);
+	}
+	
+	//-----------------------------------------FEE STRUCTURE--------------------------------------------------------------
+  $schema['fees_structure_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'fee_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'particulars' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+      'freq_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+      'frequency' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'amount' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+      'applies_to' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'facility' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'is_hostel' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'class_from' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => FALSE,
+      ),
+      'class_to' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => FALSE,
+      ),
+      'distance_from' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'not null' => FALSE,
+      ),
+      'distance_to' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'not null' => FALSE,
+      ),
+      'optional_sub' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('fee_id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_fees_structure';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_structure_table']);
+	}
+  
+  //----------------------------------------------------------------------FEE STUDENT--------------------------------------------------------------
+  $schema['fees_student_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'fee_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('fee_id','adm_no'),
+  );
+  
+	
+	foreach($columns as $col){
+		$fields1[$col] = array(
+			$col => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+		);
+	}
+	foreach($fields1 as $field){
+		$schema['fees_student_table']['fields'] = array_merge($schema['fees_student_table']['fields'], $field);
+	}
+	
+	$name_of_table = 'essa_'.$session_id.'_fees_student';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_student_table']);
+	}
+  
+  //-----------------------------------------FEE STUDENT PAYMENT-------------------------------------------
+  $schema['fees_student_payment_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'fee_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+			'month' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'receipt_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => TRUE,
+      ),
+			'amount' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+    ),
+    'primary key' => array('fee_id', 'month','adm_no','receipt_no'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_fees_student_payment';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_student_payment_table']);
+	}
+  
+	//----------------------------------------------------------------------FEE STUDENT PAYMENT--------------------------------------------------------------
+  $schema['fees_student_advance_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'fee_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+			'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'receipt_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => TRUE,
+      ),
+			'amount' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'amount_remaining' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+      'refund_date' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'refund_remarks' => array(
+        'description' => 'TODO: please describe this field!',
+	      'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'translatable' => TRUE,
+      ),
+    ),
+    'primary key' => array('fee_id', 'adm_no','receipt_no'),
+  );
+  
+	$name_of_table = 'essa_'.$session_id.'_fees_student_advance';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_student_advance_table']);
+	}
+	
+	//----------------------------------------------------------------------FEE STUDENT DUE--------------------------------------------------------------
+  $schema['fees_student_due_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'fee_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('fee_id', 'adm_no'),
+  );
+	foreach($fields1 as $field){
+		$schema['fees_student_due_table']['fields'] = array_merge($schema['fees_student_due_table']['fields'], $field);
+	}
+  
+	$name_of_table = 'essa_'.$session_id.'_fees_student_due';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_student_due_table']);
+	}
+	
+	//----------------------------------------------------------------------FEE FINE--------------------------------------------------------------
+  $schema['fees_student_fine_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'particulars' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+			'month' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'amount_to_be_paid' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'amount_paid' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'receipt_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'collection_date' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_fees_student_fine';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_student_fine_table']);
+	}
+	
+	//----------------------------------------------------------------------FEE Defaulter--------------------------------------------------------------
+  $schema['fees_defaulter_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'class' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'section' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'name' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+			'amount_due' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'fine_due' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('adm_no'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_fees_defaulter';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_defaulter_table']);
+	}
+	
+	//----------------------------------------------------------------------FEE PAYMENT HISTORY--------------------------------------------------------------
+  $schema['fees_payment_history_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'payment_date' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+      'amount' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'uid' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'edit_uid' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+      'type' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '250',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_fees_payment_history';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_payment_history_table']);
+	}
+  
+	//----------------------------------------------------------------------FEE CONCESSION--------------------------------------------------------------
+  $schema['fees_concession_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'con_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => FALSE,
+      ),
+      'fee_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'amount' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'percent' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+      'concession_desc' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '200',
+		    'not null' => FALSE,
+		  ),
+    ),
+    'primary key' => array('con_id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_fees_concession';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_concession_table']);
+	}
+  
+	//----------------------------------------------------------------------FEE STUDENT CONCESSION--------------------------------------------------------------
+  $schema['fees_student_concession_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'con_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => FALSE,
+      ),
+      'amount' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+      'percentage' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+    ),
+    'primary key' => array('con_id','adm_no'),
+  );
+	
+	foreach($columns as $col){
+		$fields_con[$col] = array(
+			$col => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+		);
+	}
+	foreach($fields_con as $field){
+		$schema['fees_student_concession_table']['fields'] = array_merge($schema['fees_student_concession_table']['fields'], $field);
+	}
+	
+	$name_of_table = 'essa_'.$session_id.'_fees_student_concession';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_student_concession_table']);
+	}
+  
+	//----------------------------------------------------------------------FEE STUDENT ADJUSTMENT--------------------------------------------------------------
+  $schema['fees_student_adjustement_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'fee_id' => array(
+        'description' => 'This is advance ID.',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'month' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+			'to_fee_id' => array(
+        'description' => 'This is the field where we save where the advance is adjusted',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'to_fine_id' => array(
+        'description' => 'This is the field where we save where the advance is adjusted',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'amount' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+      'reason' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+			'uid' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'edit_uid' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_fees_student_adjustment';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_student_adjustement_table']);
+	}
+	
+	//----------------------------------------------------------------------FEE STAFF--------------------------------------------------------------
+  $schema['fees_staff_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'uid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+      'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'type' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'name' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'phone_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'email_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'username' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('uid'),
+  );
+
+	$name_of_table = 'essa_'.$session_id.'_fees_staff';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_staff_table']);
+	}
+	
+	//----------------------------------------------------------------------FEE REFUND--------------------------------------------------------------
+  $schema['fees_refund_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'fee_id' => array(
+        'description' => 'This is advance ID.',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'uid' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'amount' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'receipt_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => TRUE,
+      ),
+			'refund_date' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'refund_remarks' => array(
+        'description' => 'TODO: please describe this field!',
+	      'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'translatable' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  
+	$name_of_table = 'essa_'.$session_id.'_fees_refund';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['fees_refund_table']);
+	}
+	
+	
+	//******************************************* SCHEMAS OF LEAVE MODULE ***********************************
+	
+	//_________________________________________schema for leave types table __________________________________  
+	
+	$schema['leave_types_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'leave_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'post_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+			'post_type' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'leave_type' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => FALSE,
+      ),
+      'leave_name' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => FALSE,
+      ),
+      'leave_desc' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '500',
+        'not null' => FALSE,
+      ),
+      'max_per_month' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+			'min_stretch' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+      'nod_per_year'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+			'half_day'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => FALSE,
+      ),
+			'half_day'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => FALSE,
+      ),
+			'half_day_rule'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('leave_id'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_leave_types';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['leave_types_table']);
+	}
+	
+	//_________________________________________schema for leave staff table ____________________________________________ 
+	
+	$schema['leave_staff_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+		 'id' => array(
+			 'description' => 'TODO: please describe this field!',
+			 'type' => 'serial',
+			 'unsigned' => TRUE,
+			 'not null' => TRUE,
+      ),
+			'leave_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'leave_status' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+			'total_leave'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'leave_taken'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+				'default' => 0,
+      ),
+			'leave_remaining'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'max_per_month' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+			'min_stretch' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id','leave_id','emp_id'),
+  );
+	
+	$bi_table = 'essa_'.$session_id.'_basicinfo';
+  $bi_db = db_query(
+		"SELECT * from {$bi_table}"
+	);
+  foreach($bi_db as $bi){
+    $strDateFrom = $bi->academicyearstart;
+    $strDateTo = $bi->academicyearend;
+  }
+  $start    = new DateTime($strDateFrom);
+	$start->modify('first day of this month');
+	$end      = new DateTime($strDateTo);
+	$end->modify('first day of next month');
+	$interval = DateInterval::createFromDateString('1 month');
+	$period   = new DatePeriod($start, $interval, $end);
+	$aryRange=array();
+	foreach ($period as $dt) {
+		array_push($aryRange,$dt->format("Y_m"));
+	}
+	
+	foreach($aryRange as $dates){
+    $date[$dates] = array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'float',
+      'not null' => TRUE,
+      'default' => 0,
+    );
+  }
+	$schema['leave_staff_table']['fields'] = array_merge($schema['leave_staff_table']['fields'], $date);
+	
+	$name_of_table = 'essa_'.$session_id.'_leave_staff';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['leave_staff_table']);
+	}
+	
+	//_________________________________________schema for leave staff history table ____________________________________________ 
+	
+	$schema['leave_staff_history_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+		 'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+		 'req_timestamp'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => TRUE,
+      ),
+			'leave_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'no_of_days'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'no_of_working_days'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'from_date'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'to_date'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'reason'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+				'default' => 0,
+      ),
+			'leave_moderator' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'status' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => FALSE,
+      ),
+			'status_remark' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => FALSE,
+      ),
+			'half_day' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'status_moderator' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'remark_moderator' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '150',
+        'not null' => FALSE,
+      ),
+			'moderator_timestamp' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'status_principal' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'remark_principal' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '150',
+        'not null' => FALSE,
+      ),
+			'principal_timestamp' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'applied_on' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('emp_id','req_timestamp'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_leave_staff_history';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['leave_staff_history_table']);
+	}
+	
+	//_________________________________________schema for leave half day table ____________________________________________ 
+	
+	$schema['leave_half_day_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+		 'id' => array(
+			 'description' => 'TODO: please describe this field!',
+			 'type' => 'serial',
+			 'unsigned' => TRUE,
+			 'not null' => TRUE,
+      ),
+			'leave_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id','leave_id','emp_id'),
+  );
+	
+	
+	foreach($aryRange as $dates){
+    $date[$dates] = array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'float',
+      'not null' => TRUE,
+      'default' => 0,
+    );
+  }
+	$schema['leave_half_day_table']['fields'] = array_merge($schema['leave_half_day_table']['fields'], $date);
+
+	$name_of_table = 'essa_'.$session_id.'_leave_half_day';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['leave_half_day_table']);
+	}
+	
+	
+	//********************************* schema for library issue table *****************************************
+  $schema['lib_issue_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'issue_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+				'length' => '11',
+        'not null' => TRUE,
+      ),
+      'acc_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+			'user_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+		  ),
+      'issue_date' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+      'return_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '25',
+        'not null' => FALSE,
+      ),
+			'return_date' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'fine' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'status' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '55',
+        'not null' => FALSE,
+      ),
+			'uid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'timestamp' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'issued_by' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'issued_by_uid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'nid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'title' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+		),
+    'primary key' => array('issue_no','acc_no'),
+  );
+	
+	$name_of_table = 'essa_'.$session_id.'_lib_issue';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['lib_issue_table']);
+	}
+	
+	//****************************** SCHEMAS FOR TIMETABLE MODULE ************************************************
+	
+	//______________________________ Time table arrangement table ________________________________________________
+	$schema['time_table_arrangement'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'id' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'date' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'int',
+				'length' => 11,
+				'not null' => FALSE,
+			),
+			'class' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => 50,
+				'not null' => FALSE,
+			),
+			'period' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => 50,
+				'not null' => FALSE,
+			),
+			'teacher' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => 50,
+				'not null' => FALSE,
+			),
+			'subject' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => 100,
+				'not null' => FALSE,
+			),
+		),
+		'primary key' => array('id'),
+	);
+	
+	$name_of_table = 'essa_'.$session_id.'_time_table_arrangement';
+	if(!db_table_exists($name_of_table)){
+		db_create_table($name_of_table, $schema['time_table_arrangement']);
+	}
+	
+}
+
+
+/**
+* implementing function for saving the data in required tables - save_data()
+*/
+function save_data($form, $form_state, $old_session_id, $session_id){
+	$master_student_table = 'essa_'.$old_session_id.'_master_student_table';
+	$master_staff_table = 'essa_'.$old_session_id.'_master_staff_table';
+	
+	$query = db_query('CREATE TABLE essa_'.$session_id.'_master_student_table AS SELECT * FROM '.$master_student_table);
+	$query = db_query('ALTER TABLE essa_'.$session_id.'_master_student_table ADD PRIMARY KEY(adm_no)');
+	
+	$query2 = db_query('CREATE TABLE essa_'.$session_id.'_master_staff_table AS SELECT * FROM '.$master_staff_table);
+	$query2 = db_query('ALTER TABLE essa_'.$session_id.'_master_staff_table ADD PRIMARY KEY(emp_id)');
+	
+	//______________________________Employees Time table table ________________________________________________
+	
+	$schema['time_table'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'day_weight' => array(
+				 'description' => 'TODO: please describe this field!',
+				 'type' => 'int',
+				 'not null' => FALSE,
+				),
+			'day' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '15',
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'Period1_class' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period1_subject' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period2_class' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period2_subject' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period3_class' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period3_subject' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period4_class' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period4_subject' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period5_class' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period5_subject' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period6_class' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period6_subject' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period7_class' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period7_subject' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period8_class' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+			'Period8_subject' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+			),
+		),
+		'primary key' => array('day'),
+	);
+	
+	$table = 'essa_'.$session_id.'_master_staff_table';
+	$query = db_query("SELECT * FROM {$table}");
+	foreach($query as $q){
+		if($q->type == 'Teaching' || $q->type == 'teaching'){
+			$name_of_table = 'essa_'.$session_id.'_time_table_'.clean($q->emp_id);
+			if(!db_table_exists($name_of_table)){
+				db_create_table($name_of_table, $schema['time_table']);
+				$day = array('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday');
+				foreach($day as $w => $input){
+					db_insert($name_of_table)
+						->fields (array(
+							'day_weight' => $w,
+							'day' => $input,
+							)
+						)
+					->execute();
+				}
+			}
+		}
+	}
+	
+}
+
+
+/**
+ *Supporting function to clean the array id.
+ */
+function clean($string) {
+  $string = str_replace(' ', '_', $string); // Replaces all spaces with hyphens.
+  $string = str_replace('-', '_', $string);
+  return preg_replace('/[^A-Za-z0-9\-]/', '_', $string); // Removes special chars.
+}

@@ -1,0 +1,345 @@
+<?php
+
+/**
+ *Implements hook_schema
+ */
+function payroll_schema(){
+	$session_id = (string)variable_get('essa_sid');
+  
+	//----------------------------------------------------------------------SALARY STRUCTURE--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_pr_salary_structure'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'sal_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('sal_id'),
+  );
+	
+	//----------------------------------------------------------------------SALARY HEADS--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_pr_salary_detail'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'sal_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+				'length' => '11',
+				'not null' => TRUE,
+      ),
+      'sal_head' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => TRUE,
+      ),
+			'particular' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => FALSE,
+      ),
+			'sal_head' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => FALSE,
+      ),
+			'is_dependent_on' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+			'depends_on' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => FALSE,
+      ),
+			'amount' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'percent' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'is_deduction' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('sal_id', 'sal_head'),
+  );
+	
+	//----------------------------------------------------------------------EMP SALARY--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_pr_emp_sal'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+				'length' => '50',
+				'not null' => TRUE,
+      ),
+			'sal_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+				'length' => '11',
+				'not null' => TRUE,
+      ),
+      'sal_head' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => TRUE,
+      ),
+			'amount' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'percent' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('emp_id', 'sal_head'),
+  );
+	
+	//----------------------------------------------------------------------BATCH INCREMENT--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_pr_batch_increment'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'sal_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+				'length' => '11',
+				'not null' => TRUE,
+      ),
+      'batch' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => TRUE,
+      ),
+			'sal_head' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => TRUE,
+      ),
+			'amount' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'percent' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+      'percent_of' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('sal_id', 'batch' ,'sal_head'),
+  );
+	
+	//----------------------------------------------------------------------BONUS--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_pr_bonus'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'particular' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => FALSE,
+      ),
+      'month' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'sal_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+				'length' => '11',
+				'not null' => TRUE,
+      ),
+			'amount' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'percent' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+      'percent_of' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	//----------------------------------------------------------------------INCENTIVE--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_pr_incentive'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'particular' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => FALSE,
+      ),
+      'incentive_desc' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+      'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'month' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'amount' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'percent' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+      'percent_of' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	//----------------------------------------------------------------------DEDUCTIONS--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_pr_deductions'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'particular' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => FALSE,
+      ),
+      'deductions_desc' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+      'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'month' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'amount' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'percent' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+      'percent_of' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+				'length' => '50',
+				'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	//----------------------------------------------------------------------T&C--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_pr_tnc'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'title' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+				'length' => '50',
+				'not null' => TRUE,
+      ),
+			'body' => array(
+        'description' => 'TODO: please describe this field!',
+	      'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'translatable' => TRUE,
+      ),
+    ),
+    'primary key' => array('title'),
+  );
+	
+	return $schema;
+}

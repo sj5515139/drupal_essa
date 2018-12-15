@@ -1,0 +1,9 @@
+name = Menu Pages
+core = 7.x
+package = ESSA Core
+dependencies[] = homebox
+features[features_api][] = api:2
+features[homebox][] = accounts
+features[homebox][] = payroll_page
+features[homebox][] = staff_page
+features[homebox][] = student_page

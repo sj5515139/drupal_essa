@@ -1,0 +1,616 @@
+<?php
+
+/**
+ *Implements hook_permission()
+ */
+function time_table_permission(){
+  return array(
+    'administer time table' => array(
+      'title' => t('Administer Time Table'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+  );
+}
+
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function time_table_theme() {
+  return array(
+    'time_table_theme_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'main_tt_theme_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'class_tt_theme_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'class_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'arrangement_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'today_arrangement_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'arrangement_history_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+	);
+}
+/**
+ * Implements hook_admin_paths()
+ */
+function time_table_admin_paths() {
+  $paths = array();
+	$session = variable_get('essa_sid');
+	$class_table = 'essa_'.$session.'_class_section';
+	$class_list = array();
+  
+	$class_db = db_query(
+		"SELECT sections from {$class_table}"
+	);
+  
+  foreach($class_db as $class){
+		$arr = explode("_", $class->sections, 2);
+		$cl = $arr[0];
+		$se = strtoupper($arr[1]);
+		$sub_url = array(
+			'admin/time_table/create/'.$cl.'/'.$se => FALSE,
+			'admin/time_table/arrangement/today' => FALSE,
+		);
+		$paths = array_merge($paths, $sub_url);
+	}
+	
+  return $paths;
+}
+
+/**
+ *Implements hook_menu()
+ */
+function time_table_menu(){
+  $items = array();
+  
+  $items['admin/time_table'] = array(
+    'title' => 'Time Table',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('timetable_main'),
+		'access arguments' => array('administer time table'),
+  );
+  
+	$items['admin/time_table/arrangement'] = array(
+    'title' => 'Arrangement',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('arrangement_form'),
+		'access arguments' => array('administer time table'),
+		'file' => 'arrangement_form.admin.inc',
+		'file path' => drupal_get_path('module','time_table').'/includes',
+  );
+	$items['admin/time_table/arrangement/today'] = array(
+    'title' => 'Today',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('today_arrangement'),
+		'access arguments' => array('administer time table'),
+		'file' => 'today_arrangement.admin.inc',
+		'file path' => drupal_get_path('module','time_table').'/includes',
+  );
+	$items['admin/time_table/arrangement/history'] = array(
+    'title' => 'History',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('arrangement_history'),
+		'access arguments' => array('administer time table'),
+		'file' => 'arrangement_history.admin.inc',
+		'file path' => drupal_get_path('module','time_table').'/includes',
+  );
+	
+	$items['admin/time_table/create'] = array(
+    'title' => 'Create',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('timetable_main'),
+		'access arguments' => array('administer time table'),
+  );
+	
+  $session = variable_get('essa_sid');
+	$class_section_table = 'essa_'.$session.'_class_section';
+	
+	$class_section_db = db_query(
+		"SELECT sections from {$class_section_table}"
+	);
+  
+  foreach($class_section_db as $section){
+		$arr = explode("_", $section->sections, 2);
+		$class = $arr[0];
+		$sec = strtoupper($arr[1]);
+		
+		$w = get_weight($class);
+		$items['admin/time_table/create/'.$class] = array(
+      'title' => $class,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('class_timetable', 3),
+			'access arguments' => array('administer time table'),
+			'weight' => $w,
+    );
+    $items['admin/time_table/create/'.$class.'/'.$sec] = array(
+      'title' => strtoupper($sec),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('timetable', 3, 4),
+      'file' => 'time_table.admin.inc',
+			'access arguments' => array('administer time table'),
+    );
+  }
+	
+	$items['teacher/autocomplete'] = array(
+    'description' => t('A callback for teacher autocomplete in subjects form'),
+    'page callback' => 'teach_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+	
+  return $items;
+}
+
+function get_weight($class){
+	$session = variable_get('essa_sid');
+	$class_table = 'essa_'.$session.'_class_list';
+	$class_db = db_query(
+		"SELECT * from {$class_table} where class_id = :id order by weight", array(':id' => $class)
+	);
+	$w = 0;
+	foreach($class_db as $c){
+		$w = $c->weight;
+	}
+	return $w;
+}
+
+/**
+ *Implements page callback function - timetable_main
+ */
+function timetable_main($form, &$form_state){
+	$form = array();
+	
+	$session = variable_get('essa_sid');
+	$class_table = 'essa_'.$session.'_class_list';
+	$class_db = db_query(
+		"SELECT * from {$class_table} order by weight"
+	);
+	foreach($class_db as $c){
+		$row[$c->class_id] = array(
+      '#tree' =>TRUE,
+			
+      $c->class_id => array(  //Generating unique array id for every form element
+				'c1' =>array(
+          '#type' => 'markup',
+					'#markup' => l(t($c->class_id), 'admin/time_table/create/'.$c->class_id),
+        ),
+      ),
+    );
+	}
+  
+	$form['time_table'] = array(
+    '#theme' => 'main_tt_theme_table',
+    'rows' => $row,
+  );
+	return $form;
+}
+
+/**
+ *Implements page callback function - timetable_main
+ */
+function create_timetable($form, &$form_state){
+	
+	timetable_main();
+//	$session = variable_get('essa_sid');
+//	$class_list = 'essa_'.$session.'_class_list';
+//	$classes = db_query("SELECT * FROM {$class_list} ORDER BY weight");
+//	foreach($classes as $cls){
+//		$row[$cls->class_id] = array(
+//			'#tree' =>TRUE,
+//			$cls->class_id => array(  //Generating unique array id for every form element
+//				'c1' =>array(
+//				  '#type' => 'markup',
+//					'#markup' => l(t($cls->class_id), 'admin/time_table/'.$cls->class_id),
+//				 ),
+//		  ),
+//		);	
+//	}
+//	$form['time_table'] = array(
+//    '#theme' => 'class_table',
+//    'rows' => $row,
+//  );
+//	return $form;
+}
+
+/**
+ *Implements page callback function - timetable_main
+ */
+function class_timetable($form, &$form_state, $class){
+	$form = array();
+	$session = variable_get('essa_sid');
+	$class_table = 'essa_'.$session.'_class_list';
+	$class_db = db_query(
+		"SELECT * from {$class_table} where class_id = :id", array(':id' => $class)
+	);
+	
+	foreach($class_db as $c){
+		$form['back'] = array(
+			'#type' => 'markup',
+			'#markup' => l(t('<<Back'), 'admin/time_table/'),
+		);
+		switch($c->no_of_sec){
+			case 1:
+				$sections = array('A');
+				foreach($sections as $sec){
+					$row[$c->class_id.$sec] = array(
+						'#tree' =>TRUE,
+					
+						$c->class_id.$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/time_table/create/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 2:
+				$sections = array('A', 'B');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/time_table/create/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 3:
+				$sections = array('A','B','C');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/time_table/create/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 4:
+				$sections = array('A','B','C','D');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/time_table/create/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 5:
+				$sections = array('A','B','C','D','E');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/time_table/create/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 6:
+				$sections = array('A','B','C','D','E','F');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/time_table/create/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 7:
+				$sections = array('A','B','C','D','E','F','G');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/time_table/create/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 8:
+				$sections = array('A','B','C','D','E','F','G','H');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/time_table/create/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+		}
+	}
+  
+	$form['time_table'] = array(
+    '#theme' => 'class_tt_theme_table',
+    'rows' => $row,
+  );
+	
+	return $form;
+}
+
+
+/**
+ * Theme callback for the form table.
+*/ 
+function theme_main_tt_theme_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Select a Class'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ * Theme callback for the form table.
+*/ 
+function theme_class_tt_theme_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Choose a Section'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ * Theme callback for the form table.
+*/ 
+function theme_class_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Choose a Class'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+
+/**
+ *Implements hook_block_info()
+ */
+function time_table_block_info(){
+	$block['teachers'] = array(
+		'info' => t('Subjects'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+	db_merge('block')
+  ->key(array('theme' => 'essa_theme', 'delta' => 'teachers', 'module' => 'time_table'))
+  ->fields(array(
+    'region' => 'sidebar_right',
+    'pages' => 'admin/time_table/create/*',
+    'status' => 1,
+    'visibility' => 1,
+		'title' => '<none>',
+  ))
+  ->execute();
+	return $block;
+}
+
+/**
+ *Implements hook_block_view()
+ */
+function time_table_block_view($delta = ''){
+	$block['subject'] = 'Subjects';
+	$block['content'] = array(
+		'#markup' => _sub_display(),
+	);
+	return $block;
+}
+
+/**
+ * Implements autocomplete function
+ */
+function teach_autocomplete($string = ''){
+	$session = variable_get('essa_sid');
+	$matches = array();
+	$teacher_table = 'essa_'.$session.'_master_staff_table';
+	$teachers =  db_query(
+		"SELECT * from {$teacher_table} where type = 'teaching' and status = 1;"
+	);
+	foreach($teachers as $teacher){
+		$autocomplete_string[] = $teacher->fname. ' ' .$teacher->lname.' ('.$teacher->nickname.')';
+	}
+	
+	foreach($autocomplete_string as $phrases){
+		if(stristr($phrases, $string)){
+			$matches[$phrases] = $phrases;
+		}
+	}
+	drupal_json_output($matches);
+}
+
+function _sub_display(){
+	$sub_fieldset = drupal_get_form('_sub_display_builder');
+  $rendered_form = drupal_render($sub_fieldset);
+  return $rendered_form;
+}
+
+function _sub_display_builder($form, &$form_state){
+	$uri = $_SERVER['HTTP_HOST'] . '/' . request_uri();
+	
+	$pos = strrpos($uri, "/");
+	$class_sec = substr($uri,$pos+1);
+  list($se1) = explode('_', $class_sec);
+
+	$nw = substr($uri, 0, strrpos($uri, '/'));
+	$pos1 = strrpos($nw, "/");
+	$class_sec1 = substr($nw,$pos1+1);
+	list($cl1) = explode('_', $class_sec1);
+	
+	$sec = $cl1;
+  $session = variable_get('essa_sid');
+	$class_sub_table = 'essa_'.$session.'_subjects_'.$sec;
+  
+  $class_sub_db = db_query(
+		"SELECT * from {$class_sub_table}"
+	);
+	foreach($class_sub_db as $csd){
+		$subs[$csd->sub_id] = $csd -> sub_name.'('.$csd->sub_id.')';
+	}
+	
+	$optional_subject_pair_table = 'essa_'.$session.'_optional_subject_pair';
+	$optional_subject_pair = db_query(
+		"SELECT * from {$optional_subject_pair_table} where class = :cl;", array(':cl' => $sec)
+	);
+	
+	$i = 1;
+	foreach($optional_subject_pair as $osp){
+		for($i=1; $i<=5; $i++){
+			$obj = 'sub_'.$i;
+			if($osp->$obj != NULL){
+				unset($subs[$osp->$obj]);
+			}	
+		}
+		$subs[] = $osp->pair_name;
+	}
+	
+	foreach($subs as $sub){
+		$form['options'.$sub][$sub] = array(
+			'#type' => 'markup',
+			'#markup' => '<div id="drag1" draggable="true" ondragstart="drag(event) ">'.$sub.'</div>',
+			'#attached' => drupal_add_js('
+				function allowDrop(ev) {
+					ev.preventDefault();
+				}
+				function drag(ev) {
+					ev.dataTransfer.setData("text", ev.target.innerHTML);
+				}
+				function drop(ev) {
+					ev.preventDefault();
+					var data = ev.dataTransfer.getData("text");
+					ev.target.value = data;
+			}','inline'),
+		);
+	}
+	
+  return $form;
+}
+/**
+ *Supporting function to clean_string the array id.
+ */
+function clean_teacher_insert($string) {
+	$string = str_replace(' ', '_', $string);
+	$string = str_replace('-', '_', $string);
+	$string = str_replace('/', '_', $string);// Replaces all spaces with hyphens.
+  return preg_replace('/[^A-Za-z0-9\-]/', '', $string); // Removes special chars.
+}

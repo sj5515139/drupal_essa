@@ -1,0 +1,184 @@
+<?php
+
+/**
+ *Implements hook_schema()
+ */
+function di_schema(){
+	$session = variable_get('essa_sid');
+	$schema['essa_'.$session.'_di_group_name'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'id' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+		  'group_name' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '100',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class_from' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+			'class_to' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('id'),
+	);
+	
+	$schema['essa_'.$session.'_di_group_section'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'id' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+		  'section_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'section_name' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => FALSE,
+		  ),
+			'group_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'is_marksheet' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('id'),
+	);
+	
+	$schema['essa_'.$session.'_di_indicators'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'id' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'group_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		  'section_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'serial_no' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'sub_section' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => FALSE,
+		  ),
+			'grade' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+				'default' => '',
+		  ),
+			'di' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => FALSE,
+				'default' => '',
+		  ),
+		),
+		'primary key' => array('id'),
+	);
+	
+	$schema['essa_'.$session.'_di_sa'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'sub_section' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '255',
+				'not null' => TRUE,
+			),
+			'group_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		  'section_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'serial_no' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'title' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => FALSE,
+		  ),
+			'sub_section_title' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => FALSE,
+		  ),
+			'sa' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'text',
+				'default' => NULL,
+		  ),
+		),
+		'primary key' => array('sub_section', 'group_id', 'section_id', 'serial_no'),
+	);
+	return $schema;
+}
+
+/**
+ *Implements hook_install
+ */
+function di_install(){
+	variable_set('di_status', TRUE);
+}

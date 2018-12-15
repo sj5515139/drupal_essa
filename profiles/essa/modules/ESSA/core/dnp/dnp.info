@@ -1,0 +1,5 @@
+name = Departments and Posts
+description = Developing and arranging Departments and Posts
+package = ESSA Core
+core = 7.x
+files[] = dnp.module

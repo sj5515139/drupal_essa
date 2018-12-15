@@ -1,0 +1,341 @@
+#subject-form table{
+  width: 60%;
+  margin-left: 20%;
+}
+
+.form-item-print-pdf-size, .form-item-print-pdf-orientation, .page-node-add .vertical-tabs{
+  display: none;
+}
+
+.page-node-add-student-remarks #overlay{
+  width: 60%;
+}
+
+.page-node-add-student-remarks label{
+  display: inline-block;
+  width:  250px !important;
+  margin-left: 80px;
+}
+
+#optional-subject-form .form-item-class{
+  float: left;
+}
+
+.page-admin-settings-classes-class-teacher #overlay, .page-admin-settings-classes #overlay, .page-admin-settings-transport-setting-create-route #overlay, .page-edit-route- #overlay{
+  width: 40%;  
+}
+
+#student-house-form .form-type-radio{
+  display: inline-block !important;
+  margin-right: 8px !important;
+}
+
+#optional-subject-form #sub_wrapper{
+  clear: both;
+}
+
+#optional-subject-form label{
+  display: inline-block;
+  width:  180px;
+  margin-left: 80px;
+}
+
+.back_button{
+  -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    border: solid 1px GREY;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
+    -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+    background:	#4682B4;
+    padding: 5px 8px;
+    text-decoration: none;
+    width: 50px;
+    text-align: center;
+}
+
+.back_button a{
+  color: WHITE !important;
+  text-decoration: none !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  height:100% !important;
+  width:100% !important;
+}
+
+.page-admin-students-manage-optional-subjects #overlay{
+  width: 300px !important;
+}
+
+.page-admin-students-manage-optional-subjects #overlay thead th{
+  text-align: center;
+}
+
+.page-admin-students-manage-optional-subjects #overlay tbody tr{
+  text-align: center;
+  width: 100%;
+}
+
+.page-admin-students-manage-optional-subjects #overlay tbody tr a{
+  font-size: 20px;
+  font-weight: 900;
+  height:100%;
+  width:100%;
+}
+
+.page-admin-students-manage-optional-subjects #overlay table tr td {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.page-admin-students-manage-transport #overlay{
+  width: 1000px !important;
+}
+
+.page-admin-students-manage-transport #overlay thead th{
+  text-align: center;
+}
+
+.page-admin-students-manage-transport #overlay tbody tr{
+  text-align: center;
+  width: 100%;
+}
+
+.page-admin-students-manage-transport #overlay tbody tr a{
+  font-size: 20px;
+  font-weight: 900;
+  height:100%;
+  width:100%;
+}
+
+.page-admin-students-manage-transport #overlay table tr td {
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.page-admin-students-manage-transport .form-type-hierarchical-select{
+  padding-left: 10px !important;
+}
+
+.page-admin-settings-transport-setting- #overlay{
+  width: 50% !important;
+  margin-left: 25% !important;
+}
+
+.page-admin-students-manage-houses #overlay{
+  width: 1000px !important;
+}
+
+.page-admin-students-manage-houses #overlay thead th{
+  text-align: center;
+}
+
+.page-admin-students-manage-houses #overlay tbody tr{
+  text-align: center;
+  width: 100%;
+}
+
+.page-admin-students-manage-houses #overlay tbody tr a{
+  font-size: 20px;
+  font-weight: 900;
+  height:100%;
+  width:100%;
+}
+
+.page-admin-students-manage-houses #overlay table tr td {
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.page-admin-students-manage-houses .form-type-hierarchical-select{
+  padding-left: 10px !important;
+}
+
+.page-admin-settings-houses-setting- #overlay{
+  width: 50% !important;
+  margin-left: 25% !important;
+}
+
+#overlay{
+  margin-bottom: 80px;
+}
+.content{
+  margin-bottom: 40px;
+}
+
+#allocate-academics{
+  width: 70%;
+  margin-left: 15%;
+}
+
+#delete_br input[type="submit"]{
+  background: red !important;
+  margin-bottom: 5px;
+}
+
+#allocate-admin{
+  width: 70%;
+  margin-left: 15%;
+}
+
+#allocate-admin th{
+  background: #8FBC8F;
+}
+
+.page-admin-administration-organisation-structure-allocate-admin #branding{
+  background-color: 	#2F4F4F !important;
+}
+
+#allocate-academics th{
+  background: 	#4B0082;
+}
+
+.page-admin-administration-organisation-structure-allocate-academics #branding{
+  background-color: #191970	 !important;
+}
+
+.page-admin-administration-classes-class-teacher #overlay{
+  width: 50% !important;
+  margin-left: 25% !important;
+}
+
+#class-teacher label{
+  display: inline-block;
+  width:  180px;
+  margin-left: 80px;
+}
+
+#bus-stop-form thead th{
+  text-align: center;
+}
+
+#bus-stop-form tbody td{
+  text-align: center;
+}
+
+#basicinfo-form .form-item label{
+  display: inline-block;
+  padding-right: 10px;
+}
+
+.form-type-date-popup label{
+  float: left;  
+}
+
+.form-item-file label{
+  float: left;  
+}
+
+#basicinfo-form .fieldset-legend{
+  font-weight: 400;
+  padding: 0px 10px 0px 10px;
+  text-shadow: 0px 1px 1px #4d4d4d;
+	color: black;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+}
+
+#basicinfo-form #edit-ss{
+  padding-left: 30px;
+  padding-right: 30px;
+}
+
+#basicinfo-form label, #create-route-form label, #edit-route label{
+  display: inline-block;
+  width:  220px;
+}
+
+#basicinfo-form .form-type-radio{
+  display: inline-block;
+  margin-right: 30px !important;
+}
+
+label[for=edit-hostel], label[for=edit-transport]{
+  float: left;
+}
+
+.form-item-house1{
+  margin-left: 10% !important;  
+}
+
+.form-item-house1, .form-item-house2, .form-item-house3{
+  float: left;
+  margin-right: 50px !important;
+}
+
+#edit-hs .fieldset-wrapper{
+  margin-top: 10px !important;
+}
+
+#transport-form{
+  width: 80%;
+  margin-left: 10%;
+}
+
+.page-admin-settings-transport-setting .action-links{
+  margin-right: 10%;
+}
+
+#edit-financialyear{
+  float: left;
+  width: 50%;
+  clear: both;
+}
+
+.form-item-addofschool label{
+  float: left;
+}
+
+#edit-addofschool{
+  width: 70%;
+}
+
+#edit-addofschool .form-type-checkbox{
+  float: left;
+  width: 120px;
+}
+
+#class-setup .form-type-checkbox{
+  display: inline-block;
+  width: 80px;
+}
+
+.page-admin-administration-classes-roll-no .form-item label{
+  display: inline-block;
+  padding-right: 10px;
+}
+
+.page-admin-administration-classes-roll-no .form-item-class, .page-admin-administration-classes-roll-no .form-item-section{
+  float: left;
+  margin-right: 20px !important;
+}
+
+.page-admin-administration-classes-roll-no .form-item-class{
+  margin-left: 200px !important;
+}
+
+.page-admin-administration-classes-roll-no #generate-roll-no{
+  margin-left: 10%;
+  width: 80%;
+}
+
+.page-admin-administration-classes-roll-no .form-submit{
+  margin-top: 3px !important;
+  margin-left: 20px !important;
+}
+
+.page-admin-settings-subjects #overlay{
+	width: 40% !important;
+}
+
+#sub-teacher-alloc label, #manage-optional-subject label, #manage-optional-subject .form-type-checkbox{
+	display: inline-block;
+	width: 250px;
+}
+#manage-optional-subject .form-type-checkbox{
+	display: inline-block !important;
+	width: 100px;
+}

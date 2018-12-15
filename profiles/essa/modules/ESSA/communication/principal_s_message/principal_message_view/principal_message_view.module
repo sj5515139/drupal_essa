@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Principal Message View feature.
+ */
+
+include_once 'principal_message_view.features.inc';

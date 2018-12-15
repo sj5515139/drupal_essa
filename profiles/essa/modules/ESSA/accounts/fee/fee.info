@@ -1,0 +1,10 @@
+name = Fee Module
+description = Fees management system
+core = 7.x
+package = ESSA Accounts
+files[] = fees.module
+files[] = includes/fee.views.inc
+stylesheets[all][] = fees.css
+dependencies[] = views
+dependencies[] = school_master
+dependencies[] = student_admission

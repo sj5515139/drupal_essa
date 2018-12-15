@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the ESSA Backup feature.
+ */
+
+include_once 'essa_backup.features.inc';

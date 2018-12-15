@@ -1,0 +1,1120 @@
+<?php
+/**
+* Implements hook_schema.
+*/
+function staff_recruitment_schema(){
+	$session = variable_get('essa_sid');
+  $schema['essa_'.$session.'_master_staff_table'] = array(
+  'description' => 'TODO: please describe this table!',
+  'fields' => array(
+    'emp_id' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => TRUE,
+      'default' => '',
+    ),
+		'status' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'int',
+      'length' => '11',
+      'not null' => FALSE,
+			'default' => 1,
+    ),
+		'uid' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'int',
+      'length' => '11',
+      'not null' => FALSE,
+    ),
+    'joining_date' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '30',
+      'not null' => FALSE,
+    ),
+    'type' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'grade' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '30',
+      'not null' => FALSE,
+    ),
+    'subject' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'dept' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'post' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+		'dept_id' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'int',
+      'length' => '11',
+      'not null' => FALSE,
+    ),
+    'post_id' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'int',
+      'length' => '11',
+      'not null' => FALSE,
+    ),
+    'nickname' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '30',
+      'not null' => FALSE,
+      'default' => '',
+    ),
+    'nt_grade' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '30',
+      'not null' => FALSE,
+    ),
+    'nt_dept' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'nt_post' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'nt_dept_id' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'int',
+      'length' => '11',
+      'not null' => FALSE,
+    ),
+    'nt_post_id' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'int',
+      'length' => '11',
+      'not null' => FALSE,
+    ),
+    'photo' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'fname' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'lname' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'gender' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '7',
+      'not null' => FALSE,
+    ),
+    'dob' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '30',
+      'not null' => FALSE,
+    ),
+    'marital_status' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'place_of_birth' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'pob_state' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'pob_nationality' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'email' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'phone_no' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'mobile_no' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'ca_line1' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '500',
+      'not null' => FALSE,
+    ),
+    'ca_line2' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '500',
+      'not null' => FALSE,
+    ),
+    'ca_city' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'ca_state' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'ca_pincode' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'ca_country' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'child1_name' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'child1_sex' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '6',
+      'not null' => FALSE,
+    ),
+    'child1_age' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'numeric',
+      'length' => '3',
+      'not null' => FALSE,
+    ),
+    'child2_name' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'child2_sex' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '6',
+      'not null' => FALSE,
+    ),
+    'child2_age' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'numeric',
+      'length' => '3',
+      'not null' => FALSE,
+    ),
+    'child3_name' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'child3_sex' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '6',
+      'not null' => FALSE,
+    ),
+    'child3_age' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'numeric',
+      'length' => '3',
+      'not null' => FALSE,
+    ),
+    'sp_name' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'sp_profession' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'sp_native_place' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'f_name' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'f_occupation' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'f_address' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '500',
+      'not null' => FALSE,
+    ),
+    'f_phone' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'm_name' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'm_occupation' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'm_address' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '500',
+      'not null' => FALSE,
+    ),
+    'm_phone' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    's_name' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    's_occupation' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    's_address' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '500',
+      'not null' => FALSE,
+    ),
+    's_phone' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'hs_discipline' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'hs_school' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'hs_board' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'hs_passing_year' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'hs_marks' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'hs_div' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'inter_discipline' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'inter_school' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'inter_board' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'inter_passing_year' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'inter_marks' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'inter_div' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'grad_discipline' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'grad_school' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'grad_board' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'grad_passing_year' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'grad_marks' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'grad_div' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'pgrad_discipline' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'pgrad_school' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'pgrad_board' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'pgrad_passing_year' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'pgrad_marks' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'pgrad_div' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'bed_discipline' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'bed_school' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'bed_board' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'bed_passing_year' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'bed_marks' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'bed_div' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'ao_discipline' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'ao_school' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'ao_board' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'ao_passing_year' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'ao_marks' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'ao_div' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'scholarship' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '200',
+      'not null' => FALSE,
+    ),
+    'research' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '200',
+      'not null' => FALSE,
+    ),
+    'activities' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '200',
+      'not null' => FALSE,
+    ),
+    'sports' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '200',
+      'not null' => FALSE,
+    ),
+    'lang1' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '200',
+      'not null' => FALSE,
+    ),
+    'lang1_mothertongue' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'lang1_read' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'lang1_write' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'lang1_speak' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'lang2' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '200',
+      'not null' => FALSE,
+    ),
+    'lang2_mothertongue' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'lang2_read' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'lang2_write' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'lang2_speak' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'lang3' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '200',
+      'not null' => FALSE,
+    ),
+    'lang3_mothertongue' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'lang3_read' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'lang3_write' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'lang3_speak' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    
+    'lang4' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '200',
+      'not null' => FALSE,
+    ),
+    'lang4_mothertongue' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'lang4_read' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'lang4_write' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'lang4_speak' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+    ),
+    'comp' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '200',
+      'not null' => FALSE,
+    ),
+    'i1_academics' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'i1_activities' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'i1_sports' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'i2_academics' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'i2_activities' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'i2_sports' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'i3_academics' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'i3_activities' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'i3_sports' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p1_institution' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p1_from' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'p1_to' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'p1_position' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p1_subjects' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p1_duties' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p1_assignment' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p2_institution' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p2_from' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'p2_to' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'p2_position' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p2_subjects' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p2_duties' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p2_assignment' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p3_institution' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p3_from' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'p3_to' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'p3_position' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p3_subjects' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p3_duties' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'p3_assignment' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'passport_no' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'pan_card_no' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'dl_no' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'aadhar_card_no' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'voter_id_no' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+  ),
+  'primary key' => array('emp_id'),
+  );
+	
+	$schema['essa_'.$session.'_staff_resignation'] = array(
+			'description' => 'TODO: please describe this table!',
+			'fields' => array(
+				'id' => array(
+				 'description' => 'TODO: please describe this field!',
+				 'type' => 'serial',
+				 'unsigned' => TRUE,
+				 'not null' => TRUE,
+				),
+				'emp_id' => array(
+					'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '50',
+					'not null' => TRUE,
+					'default' => '',
+			),
+			'type' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '50',
+					'not null' => FALSE,
+					'default' => '',
+			),
+			'subject' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '255',
+					'not null' => FALSE,
+					'default' => '',
+			),
+			'reason' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'text',
+				'not null' => FALSE,
+				'size' => 'big',
+				'not null' => FALSE,
+			),
+			'status_fin' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '50',
+					'not null' => FALSE,
+					'default' => '',
+			),
+			'status_fin_reason' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '255',
+					'not null' => FALSE,
+					'default' => '',
+			),
+			'fin_timestamp' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'int',
+					'length' => '11',
+					'not null' => FALSE,
+			),
+			'fin_uid' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'int',
+					'length' => '11',
+					'not null' => FALSE,
+			),
+			'status' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '50',
+					'not null' => FALSE,
+			),
+			'status_reason' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'varchar',
+					'length' => '255',
+					'not null' => FALSE,
+			),
+			'status_timestamp' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'int',
+					'length' => '11',
+					'not null' => FALSE,
+			),
+			'status_uid' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'int',
+					'length' => '11',
+					'not null' => FALSE,
+			),
+			'wef' => array(
+				 'description' => 'TODO: please describe this field!',
+					'type' => 'int',
+					'length' => '11',
+					'not null' => FALSE,
+			),
+		),
+    'primary key' => array('id'),
+  );
+  return $schema;
+}
+
+/**
+ *Implements hook_install
+ */
+function staff_recruitment_install(){
+	
+	$t_flag = 0;
+	$teacher_role = db_query(
+		"SELECT * from role where name = 'Teacher';"
+	);
+	foreach($teacher_role as $tr){
+		$t_flag = 1;
+	}
+	
+	if($t_flag == 0){
+		$role = new stdClass();
+		$role->name = 'Teacher';
+		user_role_save($role);
+	}
+	
+	$st_flag = 0;
+	$staff_role = db_query(
+		"SELECT * from role where name = 'Staff';"
+	);
+	foreach($staff_role as $st){
+		$st_flag = 1;
+	}
+	
+	if($st_flag == 0){
+		$role = new stdClass();
+		$role->name = 'Staff';
+		user_role_save($role);
+	}
+	
+	$new_vocab = (object) array(
+	 'name' => 'Staff',
+	 'description' => 'This vocabulary creates Class and section vocabulary',
+	 'machine_name' => 'staff_vocab',
+	);
+	
+	$vid = taxonomy_vocabulary_machine_name_load('staff_vocab');
+	if($vid->vid == NULL){
+		taxonomy_vocabulary_save($new_vocab);
+	}
+	
+	$new_vocab = (object) array(
+	 'name' => 'Staff UID',
+	 'description' => 'This vocabulary creates Class and section vocabulary',
+	 'machine_name' => 'staff_uid_vocab',
+	);  
+	$vid = taxonomy_vocabulary_machine_name_load('staff_uid_vocab');
+	if($vid->vid == NULL){
+		taxonomy_vocabulary_save($new_vocab);
+	}
+}
+
+/**________________________________________________hook_uninstall()________________________________________________________
+ *Implements hook_uninstall()
+ ----------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/**
+function staff_recruitment_uninstall(){
+  $session_id = (string)variable_get('essa_sid');
+	
+  $vocab = taxonomy_vocabulary_machine_name_load('staff_vocab');
+  taxonomy_vocabulary_delete($vocab->vid);
+  
+	$role->name = 'Teacher';
+	user_role_delete($role);
+	
+	$role->name = 'Staff';
+	user_role_delete($role);
+  
+  drupal_flush_all_caches();
+}
+*/

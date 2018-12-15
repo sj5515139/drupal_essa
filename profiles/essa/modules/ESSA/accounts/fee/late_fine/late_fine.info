@@ -1,0 +1,7 @@
+name = Late Fine Module
+description = Late Fine management system
+core = 7.x
+package = ESSA Accounts
+files[] = late_fine.module
+stylesheets[all][] = late_fine.css
+dependencies[] = fee

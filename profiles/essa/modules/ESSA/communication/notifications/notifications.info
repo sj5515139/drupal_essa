@@ -1,0 +1,9 @@
+name = Notifications
+description = Displays user specific notifications.
+core = 7.x
+package = ESSA notification
+files[] = notifications.module
+stylesheets[all][] = notifications.css
+dependencies[] = taskbar_activity
+dependencies[] = views
+dependencies[] = taskbar

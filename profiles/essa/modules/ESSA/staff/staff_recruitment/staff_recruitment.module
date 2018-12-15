@@ -1,0 +1,493 @@
+<?php
+
+/**
+* @file
+* Form to Add staff to the system
+*/
+/**
+ * Implements hook_admin_paths()
+ */
+function staff_recruitment_admin_paths() {
+  $paths = array(
+    'admin/staff/recruitment' => FALSE,
+		'admin/staff/recruitment/employee_recruitment' => FALSE,
+		'admin/staff/recruitment/employee_recruitment_bulk_upload' => FALSE,
+    'employee_recruitment_step2' => FALSE,
+    'employee_recruitment_step3' => FALSE,
+		'delete_staff' => TRUE,
+  );
+  return $paths;
+}
+
+/**
+ *Implements hook_permission()
+ */
+function staff_recruitment_permission(){
+  return array(
+    'administer staffs' => array(
+      'title' => t('Administer staffs'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+		'resign' => array(
+      'title' => t('Resign from service'),
+      'description' => t('Warning: Give to staffs only.'),
+    ),
+		'access staffs' => array(
+      'title' => t('Resign from service'),
+      'description' => t('Warning: Give to staffs only.'),
+    ),
+  );
+}
+/**
+* Implementing hook_menu
+*/
+function staff_recruitment_menu(){
+  $items = array();
+	
+ $items['admin/staff/recruitment'] = array(
+		'title' => 'Recruitment',
+	  'description' => 'Adding Employees to the system',
+	  'page callback' => 'staff_recruitment',
+	  'access arguments' => array('administer staffs'),
+		'weight' => 0,
+	);
+ 
+	$items['user/%staff/edit_staff'] = array(
+		 'title' => 'Edit Profile',
+	  'page callback' => 'drupal_get_form',
+		'page arguments' => array('edit_staff_form',1),
+		'access arguments' => array('administer staffs'),
+		'type' => MENU_LOCAL_TASK,
+		'file' => 'edit_staff.admin.inc',
+    'file path' => drupal_get_path('module','staff_recruitment').'/includes',
+		'weight' => 9,
+	);
+	
+	$items['admin/staff/details'] = array(
+		'title' => 'Details',
+	  'description' => 'Displaying Staff Details',
+		'page callback' => 'drupal_get_form',
+	  'page arguments' => array('staff_details'),
+	  'access arguments' => array('access staffs'),
+		'file' => 'staff_details.admin.inc',
+    'file path' => drupal_get_path('module','staff_recruitment').'/includes',
+		'weight' => -51,
+	);
+ 
+	$items['admin/staff/recruitment/employee_recruitment'] = array(
+	  'title' => 'Individual',
+	  'description' => 'Adding employees to the system',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('addstaff_form'),
+	  'access arguments' => array('administer staffs'),
+		'weight' => -10,
+	  'file' => 'add_staff.admin.inc',
+    'file path' => drupal_get_path('module','staff_recruitment').'/includes',
+	);
+
+  $items['admin/staff/recruitment/employee_recruitment_bulk_upload'] = array(
+    'title' => 'Bulk',
+    'description' => 'Adding Staff to the system',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('add_staff_bu_form'),
+    'access arguments' => array('administer staffs'),
+    'file' => 'add_staff_bu_form.admin.inc',
+    'file path' => drupal_get_path('module','staff_recruitment').'/includes',
+  );
+
+	$items['admin/staff/termination'] = array(
+		'title' => 'Termination',
+	  'description' => 'Removing Employees from the system',
+		'page callback' => 'drupal_get_form',
+	  'page arguments' => array('manage_staff_termination'),
+	  'access arguments' => array('administer staffs'),
+		'weight' => 10,
+		'file' => 'termination.admin.inc',
+    'file path' => drupal_get_path('module','staff_recruitment').'/includes/termination',
+	);
+	
+	$items['admin/staff/termination/manage'] = array(
+		'title' => 'Manage',
+	  'description' => 'Managing Employees Termination from the system',
+		'page callback' => 'drupal_get_form',
+	  'page arguments' => array('manage_staff_termination'),
+	  'access arguments' => array('administer staffs'),
+		'weight' => 10,
+		'file' => 'termination.admin.inc',
+    'file path' => drupal_get_path('module','staff_recruitment').'/includes/termination',
+	);
+	
+	$items['admin/staff/termination/dismissal'] = array(
+		'title' => 'Dismissal',
+	  'description' => 'Dismissal from the system',
+		'page callback' => 'drupal_get_form',
+	  'page arguments' => array('dismissal_form'),
+	  'access arguments' => array('administer staffs'),
+		'weight' => 11,
+		'file' => 'dismissal.admin.inc',
+    'file path' => drupal_get_path('module','staff_recruitment').'/includes/termination',
+	);
+	
+	$items['admin/staff/termination/retirement'] = array(
+		'title' => 'Retirement',
+	  'description' => 'Managing Employees Retirement from the system',
+		'page callback' => 'drupal_get_form',
+	  'page arguments' => array('retirement_form'),
+	  'access arguments' => array('administer staffs'),
+		'weight' => 12,
+		'file' => 'retirement.admin.inc',
+    'file path' => drupal_get_path('module','staff_recruitment').'/includes/termination',
+	);
+	
+	$items['resignation'] = array(
+		'title' => 'Resignation',
+	  'description' => 'Managing Employees Termination from the system',
+		'page callback' => 'drupal_get_form',
+	  'page arguments' => array('resignation_form'),
+	  'access arguments' => array('resign'),
+		'file' => 'resignation.admin.inc',
+    'file path' => drupal_get_path('module','staff_recruitment').'/includes/termination',
+	);
+	
+	$items['admin/staff/recruitment/delete_staff'] = array(
+	  'title' => 'Delete Staff',
+	  'description' => 'Delete Staff',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('delete_staff'),
+	  'access arguments' => array('administer staffs'),
+	  'file' => 'delete_staff.admin.inc',
+    'file path' => drupal_get_path('module','staff_recruitment').'/includes/delete_staff',
+	);
+	
+	$items['delete_staff'] = array(
+    'title' => 'Confirm Delete',
+    'page callback' => 'delete_staff_pagecallback',
+    'access arguments' => array('administer staffs'),
+    'file' => 'delete_staff.admin.inc',
+    'file path' => drupal_get_path('module','staff_recruitment').'/includes/delete_staff',
+		'type' => MENU_CALLBACK,
+  );
+	
+	$items['emp_id/autocomplete'] = array(
+    'description' => t('A callback for staff emp_id autocomplete'),
+    'page callback' => 'emp_id_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Implements autocomplete function
+ */
+function emp_id_autocomplete($string = ''){
+	$session = variable_get('essa_sid');
+	$matches = array();
+	$staff_table = 'essa_'.$session.'_master_staff_table';
+	$staffs =  db_query(
+		"SELECT * from {$staff_table} where status = 1;"
+	);
+	foreach($staffs as $staff){
+		$autocomplete_string[] = $staff->emp_id;
+	}
+	
+	foreach($autocomplete_string as $phrases){
+		if(stristr($phrases, $string)){
+			$matches[$phrases] = $phrases;
+		}
+	}
+	
+	drupal_json_output($matches);
+}
+
+function staff_load($user){
+	$staff_rid = db_query("select rid from role where name = 'Staff'");
+	foreach($staff_rid as $role_id){
+		$staff = $role_id->rid;
+	}
+	$roles = db_query("
+		SELECT rid from users_roles where uid = :uid;", array(':uid' => $user)
+	);
+	$rid = array();
+	foreach($roles as $r){
+		$rid[] = $r->rid;
+	}
+	if(in_array($staff, $rid)){
+		return $user;
+	} else{
+		return FALSE;
+	}
+}
+
+function staff_recruitment(){
+	$output = '<div id = "individual_staff" class="shrink circle float-inline">'.l(t('Individual Recruitment'), 'admin/staff/recruitment/employee_recruitment').'</div>';
+	$output .= '<div id = "bulk_staff" class="shrink circle">'.l(t('Bulk Recruitment'), 'admin/staff/recruitment/employee_recruitment_bulk_upload').'</div>';
+	return $output;
+}
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function staff_recruitment_theme() {
+  return array(
+    'staff_family_info_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+    'staff_fms_info_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+    'aq_info_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+    'lang_info_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+    'interest_info_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+    'exp_info_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'staff_detail_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+	);
+}
+
+/**
+ * Theme callback for the form table.
+ */
+function theme_staff_family_info_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Children'), t('Name'), t('Sex'), t('Age(in years)'));
+
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ * Theme callback for the form table.
+ */
+function theme_staff_fms_info_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t(' '), t('Name'), t('Occupation'), t('Office Address'), t('Telephone no.'));
+
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ * Theme callback for the form table.
+ */
+function theme_aq_info_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Qualification'), t('Discipline/Subject'), t('School/College'), t('Board/University'), t('Year of Passing'), t('% of Marks'), t('Division'));
+
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ * Theme callback for the form table.
+ */
+function theme_lang_info_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Language'),t('Mother Tongue'), t('Read'), t('Write'), t('Speak'));
+
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ * Theme callback for the form table.
+ */
+function theme_interest_info_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Academics'),t('Co-curricular Activities'), t('Sports Activities'));
+
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ * Theme callback for the form table.
+ */
+function theme_exp_info_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Name of Institution'),t('From'), t('To'), t('Positions Held'), t('Subjects Taught'), t('Duties'), t('Assignment'));
+
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ * Implementation of hook_mail().
+ */
+function staff_recruitment_mail($key, &$message, $params){
+
+  // Set the mail content type to html to send an html e-mail (optional).
+  $message['headers']['Content-Type'] = 'text/html; charset=UTF-8; format=flowed';
+
+  // Grab the subject and body from params and add it to the message.
+  $message['subject'] = $params['subject'];
+  $message['body'][] = $params['body'];// Drupal 7
+  //$message['body'] = $params['body']; // Drupal 6, I think
+
+  switch ($key) {
+    case "my_module_mail_example":
+      // Make other changes here if desired...
+      break;
+  }
+
+}

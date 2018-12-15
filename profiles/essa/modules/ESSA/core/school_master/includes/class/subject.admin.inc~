@@ -1,0 +1,337 @@
+<?php
+
+/**
+ *Implements callback function for subjects
+ */
+function subject_list_form($form, &$form_state){
+	$session = variable_get('essa_sid');
+	$class_list_table = 'essa_'.$session.'_class_list';
+	$class_list = array();
+  
+	$class_list_db = db_query(
+		"SELECT class_id from {$class_list_table} order by weight"
+	);
+	
+  foreach($class_list_db as $class){
+		$sub_l[ 'subjects/'.$class->class_id] = $class->class_id;
+	}
+	$options = array(
+		'title' => 'Select a class - ',
+	);
+	ctools_include('jump-menu');
+	$form['jump'] = ctools_jump_menu(array(), $form_state, $sub_l, $options);
+	
+	$form['sub'] = array(
+		'#type' => 'markup',
+		'#markup' => 'Select a Class to add subjects',
+	);
+	
+	return $form;
+}
+
+/**
+ *Implements callback function for each class to enter sunjects
+ */
+function subject_form($form, &$form_state, $class_sub){
+	
+	$session = variable_get('essa_sid');
+	$class_list_table = 'essa_'.$session.'_class_list';
+	$class_list = array();
+  
+	$class_sub_table = 'essa_'.$session.'_subjects_'.mod_sub_string($class_sub);
+	
+	$num = 0;
+	$pre_saved_values = db_query(
+		"SELECT * from {$class_sub_table}"
+	);
+	foreach($pre_saved_values as $val){
+		$num++;
+		$value[] = $val;
+	}
+	
+	$form['class'] = array(
+		'#type' => 'value',
+		'#value' => $class_sub
+	);
+	
+	$form['help'] = array(
+		'#type' => 'markup',
+		'#markup' => '<br><h3>'.'You are managing subjects for Class - '.'<b>'.$class_sub.'</b></h3>',
+	);
+	
+	//----------------------------------------------sets the value for the loop - to generate the number of rows.-------------------------------------------
+	if($num < 10 && isset($form_state['triggering_element']['#value']) != 'Add more'){
+		variable_set('set_sub_i', 10);
+		$limit = variable_get('set_sub_i');
+	} else if($num > 10 && isset($form_state['triggering_element']['#value']) != 'Add more'){
+		variable_set('set_sub_i', $num);
+		$l = variable_get('set_sub_i');
+		$limit = $l;
+	}else{
+		$limit = variable_get('set_sub_i');
+	}
+	
+	for($i = 0; $i < $limit; $i++){
+		//-------------------------------------------------sets default vaues as empty string for all rows if DB entry is NULL----------------------------------
+		if(!isset($value[$i])){
+			$value[$i] = new StdClass;
+			$value[$i]->sub_id = "";
+			$value[$i]->sub_name = "";
+			$value[$i]->type = "";
+			$value[$i]->teacher1 = "";
+			$value[$i]->teacher2 = "";
+			$value[$i]->teacher3 = "";
+			$value[$i]->teacher4 = "";
+			$value[$i]->teacher5 = "";
+		}
+      $row[] = array(
+      '#tree' =>TRUE,
+			
+      $i => array(  //Generating unique array id for every form element
+				'c1' =>array(
+          '#type' => 'textfield',
+					'#size' => 8,
+					'#default_value' => $value[$i]->sub_id,
+        ),
+        'c2' =>array(
+          '#type' => 'textfield',
+					'#size' => 18,
+					'#default_value' => $value[$i]->sub_name,
+        ),
+        'c3' =>array(
+          '#type' => 'select',
+          '#options' => drupal_map_assoc(array(t('Compulsory'), t('Optional'))),
+					'#default_value' => $value[$i]->type,
+        ),
+				'c4' =>array(
+          '#type' => 'textfield',
+					'#autocomplete_path' => 'teachers/autocomplete',
+					'#size' => 25,
+					'#default_value' => $value[$i]->teacher1,
+				),
+				'c5' =>array(
+          '#type' => 'textfield',
+					'#autocomplete_path' => 'teachers/autocomplete',
+					'#size' => 25,
+					'#default_value' => $value[$i]->teacher2,
+				),
+				'c6' =>array(
+          '#type' => 'textfield',
+					'#autocomplete_path' => 'teachers/autocomplete',
+					'#size' => 25,
+					'#default_value' => $value[$i]->teacher3,
+				),
+				'c7' =>array(
+          '#type' => 'textfield',
+					'#autocomplete_path' => 'teachers/autocomplete',
+					'#size' => 25,
+					'#default_value' => $value[$i]->teacher4,
+				),
+				'c8' =>array(
+          '#type' => 'textfield',
+					'#autocomplete_path' => 'teachers/autocomplete',
+					'#size' => 25,
+					'#default_value' => $value[$i]->teacher5,
+				),
+      ),
+    );
+  }
+  
+	//-----------------------Calling the theme function to build the custom table and display the form in tabular format.-----------------------------
+  $form['sub'][$class_sub] = array(
+    '#theme' => 'class_sub_table',
+    'rows' => $row,
+  );
+  $form['container'] = array(
+    '#type' => 'container',
+    '#prefix' => '<div id = "create_subject">',
+    '#suffix' => '</div>',
+  );
+	
+	$form['save_manage'] = array(
+		'#type' => 'submit',
+		'#value' => 'Save',
+		'#submit' => array('save_manage'),
+	);
+	
+	$form['add_more'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add more'),
+    '#submit' => array('add_more'),
+  );
+	
+	$form['reset'] = array(
+    '#type' => 'submit',
+    '#value' => t('Reset'),
+    '#submit' => array('reset_form'),
+  );
+	
+	return $form;
+}
+
+/**
+ *Submit function - adds more rows to the form.
+ */
+function add_more($form, &$form_state){
+  $form_state['rebuild']  = TRUE;
+  $l = variable_get('set_sub_i');
+  $l++;
+  variable_set('set_sub_i', $l);
+}
+
+/**
+ *Submit function - resets the form.
+ */
+function reset_form($form, $form_state){
+	variable_get('set_sub_i');
+  variable_set('set_sub_i',10);
+}
+
+/**
+ *Implements the submit function to save the entries and continue to add subjects
+ */
+function save_manage($form, &$form_state){
+	$session = variable_get('essa_sid');
+	$class_list_table = 'essa_'.$session.'_class_list';
+	$staff_table = 'essa_'.$session.'_master_staff_table';
+	$t1_emp_id = NULL;
+	$t2_emp_id = NULL;
+	$t3_emp_id = NULL;
+	$t4_emp_id = NULL;
+	$t5_emp_id = NULL;
+	
+	$class_list = array();
+  
+	$class_sub_table = 'essa_'.$session.'_subjects_'.mod_sub_string($form_state['values']['class']);
+	
+	$class_subject = db_query(
+		"SELECT * from {$class_sub_table}"
+	);
+					
+	foreach($class_subject as $sub){
+		$subj[$sub->sub_id] = $sub->id;
+	}
+	foreach($form_state['values'] as $row){
+    if(is_array($row)){
+      foreach($row as $data){
+        if(!empty($data['c1'])){
+					if(!empty($data['c4'])){
+						$t1_emp_id = $t2_emp_id = $t3_emp_id = $t4_emp_id = $t5_emp_id = NULL;
+						preg_match('#\((.*?)\)#', $data['c4'], $match);
+						$staff_db = db_query(
+							"SELECT * from {$staff_table} where nickname = :nickname",  array(':nickname' => $match[1])
+						);
+						foreach($staff_db as $staff){
+							$t1_emp_id = $staff->emp_id;
+						}	
+					}       
+					
+					if(!empty($data['c5'])){
+						preg_match('#\((.*?)\)#', $data['c5'], $match);
+						$staff_db = db_query(
+							"SELECT * from {$staff_table} where nickname = :nickname",  array(':nickname' => $match[1])
+						);
+						foreach($staff_db as $staff){
+							$t2_emp_id = $staff->emp_id;
+						}
+					}
+					
+					if(!empty($data['c6'])){
+						preg_match('#\((.*?)\)#', $data['c6'], $match);
+						$staff_db = db_query(
+							"SELECT * from {$staff_table} where nickname = :nickname",  array(':nickname' => $match[1])
+						);
+						foreach($staff_db as $staff){
+							$t3_emp_id = $staff->emp_id;
+						}
+					}
+					
+					if(!empty($data['c7'])){
+						preg_match('#\((.*?)\)#', $data['c7'], $match);
+						$staff_db = db_query(
+							"SELECT * from {$staff_table} where nickname = :nickname",  array(':nickname' => $match[1])
+						);
+						foreach($staff_db as $staff){
+							$t4_emp_id = $staff->emp_id;
+						}
+					}
+					
+					if(!empty($data['c8'])){
+						preg_match('#\((.*?)\)#', $data['c8'], $match);
+						$staff_db = db_query(
+							"SELECT * from {$staff_table} where nickname = :nickname",  array(':nickname' => $match[1])
+						);
+						foreach($staff_db as $staff){
+							$t5_emp_id = $staff->emp_id;
+						}
+					}
+					
+					db_merge($class_sub_table)
+						->key(array('id' => isset($subj[$data['c1']])? $subj[$data['c1']]: NULL))
+						->fields (array(
+							'sub_id' => $data['c1'],
+							'sub_name' => $data['c2'],
+							'type' => $data['c3'],
+							'teacher1' => $data['c4'],
+							'teacher1_emp_id' => $t1_emp_id,
+							'teacher2' => $data['c5'],
+							'teacher2_emp_id' => $t2_emp_id,
+							'teacher3' => $data['c6'],
+							'teacher3_emp_id' => $t3_emp_id,
+							'teacher4' => $data['c7'],
+							'teacher4_emp_id' => $t4_emp_id,
+							'teacher5' => $data['c8'],
+							'teacher5_emp_id' => $t5_emp_id,
+							)
+						)
+						->execute();
+				}
+			}
+		}
+	}
+	drupal_flush_all_caches();
+}
+
+/**
+ * Theme callback for the form table.
+ */
+function theme_class_sub_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Subject ID'),t('Name of Subject'), t('Type'),t('Assign Teacher1'), t('Assign Teacher2'), t('Assign Teacher3'), t('Assign Teacher4'), t('Assign Teacher5'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ *Supporting function to clean_string the array id.
+ */
+function mod_sub_string($string) {
+   $string = str_replace('-', '', $string); // Replaces all spaces with hyphens.
+	 $string = str_replace(' ', '', $string);
+   return preg_replace('/[^A-Za-z0-9\-]/', '', $string); // Removes special chars.
+}

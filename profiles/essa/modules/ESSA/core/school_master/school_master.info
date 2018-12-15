@@ -1,0 +1,17 @@
+name = School Master
+description = Managing the basic settings and Menu system for the school.
+core = 7.x
+package = ESSA Core
+files[] = school_master.module
+stylesheets[all][] = school_master.css
+dependencies[] = views
+dependencies[] = dnp
+dependencies[] = menu_pages
+dependencies[] = checkall
+dependencies[] = filedepot
+dependencies[] = filedepot_multiupload
+dependencies[] = fontawesome
+dependencies[] = hierarchical_select
+dependencies[] = print
+dependencies[] = rules
+dependencies[] = notifications

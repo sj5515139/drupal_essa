@@ -1,0 +1,107 @@
+#create-exam label, #edit-exam label, #create-exam-schedule label, #create-term-exam label, #edit-term-exam label,
+#create-timing label, #create-imp-dates label, #create-paper-checker-list label, #upload-marks label, #generate-result label,
+#publish-result label, #create-term label, #upload-di label, #print-term-result label, #create-re-exam-schedule label, #generate-roll-no label{
+	display: inline-block;
+	width: 250px;
+}
+
+#print-schedule label{
+	display:inline-block;
+	width:200px;
+}
+
+.horizontal-tabs-pane{
+	padding-top: 20px !important;	
+}
+
+#edit-generate-term-result{
+	margin-left: 20px;
+}
+
+#generate-result table th, #generate-result table td{
+	text-align: center !important;
+}
+
+#publish-result .horizontal-tabs-panes{
+	padding: 10px !important;
+	
+}
+
+#publish-result .horizontal-tabs-panes .fieldset-wrapper{
+	padding: 20px 10px 20px 10px;	
+}
+
+#create-timing .date-spacer, #create-exam-schedule .date-spacer, #create-re-exam-schedule .date-spacer{
+	display: none;
+}
+
+#create-exam input, #edit-exam input{
+	display: inline-block;
+	width: 250px;
+}
+.page-admin-exam-create-exam #overlay{
+	width: 50%;
+}
+.page-admin-exam-create-exam #edit-submit{
+	width: 80px;
+}
+.page-admin-exam #edit-submit{
+	width: 80px;
+}
+.page-edit-exam #overlay{
+	width: 50%;
+}
+.page-edit-exam #edit-submit{
+	width: 80px;
+}
+.page-admin-exam #edit-sec--2{
+}
+#create-timing .form-type-checkbox{
+  display: inline-block;
+  width: 80px;
+}
+
+#create-imp-dates .form-type-checkbox{
+  display: inline-block;
+  width: 80px;
+}
+
+#print-schedule .form-type-checkbox{
+  display: inline-block !important;
+  width: 70px !important;
+}
+#print-schedule .form-radios{
+	display:inline-flex !important;
+}
+
+#print-term-result .form-radios{
+	display:inline-flex !important;
+}
+
+#create-imp-dates table td .form-type-checkbox{
+  display: inline-block;
+  width: 100px;
+}
+
+.page-admin-exam #overlay{
+	width: 50%;
+}
+
+.page-admin-exam .form-item-type{
+	display: inline;
+}
+
+.page-delete-exam #overlay-content{
+	width:30%;
+	margin-left: 35%;
+}
+
+.page-delete-exam #overlay-title{
+	margin-left: 35%;
+}
+.page-delete-exam #overlay-close-wrapper{
+	margin-right: 35%
+}
+.page-admin-exam i.fa.fa-times{
+  color: red;
+}

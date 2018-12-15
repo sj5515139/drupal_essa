@@ -1,0 +1,355 @@
+<?php
+
+/**
+ * Implements hook_admin_paths()
+ */
+function re_exam_admin_paths() {
+	$paths = array();
+		// //'edit/exam/*' => TRUE,
+		// 'admin/exam/*/exam_schedule' => FALSE,
+		// 'admin/exam' => FALSE,
+		// 'delete_exam' =>TRUE,
+	// );
+	$session = variable_get('essa_sid');
+	$master_exam_table = 'essa_'.$session.'_exam_master';
+	$term_table = 'essa_'.$session.'_exam_terms';
+	$exams = db_query("SELECT * FROM {$master_exam_table};");
+	
+	foreach($exams as $exam){
+		$re_exam = array('admin/exam/'.$exam->term.'/'.$exam->exam_code.'/re_exam' => FALSE);
+		$paths = array_merge($paths, $re_exam);
+		$gr = array('admin/exam/'.$exam->term.'/'.$exam->exam_code.'/re_exam/generate-result' => FALSE);
+		$paths = array_merge($paths, $gr);//generate-result
+		$pr = array('admin/exam/'.$exam->term.'/'.$exam->exam_code.'/re_exam/publish-result' => FALSE);
+		$paths = array_merge($paths, $pr);//publish-result
+		$re_schedule = array('admin/exam/'.$exam->term.'/'.$exam->exam_code.'/re_exam/schedule' => FALSE);
+		$paths = array_merge($paths, $re_schedule);
+		$re_schedule_create = array('admin/exam/'.$exam->term.'/'.$exam->exam_code.'/re_exam/schedule/create' => FALSE);
+		$paths = array_merge($paths, $re_schedule_create);
+		// $pub_term = array('admin/exam/'.$exam->term.'/publish-term-result' => FALSE);
+		// $paths = array_merge($paths, $pub_term);//generate-result
+		// $gen_term = array('admin/exam/'.$exam->term.'/generate-term-result' => FALSE);
+		// $paths = array_merge($paths, $gen_term);//generate-result
+	}
+	
+	// $terms = db_query("SELECT * FROM {$term_table}");
+	// foreach($terms as $term){
+		// if($term->term_1 != NULL){
+			// $gen_term = array('admin/exam/'.$term->id.'/generate-term-result' => FALSE);
+			// $paths = array_merge($paths, $gen_term);//generate-result
+			
+			// $sum_term = array('admin/exam/'.$term->id.'/publish-sum-term-result' => FALSE);
+			// $paths = array_merge($paths, $sum_term);//generate-result
+			
+			// $print_sum_term = array('admin/exam/'.$term->id.'/print-sum-term-result' => FALSE);
+			// $paths = array_merge($paths, $print_sum_term);//generate-result
+		// }
+		// $term_exam = array('admin/exam/'.$term->id => FALSE);
+		// $paths = array_merge($paths, $term_exam);
+			
+	// }
+	return $paths;
+}
+
+/**
+ *Implements hook_permission()
+ */
+function re_exam_permission(){
+  // return array(
+		// 'publish_schedule' => array(
+			// 'title' => t('Publish Schedule'),
+			 // 'description' => t('For Exam Controller and Principal only.'),
+		// ),
+  // );
+}
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function re_exam_theme() {
+  return array(
+		're_exam_students_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		're_exam_student_marks_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		're_exam_student_gp_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		're_exam_student_grade_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		're_exam_student_cf_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		're_exam_generate_result_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		're_exam_full_marks_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		're_exam_page_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'pr_student_grade_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'pr_student_gp_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'pr_full_marks_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'pr_student_cf_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'pr_student_marks_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		're_exam_publish_schedule_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		're_exam_schedule_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+  );
+}
+
+/**
+ *Implements hook_menu
+ */
+function re_exam_menu(){
+	$session_id = (string)variable_get('essa_sid');
+	$class_table = 'essa_'.$session_id.'_class_list';
+	$timing_table = 'essa_'.$session_id.'_exam_timing';
+	$master_exam_table = 'essa_'.$session_id.'_exam_master';
+	$grade_table = 'essa_'.$session_id.'_exam_grade_settings';
+	$master_student_table = 'essa_'.$session_id.'_master_student_table';
+	$session = variable_get('essa_sid');
+	$items = array();
+	
+	
+	$term_table = 'essa_'.$session.'_exam_terms';
+	$terms = db_query("SELECT * FROM {$term_table}");
+	foreach($terms as $term){
+		$master_exam_table = 'essa_'.$session.'_exam_master';
+		$exams = db_query("SELECT * FROM {$master_exam_table} WHERE term = :term;", array(':term' => $term->id));
+		foreach($exams as $exam){
+			
+			$items['admin/exam/'.$term->id.'/'.$exam->exam_code.'/re_exam'] = array(
+				'title' => 'Re-Exam',
+				'description' => 'Re-Exam',
+				'page callback' => 'drupal_get_form',
+				'page arguments' => array('re_exam',2,3),
+				'access arguments' => array('view_exam'),
+				'file' => 're_exam.admin.inc',
+				'file path' => drupal_get_path('module','exam').'/includes/re_exam',
+			);
+			$items['admin/exam/'.$term->id.'/'.$exam->exam_code.'/re_exam/students'] = array(
+				'title' => 'Select Students',
+				'description' => 'Re-Exam Students',
+				'page callback' => 'drupal_get_form',
+				'page arguments' => array('re_exam_students',2,3),
+				'access arguments' => array('view_exam'),
+				'weight' =>'10',
+				'file' => 're_exam_students.admin.inc',
+				'file path' => drupal_get_path('module','exam').'/includes/re_exam',
+			);
+			$items['admin/exam/'.$term->id.'/'.$exam->exam_code.'/re_exam/upload-marks'] = array(
+				'title' => 'Upload Marks',
+				'description' => 'Re-Exam Students',
+				'page callback' => 'drupal_get_form',
+				'page arguments' => array('re_exam_upload_marks',2,3),
+				'access arguments' => array('upload_marks'),
+				'weight' =>'11',
+				'file' => 're_exam_upload_marks.admin.inc',
+				'file path' => drupal_get_path('module','exam').'/includes/re_exam/result',
+			);
+			$items['admin/exam/'.$term->id.'/'.$exam->exam_code.'/re_exam/generate-result'] = array(
+				'title' => 'Generate Result',
+				'description' => 'Generate result',
+				'page callback' => 'drupal_get_form',
+				'page arguments' => array('re_exam_generate_result',2,3),
+				'access arguments' => array('generate_result'),
+				'weight' =>'12',
+				'file' => 're_exam_generate_result.admin.inc',
+				'file path' => drupal_get_path('module','exam').'/includes/re_exam/result',
+			);
+			$items['admin/exam/'.$term->id.'/'.$exam->exam_code.'/re_exam/publish-result'] = array(
+				'title' => 'Publish Result',
+				'description' => 'Publish result',
+				'page callback' => 'drupal_get_form',
+				'page arguments' => array('re_exam_publish_result',2,3),
+				'access arguments' => array('publish_result'),
+				'weight' =>'13',
+				'file' => 're_exam_publish_result.admin.inc',
+				'file path' => drupal_get_path('module','exam').'/includes/re_exam/result',
+			);
+			$items['admin/exam/'.$term->id.'/'.$exam->exam_code.'/re_exam/schedule'] = array(
+				'title' => 'Schedule',
+				'description' => 'Create Schedule for exam '.$exam->exam_code,
+				'page callback' => 'drupal_get_form',
+				'page arguments' => array('re_exam_publish_schedule_form',2,3),
+				'access arguments' => array('publish_schedule'),
+				'weight' => '14',
+				'file' => 're_exam_publish_schedule.admin.inc',
+				'file path' => drupal_get_path('module','exam').'/includes/re_exam/schedule',
+			);
+			
+			$items['admin/exam/'.$term->id.'/'.$exam->exam_code.'/re_exam/schedule/create'] = array(
+				'title' => 'Create/Edit',
+				'description' => 'Create Schedule for exam '.$exam->exam_code,
+				'page callback' => 'drupal_get_form',
+				'page arguments' => array('create_re_exam_schedule',2,3),
+				'access arguments' => array('create_exam'),
+				'weight' => '10',
+				'file' => 're_exam_schedule.admin.inc',
+				'type' => MENU_LOCAL_ACTION,
+				'file path' => drupal_get_path('module','exam').'/includes/re_exam/schedule',
+			);
+			
+			$items['admin/exam/'.$term->id.'/'.$exam->exam_code.'/re_exam/schedule/timing'] = array(
+				'title' => 'Timing',
+				'description' => 'Create Timing for exam '.$exam->exam_code,
+				'page callback' => 'drupal_get_form',
+				'page arguments' => array('create_re_exam_timing',2,3),
+				'access arguments' => array('create_exam'),
+				'weight' => '11',
+				'type' => MENU_LOCAL_ACTION,
+				'file' => 're_exam_timing.admin.inc',
+				'file path' => drupal_get_path('module','exam').'/includes/re_exam/schedule',
+			);
+			
+			$items['admin/exam/'.$term->id.'/'.$exam->exam_code.'/re_exam/schedule/imp_dates'] = array(
+				'title' => 'Important Dates',
+				'description' => 'Create important dates for exam '.$exam->exam_code,
+				'page callback' => 'drupal_get_form',
+				'page arguments' => array('create_re_exam_imp_dates',2,3),
+				'access arguments' => array('create_exam'),
+				'weight' => '12',
+				 'type' => MENU_LOCAL_ACTION,
+				'file' => 're_exam_imp_dates.admin.inc',
+				'file path' => drupal_get_path('module','exam').'/includes/re_exam/schedule',
+			);
+			
+		}
+	}
+	
+	$items['re_exam_student_autocomplete'] = array(
+		'description' => t('A callback for student autocomplete in exam forms'),
+    'page callback' => 're_exam_student_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+	);
+	
+	return $items;
+}
+
+function re_exam_student_autocomplete($string = ''){
+	$session = variable_get('essa_sid');
+	$matches = array();
+	$student_table = 'essa_'.$session.'_master_student_table';
+	
+	$student_records =  db_query(
+		"SELECT * from {$student_table} where status = 1"
+	);
+  foreach($student_records as $sr){
+		$autocomplete_string[] = $sr->adm_no;
+  }
+
+	
+	
+	foreach($autocomplete_string as $phrases){
+		if(stristr($phrases, $string)){
+			$matches[$phrases] = $phrases;
+		}
+	}
+	drupal_json_output($matches);
+}
+
+/**
+ *Implements hook_cron
+ */
+function re_exam_cron(){
+	$session_id = (string)variable_get('essa_sid');
+	$class_table = 'essa_'.$session_id.'_class_list';
+	$timing_table = 'essa_'.$session_id.'_exam_timing';
+	$master_exam_table = 'essa_'.$session_id.'_exam_master';
+	$grade_table = 'essa_'.$session_id.'_exam_grade_settings';
+	$master_student_table = 'essa_'.$session_id.'_master_student_table';
+	$exam_status_table = 'essa_'.$session_id.'_exam_status';
+	$op_subj_student_table = 'essa_'.$session_id.'_optional_subject_student';
+	$term_table = 'essa_'.$session_id.'_exam_terms';
+	
+	$exam_state = db_query(
+		"SELECT * from $exam_status_table;"
+	);
+	foreach($exam_state as $es){
+		if($es->publish_on < time()){
+			db_merge($exam_status_table)
+				->key(array('term_id' => $es->term_id, 'exam_code' => $es->exam_code,'class' => $es->class, 'sec' => $es->sec))
+				->fields (array(
+						'term_id' => $es->term_id,
+						'exam_code' => $es->exam_code,
+						'class' => $es->class,
+						'sec' => $es->sec,
+						'publish_result_status' => TRUE,
+						'send_for_review' => TRUE,
+					)
+				)
+			->execute();
+		}
+	}
+	
+	$terms = db_query(
+		"SELECT * from $term_table;"
+	);
+	foreach($terms as $term){
+		$pub_on = variable_get('publish_term_result_on_'.$term->id);
+		if($pub_on != NULL){
+			if($pub_on < time()){
+				variable_set('publish_term_result_'.$term->id, TRUE);
+			}
+		}
+	}
+}
+
+/**
+ *Supporting function to get a date range between two dates.
+ */
+function get_dates_range($start, $end, $format) {
+  $array = array();
+  $interval = new DateInterval('P1D');
+  $realEnd = new DateTime($end);
+  $realEnd->add($interval);
+  $period = new DatePeriod(new DateTime($start), $interval, $realEnd);
+  foreach($period as $date) { 
+    $array[] = $date->format($format); 
+  }
+  return $array;
+}
+
+/**
+ *Supporting function to clean_string the array id.
+ */
+function re_exam_clean($string) {
+   $string = str_replace('-', '_', $string); // Replaces all spaces with hyphens.
+	 $string = str_replace(' ', '_', $string); // Replaces all spaces with hyphens.
+   return preg_replace('/[^A-Za-z0-9\-]/', '', $string); // Removes special chars.
+}

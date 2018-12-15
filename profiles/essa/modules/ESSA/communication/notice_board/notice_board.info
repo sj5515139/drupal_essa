@@ -1,0 +1,13 @@
+name = Notice Board
+core = 7.x
+package = ESSA notification
+dependencies[] = features
+dependencies[] = text
+dependencies[] = views
+features[ctools][] = views:views_default:3.0
+features[features_api][] = api:2
+features[field_base][] = body
+features[field_instance][] = node-notices-body
+features[node][] = notices
+features[views_view][] = notice_board
+features_exclude[dependencies][ctools] = ctools

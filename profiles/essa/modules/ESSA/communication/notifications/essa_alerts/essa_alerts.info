@@ -1,0 +1,13 @@
+name = ESSA alerts
+core = 7.x
+package = ESSA notification
+dependencies[] = quicktabs
+dependencies[] = taskbar
+dependencies[] = views
+features[ctools][] = quicktabs:quicktabs:1
+features[ctools][] = views:views_default:3.0
+features[features_api][] = api:2
+features[quicktabs][] = essa_alerts
+features[taskbar][] = alerts
+features[views_view][] = essa_alerts
+features_exclude[dependencies][ctools] = ctools

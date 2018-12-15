@@ -1,0 +1,443 @@
+#student-advanced-search #edit-submit{
+  display: none;
+}
+
+.page-admin-students-admission-student-admission #edit-pa, .page-user-edit-student #edit-pa{
+  width: 47%;
+  margin-top: 30px;
+  float: left;
+}
+
+.form-item-hos input{
+  display: none;
+}
+
+.form-item-hos label{
+  float: left;
+}
+
+#as_house{
+  margin-top: -5px;
+}
+
+.form-item-sara{
+  display: block;
+  width: 100%;
+}
+
+.form-item-sara label{
+  color: GREEN;
+  display: block;
+  width: 900px !important;
+}
+
+.page-admin-students-admission-student-admission .form-item-ec1, .page-user-edit-student .form-item-ec1{
+  margin-left: 5% !important;  
+}
+
+.page-admin-students-admission-student-admission .form-item-ec1, .page-user-edit-student .form-item-ec1,
+.page-admin-students-admission-student-admission .form-item-ec2, .page-user-edit-student .form-item-ec2,
+.page-admin-students-admission-student-admission .form-item-ec3, .page-user-edit-student .form-item-ec3{
+  float: left;
+  margin-right: 50px !important;
+}
+
+.page-admin-students-admission-student-admission #edit-ec .fieldset-wrapper, .page-user-edit-student #edit-ec .fieldset-wrapper{
+  margin-top: 10px !important;
+}
+
+.form-item-first-name, .form-item-middle-name, .form-item-f-first-name, .form-item-f-middle-name, .form-item-m-first-name, .form-item-m-middle-name{
+  float: left;
+  margin-bottom: -20px !important;
+}
+
+.page-admin-students-admission-student-admission #edit-fi thead th, .page-user-edit-student #edit-fi thead th, .page-admin-students-admission-student-admission #edit-fi tbody td .form-type-textfield , .page-user-edit-student #edit-fi tbody td .form-type-textfield {
+  text-align: center !important;
+}
+
+.page-admin-students-admission-student-admission #edit-medical-history .form-type-checkbox label,
+.page-user-edit-student #edit-medical-history .form-type-checkbox label{
+  width: 250px !important;
+  margin-right: 40px;
+}
+
+.page-admin-students-admission-student-admission #edit-ca, .page-user-edit-student #edit-ca{
+  width: 47%;
+  margin-top: 43px !important;
+}
+
+#ca_wrapper .form-wrapper{
+  width: 47%;
+  margin-top: 43px !important;
+}
+
+.page-admin-students-admission-student-admission label[for=edit-sibling], .page-user-edit-student label[for=edit-sibling],
+.page-admin-students-admission-student-admission label[for=edit-stop], .page-user-edit-student label[for=edit-stop]{
+  float: left;
+}
+
+.page-admin-students-admission-student-admission .form-item-birth-history label, .page-user-edit-student .form-item-birth-history label{
+  width: 500px !important;
+}
+
+.page-admin-students-admission-student-admission .form-item-ec1, .page-user-edit-student .form-item-ec1,
+.page-admin-students-admission-student-admission .form-item-ec2, .page-user-edit-student .form-item-ec2,
+.page-admin-students-admission-student-admission .form-item-ec3, .page-user-edit-student .form-item-ec3{
+  float: left;
+}
+
+.page-admin-students-admission-student-admission .form-item-class label, .page-user-edit-student .form-item-class label,
+#student-details .form-item-class label{
+  float: left;
+}
+
+
+.page-admin-students-admission-student-admission .form-item-adm-no, .page-user-edit-student .form-item-adm-no{
+  margin-top: 10px;
+}
+
+.page-admin-students-admission-student-admission #branding, .page-user-edit-student #branding{
+  background-color: #6495ED !important;
+}
+
+.page-admin-students-admission-student-admission-bulk-upload #branding{
+  background-color: #C71585 !important;
+   box-shadow: 0 10px 6px -6px #777;
+}
+
+.page-admin-students-admission-student-admission-bulk-upload-all #branding{
+  background-color: #004080 !important;
+   box-shadow: 0 10px 6px -6px #777;
+}
+
+.breadcrumb a{
+  color: #b3b3b3 !important;
+  text-decoration: underline !important;
+}
+
+.page-admin-students-admission-student-admission #branding div.breadcrumb, .page-student-admission-step2 #branding div.breadcrumb{
+  color: WHITE !important;
+}
+
+.page-admin-students-admission-student-admission .page-title, .page-student-admission-step2 .page-title, .page-user-edit-student .page-title{
+  font-weight: 600 !important;
+  text-shadow: 0px 2px 2px #4d4d4d;
+	color: #222;
+	font: 'LeagueGothicRegular' !important;
+}
+
+.page-admin-students-admission-student-admission-bulk-upload .page-title{
+  font-weight: 600 !important;
+  text-shadow: 0px 2px 2px BLACK;
+	color: #222;
+	font: 'LeagueGothicRegular' !important;
+}
+
+
+#addstudent-form, #addstudent-bu-form, #edit-student-form, #student-advanced-search {
+  margin-left: 10%;
+  width: 80%;
+}
+
+
+.page-admin-students .fieldset-legend, .page-student-admission-step2 .fieldset-legend, .page-user-edit-student .fieldset-legend{
+  font-weight: 800;
+  padding: 0px 10px 0px 10px;
+  color: #6495ED;
+	font: 'LeagueGothicRegular';
+}
+
+.page-admin-students-admission-student-admission-bulk-upload .fieldset-legend{
+  font-weight: 800;
+  padding: 0px 10px 0px 10px;
+	color: #C71585;
+	font: 'LeagueGothicRegular';
+}
+
+.page-admin-students-admission-student-admission-bulk-upload-all .fieldset-legend{
+  font-weight: 800;
+  padding: 0px 10px 0px 10px;
+  text-shadow: 0px 1px 1px #4d4d4d;
+	color: #004080;
+	font: 'LeagueGothicRegular';
+}
+
+.page-admin-students-admission-student-admission-bulk-upload .form-wrapper{
+  clear: both;
+}
+
+#addstudent-form label, #addstudent-form-step2 label, #edit-student-form label, #student-details label, #student-advanced-search label,
+#expulsion-form label, #parent-withdrawal-form label, #passout-form label, #assign-roll label{
+  display: inline-block;
+  width:  220px;
+}
+
+.form-item-class label{
+  float: left;
+}
+
+#parent-withdrawal-form{
+  width: 60%;
+  margin-left: 20%;
+}
+
+#expulsion-form .form-item-adm-no{
+  width: 50%;
+  float: left;
+}
+#readmission-form .form-item-adm-no{
+  width: 50%;
+  float: left;
+}
+
+.page-admin-students-withdrawal-expulsion #overlay, .page-admin-students-admission-readmission #overlay, .page-admin-students-withdrawal-passout #overlay{
+  width: 50%;
+}
+
+#ex_sd_wrapper{
+  width: 38%;
+  float: right;
+}
+
+label[for=edit-gender], label[for=edit-allergy], label[for=edit-sc]{
+  float: left;
+}
+
+.page-admin-students-admission-student-admission .form-type-checkbox label,
+.page-admin-students-admission-student-admission .form-type-radios label,
+.page-user-edit-student .form-type-checkbox label,
+.page-user-edit-student .form-type-radios label,
+.page-admin-students-admission-student-admission-bulk-upload .form-type-checkbox label,
+.page-admin-students-admission-student-admission-bulk-upload .form-type-radios label{
+  display: inline-block;
+}
+
+.page-admin-students-admission-student-admission .form-type-checkbox,
+.page-user-edit-student .form-type-checkbox,
+.page-admin-students-admission-student-admission-bulk-upload .form-type-checkbox,
+.page-admin-administration-classes .form-type-checkbox{
+  float: left;
+  margin-right: 30px !important;
+}
+
+.page-admin-students-admission-student-admission .form-item label,
+.page-user-edit-student .form-item label,
+.page-admin-students-admission-student-admission-bulk-upload .form-item label,
+.page-admin-students-admission-student-admission-bulk-upload-all .form-item label{
+  display: inline-block;
+  padding-right: 10px;
+}
+
+.form-item-sc-General label, .form-item-sc-SC label, .form-item-sc-ST label, .form-item-sc-OBC label{
+  width: 40px !important;
+}
+.form-item-sc-Physically-Challenged label, .form-item-sc-Ex-Serviceman label{
+  width:  160px !important;
+}
+
+.page-admin-students-admission-student-admission .form-type-radio, .page-user-edit-student .form-type-radio{
+  display: inline-block;
+  margin-right: 30px !important;
+}
+
+#bulk_title{
+  float: left;
+  margin-right: 20px;
+}
+
+.form-item-doa label, .form-item-dob label{
+  margin-top: 4px !important;
+  margin-right: 5px !important;
+  float: left;
+  clear: right;
+}
+
+.form-item-permanent-add{
+  float: left;
+}
+
+.form-item-dob-date input, .form-item-doa-date input{
+  margin-bottom: 10px;
+}
+
+#edit-permanent-add, #edit-present-add{
+  width: 500px;
+}
+
+#edit-fd{
+  float: left;
+  width: 46%;
+  margin-right: 22px;
+}
+#edit-md{
+  width: 47%;
+}
+
+#individual{
+  margin:0px 10%;
+  width:483px;
+  height:298px;
+  background:#400080;
+  border-bottom: 5px solid #2980B9;
+  color:#fff;
+  font-family:Lato;
+  font-weight:900;
+  font-size:3.4em;
+  text-align:center;
+  line-height:298px;
+  transition:all 0.3s ease;          
+}
+
+#individual a{
+  color:#fff !important;
+}
+
+.shrink:hover{
+  -webkit-transform: scale(0.8);
+  -ms-transform: scale(0.8);
+  transform: scale(0.8);
+}
+
+.circle:hover{
+  border-radius:50%;
+}
+
+.color:hover{
+  background:#53a7ea;
+}
+
+.float-inline{
+  float: left;
+}
+
+#addstudent-bu-sjs-form{
+  width:60%;
+  margin-left: 20%;
+}
+
+#bulk{
+  margin:100px 48.5%;
+  width:483px;
+  height:298px;
+  background:#C71585;
+  border-bottom: 5px solid #2980B9;
+  color:#fff;
+  font-family:Lato;
+  font-weight:900;
+  font-size:3.4em;
+  line-height:298px;
+  transition:all 0.3s ease;
+}
+
+#bulk a{
+  color:#fff !important;
+}
+
+.page-admin-students-admission-student-admission #edit-pa label,
+.page-user-edit-student #edit-pa label,
+.page-admin-students-admission-student-admission #edit-ca label,
+.page-user-edit-student #edit-ca label{
+  width: 140px !important;   
+}
+
+.form-item-upload label{
+  width: 500px !important;
+}
+
+#manage-withdrawal-form{
+  width: 80%;
+  margin-left: 10%;
+}
+
+#manage-withdrawal-form fieldset{
+  background: WHITE !important;
+  box-shadow: none !important;
+}
+
+#manage-withdrawal-form .fieldset-wrapper{
+  margin-top: 30px;
+}
+#manage-withdrawal-form i.fa.fa-check{
+  color: green;
+}
+#manage-withdrawal-form i.fa.fa-times{
+  color: red;
+}
+
+
+.horizontal-tabs{
+  background: WHITE !important;
+}
+
+.horizontal-tabs-list{
+  font-size: 16px;
+}
+
+.approve_expulsion .form-submit{
+  background: GREEN;
+  float: left;
+}
+
+.reject_expulsion .form-submit{
+  background: RED !important;
+  float: right;
+}
+.page-expulsion-reject #overlay-content{
+	width : 40%;
+	margin-left: 30%;
+}
+.page-expulsion-reject #overlay-close-wrapper{
+	margin-right: 30%
+}
+.page-reject-all-expulsion #overlay-content{
+	width : 40%;
+	margin-left: 30%;
+}
+.page-reject-all-expulsion #overlay-close-wrapper{
+	margin-right: 30%
+}
+.page-reject-all-passout #overlay-content{
+	width : 40%;
+	margin-left: 30%;
+}
+.page-reject-all-passout #overlay-close-wrapper{
+	margin-right: 30%
+}
+.page-reject-all-withdrawal #overlay-content{
+	width : 40%;
+	margin-left: 30%;
+}
+.page-reject-all-withdrawal #overlay-close-wrapper{
+	margin-right: 30%
+}
+
+.page-admin-students-admission-student-admission-bulk-upload-all #overlay-content{
+	width: 60%;
+	margin-left: 20%;
+}
+.page-admin-students-admission-student-admission-bulk-upload-all #overlay-close-wrapper{
+	margin-right: 20%
+}
+
+.page-admin-students-admission-delete-student #overlay-content{
+	width : 40%;
+	margin-left: 30%;
+}
+.page-admin-students-admission-delete-student #overlay-title{
+	margin-left: 30%;
+}
+.page-admin-students-admission-delete-student #overlay-close-wrapper{
+	margin-right: 30%
+}
+
+.page-delete-student #overlay-content{
+	width:30%;
+	margin-left: 35%;
+}
+
+.page-delete-student #overlay-title{
+	margin-left: 35%;
+}
+.page-delete-student #overlay-close-wrapper{
+	margin-right: 35%
+}

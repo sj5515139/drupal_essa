@@ -1,0 +1,87 @@
+
+.profile h3{
+  display: none;
+}
+
+.profile dl{
+  display: none;
+}
+
+#block-staff-profile-page-staff-general-details h2:first-of-type{
+  display: none;
+}
+
+#detail_title_staff{
+  display: inline-block;
+  width:  100% !important;
+  font-size: 16px !important;
+  font-weight: 100 !important;
+  background: #667467;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: center;
+  color: WHITE;
+  font-weight: 600 !important;
+}
+
+.staff-info div{
+  border: 1px solid #667467;
+  padding: 10px 10px 0px 10px;
+  background: WHITE;
+}
+
+.staff-info h3{
+  text-align: center;
+}
+
+.staff-info p{
+  line-height: 0em;
+  word-wrap: break-word;
+  width: 100%;
+}
+
+#user-profile-form label{
+  display: inline-block;
+  padding-right: 10px;
+}
+
+#update-pic{
+  width: 100%;
+}
+
+.user-picture img{
+  display: none;
+}
+
+#profile-pic{
+  width: 200px;
+  height:  200px;
+}
+
+#block-staff-profile-page-staff-general-details,.staff-info,.staff-basic-info{
+  width: 100% !important;  
+}
+
+
+#block-staff-profile-page-staff-additional-details .action-links{
+  float: right;
+}
+
+#block-staff-profile-page-staff-additional-details .content tr{
+  border: 1px solid #431c5d;
+}
+
+#block-staff-profile-page-staff-additional-details .content th{
+  text-align: center;
+  border: 1px solid #f9f9f9;
+  background: #431c5d !important;
+  font-weight: 600 !important;
+  vertical-align: middle;
+}
+
+#block-staff-profile-page-staff-additional-details .content td{
+  text-align: center;
+  border: 1px solid #431c5d !important;
+  background: WHITE;
+  font-size: 18px !important;
+}

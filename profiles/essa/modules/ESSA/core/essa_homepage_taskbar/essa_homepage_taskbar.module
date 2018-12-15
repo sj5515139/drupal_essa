@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the ESSA HomePage & TaskBar feature.
+ */
+
+include_once 'essa_homepage_taskbar.features.inc';

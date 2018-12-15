@@ -1,0 +1,7 @@
+name = Staff Profile Page Management
+description = Managing the profile pages of Staff
+core = 7.x
+package = ESSA
+files[] = staff_profile_page.module
+stylesheets[all][] = staff_pp.css
+dependencies[] = staff_recruitment

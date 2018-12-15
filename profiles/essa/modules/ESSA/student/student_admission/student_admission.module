@@ -1,0 +1,892 @@
+<?php
+/**
+ * Implements hook_admin_paths()
+ */
+function student_admission_admin_paths() {
+	$paths = array(
+		'admin/students/admission' => FALSE,
+		'admin/students/admission/student_admission' => FALSE,
+		'admin/students/admission/student_admission_bulk_upload' => FALSE,
+		'admin/students/admission/student_admission_bulk_upload_all' => FALSE,
+		//'admin/students/admission/student_admission_bulk_upload_sjs' => FALSE,
+		'admin/students/withdrawal' => FALSE,
+		'admin/students/withdrawal/manage' => FALSE,
+		'admin/students/student-search' => TRUE,
+		'expulsion/reject/*' => TRUE,
+		'expulsion/*' => TRUE,
+		'reject_all_expulsion' => TRUE,
+		'reject_all_passout' => TRUE,
+		'reject_all_withdrawal' => TRUE,
+		'delete_student' => TRUE,
+	);
+  return $paths;
+}
+
+/**
+ *Implements hook_permission()
+ */
+function student_admission_permission(){
+  return array(
+		'access students' => array(
+      'title' => t('Access Students'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+    'administer students' => array(
+      'title' => t('Administer Students'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+		'administer student details' => array(
+      'title' => t('Administer Student\'s Details'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+    'withdraw students' => array(
+      'title' => t('Withdraw Students'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+		'assign_roll' => array(
+      'title' => t('Assign Roll No.'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+  );
+}
+
+/**
+ *Implements hook_menu()
+ */
+function student_admission_menu(){
+  $items['admin/students/admission'] = array(
+		'title' => 'Admission',
+	  'description' => 'Adding Students to the system',
+	  'page callback' => 'student_admission',
+	  'access arguments' => array('administer students'),
+		'weight' => 10,
+	);
+	
+	/*
+	$items['admin/students/details'] = array(
+		'title' => 'Class Wise Details',
+	  'description' => 'Displaying Student Details',
+		'page callback' => 'drupal_get_form',
+	  'page arguments' => array('student_details'),
+	  'access arguments' => array('administer students'),
+		'file' => 'student_details.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes',
+		'weight' => 2,
+	);
+	/*
+	$items['admin/students/advanced_search'] = array(
+		'title' => 'Advanced Search',
+	  'description' => 'Displaying Student Details',
+		'page callback' => 'drupal_get_form',
+	  'page arguments' => array('student_advanced_search'),
+	  'access arguments' => array('administer students'),
+		'file' => 'student_details_individual.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes',
+		'weight' => 1,
+	);
+	*/
+	$items['admin/students/admission/student_admission'] = array(
+	  'title' => 'Individual',
+	  'description' => 'Adding Students to the system',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('addstudent_form'),
+	  'access arguments' => array('administer students'),
+		'weight' => -10,
+	  'file' => 'add_student.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes',
+	);
+	
+	$items['user/%student/edit_student'] = array(
+		 'title' => 'Edit Profile',
+	  'page callback' => 'drupal_get_form',
+		'page arguments' => array('edit_student_form',1),
+		'access arguments' => array('administer students'),
+		'type' => MENU_LOCAL_TASK,
+		'file' => 'edit_student.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes',
+		'weight' => 9,
+	);
+ 
+	
+	$items['admin/students/admission/student_admission_bulk_upload'] = array(
+	  'title' => 'Bulk(Class-wise)',
+	  'description' => 'Adding Students to the system',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('addstudent_bu_form'),
+		'access arguments' => array('administer students'),
+	  'file' => 'add_student_bu_form.admin.inc',
+		'file path' => drupal_get_path('module','student_admission').'/includes',
+	);
+
+	$items['admin/students/admission/student_admission_bulk_upload_all'] = array(
+	  'title' => 'Bulk',
+	  'description' => 'Adding Students to the system',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('addstudent_bu_sjs_form'),
+		'access arguments' => array('administer students'),
+	  'file' => 'add_student_bu_sjs.admin.inc',
+		'file path' => drupal_get_path('module','student_admission').'/includes',
+	);
+	
+	$items['admin/students/admission/student_admission_bulk_upload_all/bulk_settings'] = array(
+	  'title' => 'Settings',
+	  'description' => 'Bulk Settings',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('bulk_settings'),
+		'access arguments' => array('administer students'),
+	  'file' => 'bulk_setting.admin.inc',
+		'file path' => drupal_get_path('module','student_admission').'/includes',
+	);
+
+	$items['individual_student_search/autocomplete'] = array(
+		'description' => t('A callback for teacher autocomplete in subjects form'),
+    'page callback' => 'student_search_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+	);
+	
+	$items['readmission/autocomplete'] = array(
+		'description' => t('A callback for teacher autocomplete in subjects form'),
+    'page callback' => 'readmission_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+	);
+	
+	$items['admin/students/withdrawal'] = array(
+	  'title' => 'Withdrawal',
+	  'description' => 'Removing Students from the system',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('manage_withdrawal_form'),
+	  'access arguments' => array('administer students'),
+		'weight' => 11,
+	  'file' => 'manage_withdrawal.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes/withdrawal',
+	);
+	
+	$items['admin/students/withdrawal/expulsion'] = array(
+	  'title' => 'Expulsion',
+	  'description' => 'Removing Students from the system',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('expulsion_form'),
+	  'access arguments' => array('administer students'),
+		'weight' => -10,
+	  'file' => 'expulsion.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes/withdrawal/expulsion',
+	);
+	
+	$items['admin/students/withdrawal/manage'] = array(
+	  'title' => 'Manage',
+	  'description' => 'Removing Students from the system',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('manage_withdrawal_form'),
+	  'access arguments' => array('administer students'),
+		'weight' => -11,
+	  'file' => 'manage_withdrawal.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes/withdrawal',
+	);
+	
+	$items['admin/students/withdrawal/passout'] = array(
+	  'title' => 'Passout',
+	  'description' => 'Removing Students from the system',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('passout_form'),
+	  'access arguments' => array('administer students'),
+		'weight' => -9,
+	  'file' => 'passout.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes/withdrawal/passout',
+	);
+	
+	$items['withdrawal_application'] = array(
+	  'title' => 'Withdrawal Application',
+	  'description' => 'Removing Students from the system',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('parent_withdrawal_form'),
+	  'access arguments' => array('withdraw students'),
+		'weight' => -11,
+	  'file' => 'parents_withdrawal.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes/withdrawal/withdraw',
+	);
+	
+	$session_id = (string)variable_get('essa_sid');
+	$student_withdrawal_table = 'essa_'.$session_id.'_student_withdrawal';
+	$expulsion_students = db_query("SELECT * FROM {$student_withdrawal_table}");
+	
+	foreach($expulsion_students as $ex_students){
+		$items['expulsion/approve/'.$ex_students->adm_no.'%'.$ex_students->status_timestamp] = array(
+		  'title' => 'Approve Expulsion',
+		  'description' => t('Approve Expulsion.'),
+		  'page callback' => 'drupal_get_form',
+		  'page arguments' => array('approve_expulsion',2),
+				'access arguments' => array('withdraw students'),
+			'file' => 'approve.admin.inc',
+		  'file path' => drupal_get_path('module','student_admission').'/includes/withdrawal',
+				'type' => MENU_LOCAL_ACTION,
+		);
+			$items['expulsion/reject/'.$ex_students->adm_no.'%'.$ex_students->status_timestamp] = array(
+		  'title' => 'Reject Expulsion',
+		  'description' => t('Approve Expulsion.'),
+		  'page callback' => 'drupal_get_form',
+		  'page arguments' => array('reject_expulsion',2),
+				'access arguments' => array('withdraw students'),
+			'file' => 'reject.admin.inc',
+		  'file path' => drupal_get_path('module','student_admission').'/includes/withdrawal',
+				'type' => MENU_LOCAL_ACTION,
+		);
+		
+		$items['expulsion/'.$ex_students->adm_no.'@clearance'] = array(
+			'title' => 'clearance',
+			'description' => 'clearance of a student',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('clearance_form',1),
+			'access arguments' => array('withdraw students'),
+			'file' => 'clearance.admin.inc',
+			'file path' => drupal_get_path('module','student_admission').'/includes/withdrawal',
+			'type' => MENU_CALLBACK,
+		);
+		
+	}
+	
+	$items['reject_all_expulsion'] = array(
+    'title' => 'Reject All',
+    'description' => t('Reject All Expulsion.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('reject_all_expulsion'),
+		'access arguments' => array('withdraw students'),
+   	'file' => 'reject_all_expulsion.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes/withdrawal/expulsion',
+		'type' => MENU_LOCAL_ACTION,
+  );
+	$items['reject_all_passout'] = array(
+    'title' => 'Reject All',
+    'description' => t('Reject All Passout.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('reject_all_passout'),
+		'access arguments' => array('withdraw students'),
+   	'file' => 'reject_all_passout.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes/withdrawal/passout',
+		'type' => MENU_LOCAL_ACTION,
+  );
+	$items['reject_all_withdrawal'] = array(
+    'title' => 'Reject All',
+    'description' => t('Reject All Withdrawal.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('reject_all_withdrawal'),
+		'access arguments' => array('withdraw students'),
+   	'file' => 'reject_all_withdrawal.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes/withdrawal/expulsion',
+		'type' => MENU_LOCAL_ACTION,
+  );
+	
+	$items['admin/students/admission/readmission'] = array(
+	  'title' => 'Re-Admission',
+	  'description' => 'Re-admission of a student',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('readmission_form'),
+	  'access arguments' => array('administer students'),
+	  'file' => 'readmission.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes',
+	);
+	
+	$items['admin/students/assign_roll_no'] = array(
+	  'title' => 'Manage Roll No.',
+	  'description' => 'Manage Roll No.',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('assign_roll'),
+		'weight' => 90,
+	  'access arguments' => array('assign_roll'),
+	  'file' => 'assign_roll_no.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes',
+	);
+	
+	$items['admin/students/admission/delete_student'] = array(
+	  'title' => 'Delete Student',
+	  'description' => 'Delete Student',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('delete_student'),
+	  'access arguments' => array('administer students'),
+	  'file' => 'delete_student.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes/delete_student',
+	);
+	
+	$items['delete_student'] = array(
+    'title' => 'Confirm Delete',
+    'page callback' => 'delete_student_pagecallback',
+    'access arguments' => array('administer students'),
+    'file' => 'delete_student.admin.inc',
+    'file path' => drupal_get_path('module','student_admission').'/includes/delete_student',
+		'type' => MENU_CALLBACK,
+  );
+	
+	$items['adm_no/autocomplete'] = array(
+    'description' => t('A callback for teacher autocomplete in subjects form'),
+    'page callback' => 'adm_no_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+function student_load($user){
+	$staff_rid = db_query("select rid from role where name = 'Student'");
+	foreach($staff_rid as $role_id){
+		$staff = $role_id->rid;
+	}
+	$roles = db_query("
+		SELECT rid from users_roles where uid = :uid;", array(':uid' => $user)
+	);
+	$rid = array();
+	foreach($roles as $r){
+		$rid[] = $r->rid;
+	}
+	if(in_array($staff, $rid)){
+		return $user;
+	} else{
+		return FALSE;
+	}
+}
+
+/**
+ * Implements autocomplete function
+ */
+function adm_no_autocomplete($string = ''){
+	$session = variable_get('essa_sid');
+	$matches = array();
+	$student_table = 'essa_'.$session.'_master_student_table';
+	$students =  db_query(
+		"SELECT * from {$student_table} where status = 1;"
+	);
+	foreach($students as $student){
+		$autocomplete_string[] = $student->adm_no;
+	}
+	
+	foreach($autocomplete_string as $phrases){
+		if(stristr($phrases, $string)){
+			$matches[$phrases] = $phrases;
+		}
+	}
+	
+	drupal_json_output($matches);
+}
+
+function student_search_autocomplete($string = ''){
+	$session = variable_get('essa_sid');
+	$matches = array();
+	$student_table = 'essa_'.$session.'_master_student_table';
+	
+	$student_records =  db_query(
+		"SELECT * from {$student_table} where status = 1"
+	);
+  foreach($student_records as $sr){
+		$autocomplete_string[] = $sr->first_name.' '.$sr->middle_name.' '.$sr->last_name;
+		$autocomplete_string[] = $sr->adm_no;
+    $autocomplete_string[] = $sr->doa;
+    $autocomplete_string[] = $sr->dob;
+    $autocomplete_string[] = $sr->f_first_name.' '.$sr->f_middle_name.' '.$sr->f_last_name;
+    $autocomplete_string[] = $sr->m_first_name.' '.$sr->m_middle_name.' '.$sr->m_last_name;
+    $autocomplete_string[] = $sr->s_email;
+    $autocomplete_string[] = $sr->p_email;
+    $autocomplete_string[] = $sr->r_phone;
+    $autocomplete_string[] = $sr->c_phone;
+    $autocomplete_string[] = $sr->ec1;
+    $autocomplete_string[] = $sr->ec2;
+    $autocomplete_string[] = $sr->ec3;
+    $autocomplete_string[] = $sr->ec4;
+  }
+
+	
+	
+	foreach($autocomplete_string as $phrases){
+		if(stristr($phrases, $string)){
+			$matches[$phrases] = $phrases;
+		}
+	}
+	drupal_json_output($matches);
+}
+
+function readmission_autocomplete($string = ''){
+	$session = variable_get('essa_sid');
+	$matches = array();
+	$student_table = 'essa_'.$session.'_master_student_table';
+	
+	$student_records =  db_query(
+		"SELECT * from {$student_table} where status = 0;"
+	);
+  foreach($student_records as $sr){
+		$autocomplete_string[] = $sr->adm_no;
+  }
+	
+	foreach($autocomplete_string as $phrases){
+		if(stristr($phrases, $string)){
+			$matches[$phrases] = $phrases;
+		}
+	}
+	drupal_json_output($matches);
+}
+
+/**
+ *Implements hook_cron() - for indexing the student information
+ */
+function student_admission_cron(){
+	$session = variable_get('essa_sid');
+	$student_table = 'essa_'.$session.'_master_student_table';
+	$index_table = 'essa_'.$session.'_student_index';
+	
+  $name = $adm_no = $doa = $dob = $fname = $mname = $semail = $pemail = $p1 = $p2 = $p3 = $p4 = $p5 = $p6 = array();
+	$student_records =  db_query(
+		"SELECT * from {$student_table} where status = 1"
+	);
+	$flag = 0;
+	
+	foreach($student_records as $sr){
+    $name[$sr->adm_no] = $sr->first_name.' '.$sr->middle_name.' '.$sr->last_name;
+		$adm_no[$sr->adm_no] = $sr->adm_no;
+    $doa[$sr->adm_no] = $sr->doa;
+    $dob[$sr->adm_no] = $sr->dob;
+    $fname[$sr->adm_no] = $sr->f_first_name.' '.$sr->f_middle_name.' '.$sr->f_last_name;
+    $mname[$sr->adm_no] = $sr->m_first_name.' '.$sr->m_middle_name.' '.$sr->m_last_name;
+    $semail[$sr->adm_no] = $sr->s_email;
+    $pemail[$sr->adm_no] = $sr->p_email;
+    $p1[$sr->adm_no] = $sr->r_phone;
+    $p2[$sr->adm_no] = $sr->c_phone;
+    $p3[$sr->adm_no] = $sr->ec1;
+    $p4[$sr->adm_no] = $sr->ec2;
+		$p5[$sr->adm_no] = $sr->ec3;
+    $p6[$sr->adm_no] = $sr->ec4;
+	}
+	
+  
+  foreach($name as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+  
+  foreach($adm_no as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+  
+  foreach($doa as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+  
+  foreach($dob as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+  
+  foreach($fname as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+  
+  foreach($mname as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+  
+  foreach($semail as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+  
+  foreach($pemail as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+  
+  foreach($p1 as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+  
+  foreach($p2 as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+  
+  foreach($p3 as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+  
+  foreach($p4 as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+  
+  foreach($p5 as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+  
+  foreach($p6 as $k => $v){
+    $x = is_null($v)? ' ': $v;
+    db_merge($index_table)
+				->key(array('adm_no' => $k, 'records' => $v))
+		    ->fields (array(
+          'adm_no' => $k,
+          'records' => $x,
+        )
+		  )
+		  ->execute();
+  }
+	
+	
+}
+
+
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function student_admission_theme() {
+  return array(
+    'family_info_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'student_detail_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'student_data_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'student_expulsion_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'student_passout_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'assign_roll_no_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+	);
+}
+
+/**
+* Altering Date Popup to remove labels and description for specific field
+*/
+function student_admission_date_popup_process_alter(&$element, &$form_state, $context) {
+	unset($element['date']['#description']);
+  unset($element['date']['#title']);
+  return $element;
+}
+
+function student_admission(){
+	$output = '<div id = "individual" class="shrink circle float-inline">'.l(t('Individual Admission'), 'admin/students/admission/student_admission').'</div>';
+	$output .= '<div id = "bulk" class="shrink circle">'.l(t('Bulk Admission'), 'admin/students/admission/student_admission_bulk_upload').'</div>';
+	return $output;
+}
+
+/**
+ *Supporting function to clean_string the array id.
+ */
+function clean_classes($string) {
+   $string = str_replace('.', '', $string); // Replaces all spaces with hyphens.
+	 $string = str_replace(' ', '', $string);
+   return preg_replace('/[^A-Za-z0-9\-]/', '', $string); // Removes special chars.
+}
+
+/**
+ * Theme callback for the form table.
+ */
+function theme_family_info_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t(' '), t('Father/Guardian'),t('Mother/Guardian'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ *Implements setting function for heirarchical select form class and section
+ */
+function sa_hs_setting(){
+	// Load category based in vocabulary machine name
+	$voc = 'class_vocab';//replace this with the taxonomy term
+  $vocabulary = taxonomy_vocabulary_machine_name_load($voc);
+	//dsm($vocabulary);
+  
+	$config = array(
+		'module' => 'hs_taxonomy',
+    'params' => array(
+				'vid' => (int) $vocabulary->vid,
+				'exclude_tid' => NULL,
+				'root_term' => NULL,
+				'entity_count_for_node_type' => NULL,
+      ),
+		'config_id'       => 'taxonomy-2',
+		'save_lineage'    => 1,
+		'enforce_deepest' => 0,
+		'entity_count'    => 0,
+		'require_entity'  => 0,
+		'resizable'       => 0,
+		'render_flat_select' => 0,
+		'level_labels' => array(
+		  'status' => 1,
+		  'labels' => array(
+		    0 => '--Select--',
+		    1 => '--Select--',
+		  ),
+		),
+		'dropbox' => array(
+		  'status'    => 0,
+		),
+		'editability' => array(
+		  'status' => 0,
+		  'item_types' => array(
+		    0 => '',
+		    1 => '',
+		  ),
+		  'allowed_levels' => array(
+		    0 => 1,
+		    1 => 1,
+		  ),
+		  'allow_new_levels' => 0,
+		  'max_levels'       => 1,
+		),
+	);
+	
+	return $config;
+}
+
+/**
+ *Implements setting function for heirarchical select form class and section
+ */
+function sa_bs_hs_setting(){
+	// Load category based in vocabulary machine name
+	$voc = 'transport_vocab';//replace this with the taxonomy term
+  $vocabulary = taxonomy_vocabulary_machine_name_load($voc);
+	//dsm($vocabulary);
+  
+	$config = array(
+		'module' => 'hs_taxonomy',
+    'params' => array(
+				'vid' => (int) $vocabulary->vid,
+				'exclude_tid' => NULL,
+				'root_term' => NULL,
+				'entity_count_for_node_type' => NULL,
+      ),
+		'config_id'       => 'taxonomy-2',
+		'save_lineage'    => 1,
+		'enforce_deepest' => 0,
+		'entity_count'    => 0,
+		'require_entity'  => 0,
+		'resizable'       => 0,
+		'render_flat_select' => 0,
+		'level_labels' => array(
+		  'status' => 1,
+		  'labels' => array(
+		    0 => '--Select--',
+		    1 => '--Select--',
+		  ),
+		),
+		'dropbox' => array(
+		  'status'    => 0,
+		),
+		'editability' => array(
+		  'status' => 0,
+		  'item_types' => array(
+		    0 => '',
+		    1 => '',
+		  ),
+		  'allowed_levels' => array(
+		    0 => 1,
+		    1 => 1,
+		  ),
+		  'allow_new_levels' => 0,
+		  'max_levels'       => 1,
+		),
+	);
+	
+	return $config;
+}
+
+/**
+**Implements student_clearance function
+*/
+function student_clearance($adm_no){
+	$session_id = (string)variable_get('essa_sid');
+	$student_table = 'essa_'.$session_id.'_master_student_table';
+	$student_withdrawal_table = 'essa_'.$session_id.'_student_withdrawal';
+	$fee_due_table = 'essa_'.$session_id.'_fees_student_due';
+	$fine_table = 'essa_'.$session_id.'_fees_student_fine';
+	$fees_frequency = 'essa_'.$session_id.'_fees_frequency';
+	$fees_table = 'essa_'.$session_id.'_fees_structure';
+	$lib_issue_table = 'essa_'.$session_id.'_lib_issue';
+	
+	$current_month = date('M-Y');
+	$cm = strtotime($current_month);
+	$clear = 0;
+	
+	$months = array();
+	$dues = db_query("SELECT * FROM {$fee_due_table} WHERE adm_no = :an;", array(':an' => $adm_no));
+	foreach($dues as $due){
+		unset($due->fee_id);
+		unset($due->adm_no);
+		//$m[] = str_replace("-", "_", $due);
+		foreach($due as $k=>$d){
+			//dsm($k);
+			$m = str_replace("_","-",$k);
+			$month = strtotime($m);
+			if($month <= $cm){
+				$month = date('M-Y',$month);
+				$month = str_replace("-","_",$month);
+				$months[] = $month;
+			}
+		}
+	}
+	
+	
+	
+	$dues = db_query("SELECT * FROM {$fee_due_table} WHERE adm_no = :an;", array(':an' => $adm_no));
+	foreach($dues as $due){
+		foreach($months as $mon){
+			if($due->$mon != '0' || $due->$mon != NULL){
+				$clear = 1;
+			}
+		}
+	}
+	
+	
+	foreach($months as $mon){
+		$fines = db_query("SELECT * FROM {$fine_table} WHERE adm_no = :an and month = :m;", array(':an' => $adm_no, ':m' => $mon));
+		foreach($fines as $fine){
+			if($fine->amount_to_be_paid != $fine->amount_paid){
+				$clear = 1;
+			}
+		}
+	}
+	
+	
+	
+	$books = db_query("SELECT * FROM {$lib_issue_table} WHERE user_id = :an;", array(':an' => $adm_no));
+	foreach($books as $book){
+		if($book->status != 'closed'){
+			$clear = 1;
+		}
+	}
+	
+	return $clear;
+}

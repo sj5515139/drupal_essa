@@ -1,0 +1,11 @@
+#late-fine label{
+  width:  300px;
+  display: inline-block;
+  padding-right: 10px;
+  margin-right: 20px !important;
+}
+
+#late-fine{
+  width: 50%;
+  margin-left: 25%;
+}

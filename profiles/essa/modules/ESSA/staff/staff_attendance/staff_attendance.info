@@ -1,0 +1,10 @@
+name = Staff Attendance
+description = Managing staff attendance.
+core = 7.x
+package = ESSA
+files[] = staff_attendance.module
+stylesheets[all][] = staff_attendance.css
+dependencies[] = views
+dependencies[] = date_api
+dependencies[] = date_views
+dependencies[] = school_master

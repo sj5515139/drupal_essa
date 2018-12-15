@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the ESSA alerts feature.
+ */
+
+include_once 'essa_alerts.features.inc';

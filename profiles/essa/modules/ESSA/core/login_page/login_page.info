@@ -1,0 +1,7 @@
+name = Login Page
+description = Preparing the Login Page for Project ESSA - the School ELF.
+core = 7.x
+package = ESSA
+files[] = school_master.module
+stylesheets[all][] = login_page_creation.css
+scripts[] = login_page_creation.js

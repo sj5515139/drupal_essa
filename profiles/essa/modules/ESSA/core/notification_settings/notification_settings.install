@@ -1,0 +1,959 @@
+<?php
+/**
+*Implements hook_install()
+*/
+function school_master_install(){
+
+ //*************************************Creating Roles*******************************************************
+ $ct_flag = 0;
+	$class_teacher_role = db_query(
+		"SELECT * from role where name = 'Class Teacher';"
+	);
+	foreach($class_teacher_role as $ctr){
+		$ct_flag = 1;
+	}
+
+ if($ct_flag == 0){
+ 	 $role = new stdClass();
+	 $role->name = 'Class Teacher';
+	 user_role_save($role);
+ }
+
+ //*************************************Creating Vocabulary***************************************************
+ $flag = 0;
+	$taxonomy_check = db_query(
+		"SELECT * from taxonomy_vocabulary where machine_name = 'class_vocab';"
+	);
+	foreach($taxonomy_check as $tc){
+		$flag = 1;
+	}
+
+ if($flag == 0){
+ 	 $new_vocab = (object) array(
+		 'name' => 'Class',
+		 'description' => 'This vocabulary creates Class and section vocabulary',
+		 'machine_name' => 'class_vocab',
+	 );
+	 taxonomy_vocabulary_save($new_vocab);
+ }
+
+ $flag = 0;
+	$taxonomy_check = db_query(
+		"SELECT * from taxonomy_vocabulary where machine_name = 'transport_vocab';"
+	);
+	foreach($taxonomy_check as $tc){
+		$flag = 1;
+	}
+
+ if($flag == 0){
+ 	 $new_vocab = (object) array(
+		 'name' => 'Transport',
+		 'description' => 'This vocabulary creates Class and section vocabulary',
+		 'machine_name' => 'transport_vocab',
+	 );
+	 taxonomy_vocabulary_save($new_vocab);
+ }
+
+ $flag = 0;
+	$taxonomy_check = db_query(
+		"SELECT * from taxonomy_vocabulary where machine_name = 'dnp_types';"
+	);
+	foreach($taxonomy_check as $tc){
+		$flag = 1;
+	}
+
+ if($flag == 0){
+ 	 $new_vocab = (object) array(
+		 'name' => 'DNP Types',
+		 'description' => 'This vocabulary creates Class and section vocabulary',
+		 'machine_name' => 'dnp_types',
+	 );
+	 taxonomy_vocabulary_save($new_vocab);
+ }
+
+ $vid = taxonomy_vocabulary_machine_name_load('dnp_types');
+ taxonomy_term_save(
+  (object) array(
+   'name' => 'Post',
+   'vid' => $vid->vid,
+  )
+ );
+
+ $vid = taxonomy_vocabulary_machine_name_load('dnp_types');
+ taxonomy_term_save(
+  (object) array(
+   'name' => 'Department',
+   'vid' => $vid->vid,
+  )
+ );
+ //*************************************Vocabulary Created***************************************************
+ //--------------------------------------------------Academic DNP-------------------------------------------
+ $vid = dnp_vocabulary_machine_name_load('organisation_structure_academics');
+ dnp_term_save(
+  (object) array(
+   'name' => 'School',
+   'vid' => $vid->vid,
+	 'weight' => -10,
+  )
+ );
+
+ $school = dnp_get_term_by_name('School','organisation_structure_academics');
+ 	foreach($school as $s){
+		$s_ptid = $s->tid;
+	}
+
+ dnp_term_save(
+  (object) array(
+   'name' => 'Principal',
+   'vid' => $vid->vid,
+	 'type' => 'Post',
+	 'parent' => $s_ptid,
+	 'weight' => -10,
+  )
+ );
+ create_role('Principal');
+
+ $principal = dnp_get_term_by_name('Principal','organisation_structure_academics');
+ foreach($principal as $p){
+		$p_ptid = $p->tid;
+	}
+ dnp_term_save(
+  (object) array(
+   'name' => 'Time Table Incharge',
+   'vid' => $vid->vid,
+	 'type' => 'Post',
+	 'parent' => $p_ptid,
+  )
+ );
+ create_role('Time Table Incharge');
+
+ dnp_term_save(
+  (object) array(
+   'name' => 'Student Moderator',
+   'vid' => $vid->vid,
+	 'type' => 'Post',
+	 'parent' => $p_ptid,
+  )
+ );
+ create_role('Student Moderator');
+ 
+ dnp_term_save(
+  (object) array(
+   'name' => 'Exam Controller',
+   'vid' => $vid->vid,
+	 'type' => 'Post',
+	 'parent' => $p_ptid,
+	 'weight' => -10,
+  )
+ );
+ create_role('Exam Controller');
+
+ dnp_term_save(
+  (object) array(
+   'name' => 'Attendance Incharge',
+   'vid' => $vid->vid,
+	 'type' => 'Post',
+	 'parent' => $p_ptid,
+	 'weight' => -10,
+  )
+ );
+ create_role('Attendance Incharge');
+
+ //--------------------------------------------------Admin DNP-------------------------------------------
+ $vid = dnp_vocabulary_machine_name_load('organisation_structure_admin');
+ dnp_term_save(
+  (object) array(
+   'name' => 'School',
+   'vid' => $vid->vid,
+	 'weight' => -10
+  )
+ );
+
+ $school = dnp_get_term_by_name('School','organisation_structure_admin');
+	foreach($school as $s){
+		$s_ptid = $s->tid;
+	}
+ dnp_term_save(
+  (object) array(
+   'name' => 'Principal',
+   'vid' => $vid->vid,
+	 'type' => 'Post',
+	 'parent' => $s_ptid,
+	 'weight' => -10
+  )
+ );
+
+ $principal = dnp_get_term_by_name('Principal','organisation_structure_admin');
+	foreach($principal as $p){
+		$p_ptid = $p->tid;
+	}
+ dnp_term_save(
+  (object) array(
+   'name' => 'Leave Moderator',
+   'vid' => $vid->vid,
+	 'type' => 'Post',
+	 'parent' => $p_ptid,
+  )
+ );
+ create_role('Leave Moderator');
+
+ dnp_term_save(
+  (object) array(
+   'name' => 'Transport Head',
+   'vid' => $vid->vid,
+	 'type' => 'Post',
+	 'parent' => $p_ptid,
+  )
+ );
+ create_role('Transport Head');
+
+ dnp_term_save(
+  (object) array(
+   'name' => 'School Admin',
+   'vid' => $vid->vid,
+	 'type' => 'Post',
+	 'parent' => $p_ptid,
+  )
+ );
+ create_role('School Admin');
+
+ dnp_term_save(
+  (object) array(
+   'name' => 'Payroll Manager',
+   'vid' => $vid->vid,
+	 'type' => 'Post',
+	 'parent' => $p_ptid,
+  )
+ );
+ create_role('Payroll Manager');
+ 
+ $vid = dnp_vocabulary_machine_name_load('organisation_structure_admin');
+ $principal = dnp_get_term_by_name('Principal','organisation_structure_admin');
+ foreach($principal as $p){
+		$p_ptid = $p->tid;
+	}
+	dnp_term_save(
+  (object) array(
+   'name' => 'Librarian',
+   'vid' => $vid->vid,
+	 'type' => 'Post',
+	 'parent' => $p_ptid,
+	 'weight' => -10,
+  )
+ );
+	create_role('Librarian');
+}
+
+/**
+*Function to create roles
+*/
+function create_role($name){
+ $flag = 0;
+	$check_role = db_query(
+		"SELECT * from role where name = :role;", array(':role' => $name)
+	);
+	foreach($check_role as $cr){
+		$flag = 1;
+	}
+
+ if($flag == 0){
+ 	 $role = new stdClass();
+	 $role->name = $name;
+	 user_role_save($role);
+ }
+}
+/**
+ *Implements hook_schema
+ */
+function school_master_schema(){
+  $session = variable_get('essa_sid');
+
+  //_________________________________________________schema for basic info____________________________________________________
+  $schema['essa_'.$session.'_basicinfo'] = array(
+  'description' => 'TODO: please describe this table!',
+  'fields' => array(
+    'nameofschool' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => TRUE,
+    ),
+    'slogan' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '500',
+      'not null' => FALSE,
+    ),
+    'logo' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '200',
+      'not null' => FALSE,
+    ),
+    'board' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+		'affiliation_no' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+		'school_code' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'state_board' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '80',
+      'not null' => FALSE,
+    ),
+    'establishment_year' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '80',
+      'not null' => FALSE,
+    ),
+    'hostel_facility' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '80',
+      'not null' => FALSE,
+    ),
+    'transport_facility' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '80',
+      'not null' => FALSE,
+    ),
+    'house1' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'house2' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'house3' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'house4' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'line1' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '500',
+      'not null' => FALSE,
+    ),
+    'line2' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '500',
+      'not null' => FALSE,
+    ),
+    'city' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'state' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'pincode' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'country' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'contactofschool' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'office_email' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'website' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'fax' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'financialyearstart' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'financialyearend' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'academicyearstart' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+    ),
+    'academicyearend' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => FALSE,
+      ),
+	'notice_period' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '100',
+      'not null' => FALSE,
+	),
+    ),
+    'primary key' => array('nameofschool'),
+  );
+
+  // _________________________________________________Schema for class_list____________________________________________________
+  $schema['essa_'.$session.'_class_list'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'class_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => TRUE,
+      ),
+      'weight' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'int',
+       'not null' => FALSE,
+      ),
+      'no_of_sec' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'int',
+       'not null' => FALSE,
+      ),
+      'class_set_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('class_id'),
+  );
+
+  $schema['essa_'.$session.'_class_section'] = array(
+  'description' => 'TODO: please describe this table!',
+  'fields' => array(
+    'id' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'serial',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      ),
+    'sections' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '20',
+      'not null' => FALSE,
+      ),
+    ),
+  'primary key' => array('id'),
+  );
+
+  //_________________________________________________Schema for class_set____________________________________________________
+  $schema['essa_'.$session.'_class_set'] = array(
+  'description' => 'TODO: please describe this table!',
+  'fields' => array(
+    'class_set_id' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'char',
+      'length' => '50',
+      'not null' => FALSE,
+    ),
+    'from_class' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'char',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'to_class' => array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'char',
+      'length' => '20',
+      'not null' => FALSE,
+    ),
+    'no_of_period_regular' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'int',
+       'not null' => FALSE,
+    ),
+    'no_of_period_saturday' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'int',
+       'not null' => FALSE,
+    ),
+  ),
+  'primary key' => array('class_set_id'),
+  );
+
+  // _________________________________________________Schema for class_teacher____________________________________________________
+  $schema['essa_'.$session.'_class_teacher'] = array(
+	  'description' => 'TODO: please describe this table!',
+	  'fields' => array(
+	    'id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'serial',
+	      'unsigned' => TRUE,
+	      'not null' => TRUE,
+	    ),
+			'class' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'char',
+	      'length' => '50',
+	      'not null' => FALSE,
+	    ),
+	    'section' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '15',
+	      'not null' => FALSE,
+	    ),
+	    'teacher_nickname' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '20',
+	      'not null' => FALSE,
+	    ),
+      'teacher_fname' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '100',
+	      'not null' => FALSE,
+	    ),
+      'teacher_lname' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '100',
+	      'not null' => FALSE,
+	    ),
+	  ),
+	  'primary key' => array('id'),
+	);
+
+  // _________________________________________________Schema for staff_dept(academics)____________________________________________________
+  $schema['essa_'.$session.'_staff_dept_academics'] = array(
+	  'description' => 'TODO: please describe this table!',
+	  'fields' => array(
+	    'id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'serial',
+	      'unsigned' => TRUE,
+	      'not null' => TRUE,
+	    ),
+			'emp_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '50',
+	      'not null' => FALSE,
+	    ),
+	    'dept_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'int',
+	      'length' => '11',
+	      'not null' => FALSE,
+	    ),
+	    'dept_name' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '100',
+	      'not null' => FALSE,
+	    ),
+      'post_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'int',
+	      'length' => '11',
+	      'not null' => FALSE,
+	    ),
+      'post_name' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '100',
+	      'not null' => FALSE,
+	    ),
+	  ),
+	  'primary key' => array('id'),
+	);
+
+  // _________________________________________________Schema for staff_dept(admin)____________________________________________________
+  $schema['essa_'.$session.'_staff_dept_admin'] = array(
+	  'description' => 'TODO: please describe this table!',
+	  'fields' => array(
+	    'id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'serial',
+	      'unsigned' => TRUE,
+	      'not null' => TRUE,
+	    ),
+			'emp_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '50',
+	      'not null' => FALSE,
+	    ),
+	    'dept_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'int',
+	      'length' => '11',
+	      'not null' => FALSE,
+	    ),
+	    'dept_name' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '100',
+	      'not null' => FALSE,
+	    ),
+      'post_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'int',
+	      'length' => '11',
+	      'not null' => FALSE,
+	    ),
+      'post_name' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+	      'length' => '100',
+	      'not null' => FALSE,
+	    ),
+	  ),
+	  'primary key' => array('id'),
+	);
+
+  // _________________________________________________Schema for bus_route____________________________________________________
+  $schema['essa_'.$session.'_bus_routes'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'route_id' => array(
+        'description' => 'TODO: please describe this field!',
+	      'type' => 'serial',
+	      'unsigned' => TRUE,
+	      'not null' => TRUE,
+      ),
+      'route_name' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+      'bus_no' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '10',
+       'not null' => FALSE,
+      ),
+      'driver' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+      'helper' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+      'route_desc' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '500',
+       'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('route_id'),
+  );
+
+  $schema['essa_'.$session.'_bus_stops'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'bus_stop_id' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '50',
+       'not null' => TRUE,
+      ),
+      'route_id' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '50',
+       'not null' => FALSE,
+      ),
+      'stop_name' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+      'route_tid' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '50',
+       'not null' => FALSE,
+      ),
+      'stop_tid' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+      'distance_from_school' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'int',
+       'length' => '11',
+       'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('bus_stop_id'),
+  );
+
+	// _________________________________________________Schema for optional_subject_student____________________________________________________
+  $schema['essa_'.$session.'_optional_subject_student'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'serial',
+	      'unsigned' => TRUE,
+	      'not null' => TRUE,
+	    ),
+			'class_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => TRUE,
+      ),
+      'section' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '20',
+       'not null' => FALSE,
+      ),
+      'sub_id' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '50',
+       'not null' => FALSE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+
+	// _________________________________________________Schema for subject_teacher_table____________________________________________________
+  $schema['essa_'.$session.'_subject_teacher_table'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+			'class' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'section' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '50',
+       'not null' => FALSE,
+      ),
+      'subject' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '50',
+       'not null' => FALSE,
+      ),
+      'teacher' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('class', 'section', 'subject'),
+  );
+
+	// _________________________________________________Schema for optional_subject_pair____________________________________________________
+  $schema['essa_'.$session.'_optional_subject_pair'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+			'class' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'pair_name' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '255',
+       'not null' => FALSE,
+      ),
+      'sub_1' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+      'sub_2' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+			'sub_3' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+			'sub_4' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+			'sub_5' => array(
+       'description' => 'TODO: please describe this field!',
+       'type' => 'varchar',
+       'length' => '100',
+       'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('class', 'pair_name'),
+  );
+
+  return $schema;
+}
+
+/**________________________________________________hook_uninstall()________________________________________________________
+ *Implements hook_uninstall()
+ ----------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+function school_master_uninstall(){
+  $session_id = (string)variable_get('essa_sid');
+  $class_sec = 'essa_'.$session_id.'_class_section';
+
+  $sections = db_query("
+    SELECT sections from {$class_sec};
+  ");
+
+	$class_list = 'essa_'.$session_id.'_class_list';
+
+  $classes = db_query("
+    SELECT class_id from {$class_list} order by weight;
+  ");
+
+  foreach($classes as $class){
+    $name_of_table = 'essa_'.$session_id.'_subjects_'.clean_sub_string_uns($class->class_id);
+		db_drop_table($name_of_table);
+  }
+
+	$class_set_table = 'essa_'.$session_id.'_class_set';
+	$class_set = db_query("
+    SELECT class_set_id from {$class_set_table};
+  ");
+	foreach($class_set as $cs){
+		$name_of_table_regular = 'essa_'.$session_id.'_'.clean_string($cs -> class_set_id).'_regular';
+    db_drop_table($name_of_table_regular);
+
+		$name_of_table_saturday = 'essa_'.$session_id.'_'.clean_string($cs -> class_set_id).'_saturday';
+    db_drop_table($name_of_table_saturday);
+	}
+
+  foreach($sections as $del_table){
+    db_drop_table('essa_'.$session_id.'_'.$del_table->sections);
+		db_drop_table('essa_'.$session_id.'_time_table_'.$del_table->sections);
+    db_drop_table('essa_'.$session_id.'_'.$del_table->sections.'_attendance');
+  }
+
+  db_drop_table('essa_'.$session_id.'_'.'_class_list');
+  db_drop_table('essa_'.$session_id.'_'.'_class_set');
+  db_drop_table('essa_'.$session_id.'_'.'_class_section');
+
+  variable_del('image_example_style_name');
+  variable_del('image_example_image_fid');
+
+	/*
+  $vid = taxonomy_vocabulary_machine_name_load('class_vocab');
+  taxonomy_vocabulary_delete($vid->vid);
+
+  $vid = taxonomy_vocabulary_machine_name_load('transport_vocab');
+  taxonomy_vocabulary_delete($vid->vid);
+
+  $vid = taxonomy_vocabulary_machine_name_load('dnp_types');
+  taxonomy_vocabulary_delete($vid->vid);
+
+
+  $role->name = 'Class Teacher';
+	user_role_delete($role->rid);
+  */
+  drupal_flush_all_caches();
+}
+
+/**________________________________________________clean_string()________________________________________________________
+ *Supporting function to clean_string the array id.
+ ----------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+function clean_string($string) {
+   $string = str_replace(' ', '_', $string); // Replaces all spaces with hyphens.
+   return preg_replace('/[^A-Za-z0-9\-]/', '_', $string); // Removes special chars.
+}
+
+/**________________________________________________clean_sub_string_uns()___________________________________________________
+ *Supporting function to clean_string the array id.
+ ----------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+function clean_sub_string_uns($string) {
+   $string = str_replace('-', '', $string); // Replaces all spaces with hyphens.
+	 $string = str_replace(' ', '', $string);
+   return preg_replace('/[^A-Za-z0-9\-]/', '', $string); // Removes special chars.
+}

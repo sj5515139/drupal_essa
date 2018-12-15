@@ -1,0 +1,10 @@
+name = Lib Views
+core = 7.x
+package = ESSA Library Management System
+dependencies[] = views
+dependencies[] = views_load_more
+dependencies[] = views_pdf
+features[ctools][] = views:views_default:3.0
+features[features_api][] = api:2
+features[views_view][] = books
+features_exclude[dependencies][ctools] = ctools

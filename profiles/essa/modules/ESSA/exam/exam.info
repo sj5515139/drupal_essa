@@ -1,0 +1,8 @@
+name = Exam Module
+description = Performing exams in the system.
+core = 7.x
+package = ESSA Exam
+files[] = exam.module
+stylesheets[all][] = exam.css
+dependencies[] = visualization
+dependencies[] = field_group

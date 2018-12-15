@@ -1,0 +1,204 @@
+<?php
+/**
+ *Implements hook_permission()
+ */
+function certificates_permission(){
+  return array(
+    'create certificates' => array(
+      'title' => t('Certificate Creation'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+		'generate certificates' => array(
+      'title' => t('Certificate Generation'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_admin_paths()
+ */
+function certificates_admin_paths() {
+  $paths = array(
+    'admin/certificates' => FALSE,
+		'admin/certificates/generate_certificates' => FALSE,
+		'admin/certificates/generate_certificates/student-wise' => FALSE,
+		'admin/certificates/generate_certificates/class-wise' => FALSE,
+		'set_rp' => TRUE,
+  );
+  
+  /*
+	$session = variable_get('essa_sid');
+	$class_list_table = 'essa_'.$session.'_class_list';
+	$class_list = array();
+  
+	$class_list_db = db_query(
+		"SELECT class_id,weight from {$class_list_table} order by weight"
+	);
+  
+  foreach($class_list_db as $class){
+		$sub_url = array(
+			'admin/settings/subjects/'.$class->class_id => FALSE,
+		);
+		$paths = array_merge($paths, $sub_url);
+	}
+	*/
+  return $paths;
+}
+
+/**
+ *Implements hook_menu().
+ */
+function certificates_menu(){
+  $items = array();
+  
+	$items['admin/certificates'] = array(
+	  'title' => t('Certificates'),
+	  'description' => t('Available Certificates Templates.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('certificates'),
+	  'access arguments' => array('generate certificates'),
+    'file' => 'certificates.admin.inc',
+    'file path' => drupal_get_path('module','certificates').'/includes',
+    'weight' => 0,
+	);
+  
+  $items['admin/certificates/create_certificates'] = array(
+	  'title' => t('Create Templates'),
+	  'description' => t('Create Certificates Templates.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('create_certificates'),
+	  'access arguments' => array('create certificates'),
+    'file' => 'create_certificates.admin.inc',
+    'file path' => drupal_get_path('module','certificates').'/includes',
+    'type' => MENU_LOCAL_ACTION,
+    'weight' => -100,
+	);
+	
+	$items['admin/certificates/generate_certificates'] = array(
+	  'title' => t('Generate Certificates'),
+	  'description' => t('Generate Certificates.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('generate_certificates'),
+	  'access arguments' => array('generate certificates'),
+    'file' => 'generate_certificates.admin.inc',
+    'file path' => drupal_get_path('module','certificates').'/includes',
+    'type' => MENU_LOCAL_ACTION,
+    'weight' => -100,
+	);
+	
+	$items['admin/certificates/generate_certificates/class-wise'] = array(
+	  'title' => t('Class-Wise'),
+	  'description' => t('Generate Certificates.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('generate_certificates_cw'),
+	  'access arguments' => array('generate certificates'),
+    'file' => 'generate_certificates_cw.admin.inc',
+    'file path' => drupal_get_path('module','certificates').'/includes',
+    'weight' => -100,
+	);
+	
+	$items['admin/certificates/generate_certificates/student-wise'] = array(
+	  'title' => t('Student-Wise'),
+	  'description' => t('Generate Certificates.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('generate_certificates_sw'),
+	  'access arguments' => array('generate certificates'),
+    'file' => 'generate_certificates_sw.admin.inc',
+    'file path' => drupal_get_path('module','certificates').'/includes',
+    'weight' => -100,
+	);
+	
+	$items['admin/certificates/edit_templates'] = array(
+	  'title' => t('Edit Templates'),
+	  'description' => t('Edit Templates.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('edit_certificates'),
+	  'access arguments' => array('create certificates'),
+    'file' => 'edit_certificates.admin.inc',
+    'file path' => drupal_get_path('module','certificates').'/includes',
+    'weight' => -100,
+	);
+	
+	$items['set_rp'] = array(
+	  'title' => t('Set Replacement Values'),
+	  'description' => t('Set Replacement Values.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('set_rp'),
+	  'access arguments' => array('create certificates'),
+    'file' => 'set_rp.admin.inc',
+    'file path' => drupal_get_path('module','certificates').'/includes',
+    'weight' => -100,
+	);
+	
+	$session_id = (string)variable_get('essa_sid');
+	$certificate_table = 'essa_'.$session_id.'_certificate_templates';
+	$certificates = db_query(
+		"SELECT * from $certificate_table;"
+	);
+	foreach($certificates as $certificate){
+		$items['admin/certificates/edit_templates/'.$certificate->cer_id] = array(
+		  'title' => $certificate->title,
+		  'description' => t('Edit Certificates Templates.'),
+		  'page callback' => 'drupal_get_form',
+		  'page arguments' => array('edit_certificate', $certificate->cer_id),
+		  'access arguments' => array('create certificates'),
+		  'file' => 'edit_certificate.admin.inc',
+		  'file path' => drupal_get_path('module','certificates').'/includes',
+		  'weight' => 0,
+		);
+	}
+  
+  return $items;
+}
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function certificates_theme() {
+  return array(
+    'rp_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'rp_class_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+  );
+}
+
+/**
+ *Theme function
+ */
+function theme_rp_table(&$variables){
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Sr. No.'),t('Label'),t('Replacement Pattern'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}

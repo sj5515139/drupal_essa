@@ -1,0 +1,138 @@
+<?php
+/**
+*Implements hook_install()
+*/
+function staff_attendance_install(){
+ 
+ //*************************************Creating Roles*******************************************************
+ $lmr_flag = 0;
+ $leave_moderator_role = db_query(
+	"SELECT * from role where name = 'Attendance Incharge';"
+ );
+ foreach($leave_moderator_role as $lmr){
+ 	$lmr_flag = 1;
+ }
+
+ if($lmr_flag == 0){
+  $role = new stdClass();
+  $role->name = 'Attendance Incharge';
+  user_role_save($role);
+ }
+ 
+	// $roles = db_query(
+		// "SELECT * from role where name = 'Attendance Incharge';"
+	// );
+	// foreach($roles as $role){
+		// $p_rid = $role->rid;
+	// }
+	// user_role_grant_permissions($p_rid, $permissions = array('take_staff_attendance'));
+ 
+} 
+
+/**
+ *Implements hook_schema()
+ */
+function staff_attendance_schema(){
+  $session = (string)variable_get('essa_sid');
+	$schema['essa_'.$session.'_staff_attendance'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	$bi_table = 'essa_'.$session.'_basicinfo';
+  $bi_db = db_query(
+		"SELECT * from {$bi_table}"
+	);
+  foreach($bi_db as $bi){
+    $strDateFrom = $bi->academicyearstart;
+    $strDateTo = $bi->academicyearend;
+  }
+  
+  $aryRange=array();
+  $iDateFrom=mktime(1,0,0,substr($strDateFrom,5,2),     substr($strDateFrom,8,2),substr($strDateFrom,0,4));
+  $iDateTo=mktime(1,0,0,substr($strDateTo,5,2),     substr($strDateTo,8,2),substr($strDateTo,0,4));
+
+  if ($iDateTo>=$iDateFrom){
+    array_push($aryRange,date('Y_m_d',$iDateFrom)); // first entry
+    while ($iDateFrom<$iDateTo){
+      $iDateFrom+=86400; // add 24 hours
+      if(date('D',$iDateFrom) != 'Sun'){
+        array_push($aryRange,date('Y_m_d',$iDateFrom));
+      }
+    }
+  }
+  foreach($aryRange as $dates){
+    $date[$dates] = array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '5',
+      'not null' => TRUE,
+      'default' => '',
+    );
+  }
+  
+  $schema['essa_'.$session.'_staff_attendance']['fields'] = array_merge($schema['essa_'.$session.'_staff_attendance']['fields'], $date);
+  
+  $schema['essa_'.$session.'_staff_attendance_reason'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'attendance'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+      'reason' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+  return $schema;
+}
+
+
+/**________________________________________________hook_uninstall()________________________________________________________
+ *Implements hook_uninstall()
+ ----------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+function staff_attendance_uninstall(){
+ $role->name = 'Attendance Incharge';
+ user_role_delete($role->rid);
+ drupal_flush_all_caches();
+}

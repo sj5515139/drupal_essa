@@ -1,0 +1,200 @@
+#edit-cnt{
+  width: 40% !important;
+  float: left;
+}
+
+#book_detail table{
+  width: 58%;
+}
+
+#issue_detail{
+	width: 100%;
+}
+#user_detail{
+	width:100%;
+	display: flex;
+}
+
+#edit-save{
+  width: auto !important;
+  float: left;
+  margin: auto;
+}
+
+#edit-cancel{
+  width: auto !important;
+  margin-left:  10px;
+}
+
+.page-admin-library-books-entry-bulk .action-links{
+  margin-left: 65%;  
+}
+
+.form-item-field-source-tid .description{
+  display: none;
+}
+
+.page-admin-library-books .action-links{
+  float: right;
+}
+
+#books-bu{
+  width: 50%;
+  margin-left: 25%;
+}
+
+#books-barcode .form-item-acc-no{
+  width: 45%;
+  float: left;
+  clear: both;
+}
+
+#books-barcode #edit-ps{
+  width: 49% !important;
+  float: right;
+}
+
+.form-item-print-pdf-size, .form-item-print-pdf-orientation{
+  display: none;
+}
+
+#edit-pub-year label{
+  display: none !important;
+}
+
+#books-add-new .form-item-category, #books-add-new .form-item-lang, #books-add-new .form-item-cupboard,
+#books-add-new .form-item-shelf, #books-add-new .form-item-subject, #books-add-new .form-item-source{
+  width: 70%;
+  float: left !important;
+}
+
+#books-add-new .form-item-new-category input, #books-add-new .form-item-new-lang input, #books-add-new .form-item-new-source input,
+#books-add-new .form-item-new-shelf input{
+  margin-top: 4px !important;
+}
+
+#books-node-form .form-item-field-bc-und-0-value{
+  display: none;
+}
+
+#books-node-form .vertical-tabs, #books-node-form #edit-body-und-0-format, .form-item-field-year-und-0-value-date .description{
+  display: none;
+}
+
+#books-node-form label, .date-form-element-content, #books-add-new label, .page-admin-library-books-entry-bulk-settings label,
+#books-return label, #lib-settings label{
+  display: inline-block !important;
+  width: 250px !important;
+}
+
+#books-issue label{
+  display: inline-block !important;
+  width: 200px !important;
+  color: BLACK !important;
+}
+
+#edit-add{
+  clear: both;
+  margin-top: 2px;
+  margin-bottom: 20px;
+}
+
+.form-item-issue-date label{
+  float: left;
+  color: BLACK !important;
+}
+
+.form-item-return-date label{
+  float: left;
+}
+
+#books-issue #edit-fs{
+  margin-top: 20px;
+}
+
+.give-padding{
+  margin-left: 250px !important;
+}
+
+#delete_issue input{
+  background: red !important;
+}
+
+
+
+.node-form .form-item-field-availability-und{
+  display: inline-block;
+}
+
+#edit-test{
+  display: none;
+}
+
+.page-admin-library-books .views-field-title a{
+  font-size: 14px !important;
+}
+
+.form-item-fine{
+  display: none;
+}
+
+.field-label{
+  width: 200px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-size: large;
+  padding-left: 10px;
+}
+
+.field-item{
+  font-size: large !important;
+  padding-left: 10px;
+  padding-top: 5px;
+}
+
+.page-admin-library-books-entry-bulk-settings form{
+  margin-left: 25%;
+}
+
+.page-admin-library-books-entry #overlay, .page-admin-library-settings #overlay{
+  width:  50%;
+  margin-left: 25%;
+}
+
+.page-admin-library-books-entry-bulk-settings #overlay{
+  width:  50%;
+  margin-left: 25%;
+}
+
+#edit-fsa  .fieldset-wrapper{
+  margin-left: 20%;
+  width: 50%;
+}
+
+.node-type-books #overlay, .page-node-add-books #overlay{
+  width: 40%;
+  margin-left: 25%;
+}
+
+#c-n-s label{
+  display: inline-block !important;
+  width: 250px !important;
+}
+
+#lib-fine-collection label,  #select-adm-no label{
+	width:  180px;
+  display: inline-block;
+  padding-right: 10px;
+  margin-right: 20px !important;
+}
+#lib-fine-collection{
+	width: 100%;
+}
+
+#lib-fine-collection table{
+	width: 60%;
+}
+
+#lib-fine-collection #edit-submit{
+  margin-right: 6%;
+}

@@ -1,0 +1,40 @@
+<?php
+/**
+ * Implement hook_install().
+ *
+ * Perform actions to set up the site for this profile.
+ */
+function essa_install() {
+ // Set the default theme.
+  include_once DRUPAL_ROOT . '/profiles/standard/standard.install';
+  standard_install();
+  theme_enable(array('essa_theme'));
+  theme_enable(array('adminimal'));
+  variable_set('theme_default', 'essa_theme');
+  $default_theme_settings = variable_get('theme_essa_theme_settings', array());
+  $default_theme_settings['essa_theme_theme_skin'] = 'material';
+  variable_set('theme_essa_theme_settings', $default_theme_settings);
+  
+  $path = drupal_get_path('theme', 'essa_theme');
+  $default_theme = 'essa_theme';
+  $admin_theme = 'essa_theme';
+  
+  db_update('system')
+    ->fields(array('status' => 0))
+    ->condition('type', 'theme')
+    ->execute();
+  
+  db_update('system')
+    ->fields(array('status' => 1))
+    ->condition('type', 'theme')
+    ->condition('name', $default_theme)
+    ->execute();
+  
+  db_update('system')
+    ->fields(array('status' => 1))
+    ->condition('type', 'theme')
+    ->condition('name', $admin_theme)
+    ->execute();
+  
+  variable_set('admin_theme', $admin_theme);
+}

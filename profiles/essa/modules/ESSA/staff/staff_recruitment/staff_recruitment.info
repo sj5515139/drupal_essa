@@ -1,0 +1,12 @@
+name = Staff Recruitment
+description = Bring the staff's in the system.
+core = 7.x
+package = ESSA
+files[] = staff_recruitment.module
+stylesheets[all][] = staff.css
+dependencies[] = views
+dependencies[] = filedepot
+dependencies[] = filebrowser
+dependencies[] = date_api
+dependencies[] = date_views
+dependencies[] = school_master

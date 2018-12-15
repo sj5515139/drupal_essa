@@ -1,0 +1,12 @@
+name = Principal's Message
+core = 7.x
+package = ESSA notification
+dependencies[] = text
+dependencies[] = views
+features[ctools][] = views:views_default:3.0
+features[features_api][] = api:2
+features[field_base][] = body
+features[field_instance][] = node-principal_s_message-body
+features[node][] = principal_s_message
+features[views_view][] = principal_s_message
+features_exclude[dependencies][ctools] = ctools

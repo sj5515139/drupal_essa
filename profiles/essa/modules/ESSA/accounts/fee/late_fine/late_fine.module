@@ -1,0 +1,160 @@
+<?php
+ 
+/**
+ *Implements hook_menu()
+ */
+function late_fine_menu(){
+  $items = array();
+  $items['admin/fees/fine/late-fine'] = array(
+	  'title' => t('Late Fine'),
+	  'description' => t('Fine Management'),
+	  'page callback' => 'drupal_get_form',
+		'page arguments' => array('late_fine'),
+		'access arguments' => array('administer fees'),
+		'file' => 'late_fine.admin.inc',
+    'file path' => drupal_get_path('module','late_fine'),
+		'weight' => 999,
+		'type' => MENU_LOCAL_ACTION,
+	);
+	return $items;
+}
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function late_fine_theme() {
+  return array(
+    'late_fine_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+	);
+}
+
+/**
+ *Implements hook_cron
+ */
+function late_fine_cron(){
+	$session_id = (string)variable_get('essa_sid');
+	$student_table = 'essa_'.$session_id.'_master_student_table';
+	$session_id = (string)variable_get('essa_sid');
+  $fees_table = 'essa_'.$session_id.'_fees_structure';
+	$fees_freq_table = 'essa_'.$session_id.'_fees_frequency';
+	$fees_student_table = 'essa_'.$session_id.'_fees_student_table';
+  $fees_table = 'essa_'.$session_id.'_fees_structure';
+	$fine_table = 'essa_'.$session_id.'_fees_student_fine';
+  $fees_freq = 'essa_'.$session_id.'_fees_frequency';
+  $fees_student = 'essa_'.$session_id.'_fees_student';
+  $fees_student_due = 'essa_'.$session_id.'_fees_student_due';
+  $basic_info_table = 'essa_'.$session_id.'_basicinfo';
+	
+	$options = array();
+	$session = (string)variable_get('essa_sid');
+	$basic_info_table = 'essa_'.$session.'_basicinfo';
+	$binfo = db_query("
+		SELECT * from {$basic_info_table};
+	");
+	foreach($binfo as $info){
+		$start_date = $info->academicyearstart;
+		$end_date = date('d-m-Y');
+	}
+	$start = new DateTime($start_date);
+	$start->modify('first day of this month');
+	$end      = new DateTime($end_date);
+	$end->modify('first day of next month');
+	$interval = DateInterval::createFromDateString('1 month');
+	$period   = new DatePeriod($start, $interval, $end);
+	foreach ($period as $dt) {
+		$options[] = $dt->format("M_Y");
+	}
+	$st_fine = array();
+	$students = db_query("
+    SELECT * from {$student_table};"
+  );
+	foreach($students as $st){
+		$deadline = variable_get('late_fine_due_date/'.$st->class);
+		$current_col = date('M_Y');
+		foreach($deadline[$current_col] as $dl => $amt){
+			if($dl > time()){
+				$prev_col = date('M_Y', strtotime(date('Y-m')." -1 month"));
+				foreach($deadline[$prev_col] as $prdl => $pramt){
+					$due_dt = $prdl;
+				}
+			}else{
+				$due_dt = $dl;	
+			}
+			
+			$amount = $amt;
+		}
+	
+		$total_due = 0;
+		$students_fee_due = db_query("
+			SELECT * from {$fees_student_due} where adm_no = :an;", array(':an' => $st->adm_no)
+		);
+		foreach($students_fee_due as $sfd){
+			$fee_detail = db_query("
+				SELECT * from {$fees_table} where fee_id = :fi;", array(':fi' => $sfd->fee_id)
+			);
+			foreach($fee_detail as $fd){
+				$freq_detail = db_query("
+					SELECT * from {$fees_freq_table} where freq_id = :fi;", array(':fi' => $fd->freq_id)
+				);
+				foreach($freq_detail as $frd){
+					foreach($options as $col){
+						if($frd->$col < $due_dt){
+							$total_due = $total_due + $sfd->$col;
+						}
+					}
+				}
+			}
+		}
+		if($total_due > 0){
+			$st_fine[$st->adm_no][$due_dt] = $amount;
+		}
+	}
+	
+	$now = time();
+	foreach($st_fine as $adm_no => $val){
+		foreach($val as $due_dt => $amount){
+			$datediff = $now - $due_dt;
+			$no_of_days = floor($datediff / (60 * 60 * 24));
+			$fine = $no_of_days * $amount;
+			$month = date('M_Y', $due_dt);
+			$particulars = 'Late Fine - '.$month;
+			
+			$flag = 0;
+			$students_fine = db_query("
+				SELECT * from {$fine_table} where adm_no = :an and particulars = :p;", array(':an' => $adm_no, ':p' => $particulars)
+			);
+			foreach($students_fine as $sf){
+				$flag = 1;
+				db_merge($fine_table)
+					->key(array('id' => $sf->id))
+					->fields (array(
+							'adm_no' => $adm_no,
+							'particulars' => $particulars,
+							'month' => $month,
+							'collection_date' => $due_dt,
+							'amount_to_be_paid' => $fine,
+						)
+					)
+				->execute();
+			}
+			
+			if($flag == 0){
+				if($fine > 0){
+					db_insert($fine_table)
+					->fields (array(
+							'adm_no' => $adm_no,
+							'particulars' => $particulars,
+							'month' => $month,
+							'collection_date' => time(),
+							'amount_to_be_paid' => $fine,
+						)
+					)
+				->execute();
+				}
+			}
+		}
+	}
+}

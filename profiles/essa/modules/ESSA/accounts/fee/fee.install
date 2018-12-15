@@ -1,0 +1,753 @@
+<?php
+
+/**
+* Implements hook_install.
+*/
+function fee_install(){
+	$role = new stdClass();
+	$role->name = 'Fees Collector';
+	user_role_save($role);
+	
+	$role = new stdClass();
+	$role->name = 'Fees Incharge';
+	user_role_save($role);
+}
+
+/**
+* Implements hook_uninstall.
+*/
+function fee_uninstall(){
+	$role = 'Fees Collector';
+	user_role_delete($role);
+	
+	$role = 'Fees Incharge';
+	user_role_delete($role);
+}
+
+/**
+*Implements hook_schema()
+*/
+function fee_schema(){
+  $session_id = (string)variable_get('essa_sid');
+  
+	//----------------------------------------------------------------------FEE FREQUENCY--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_frequency'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'freq_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'freq_name' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('freq_id'),
+  );
+  $session = (string)variable_get('essa_sid');
+	$basic_info_table = 'essa_'.$session.'_basicinfo';
+	$binfo = db_query("
+    SELECT * from {$basic_info_table};
+  ");
+	foreach($binfo as $info){
+		$start_date = $info->academicyearstart;
+		$end_date = $info->academicyearend;
+	}
+  $start = new DateTime($start_date);
+	$start->modify('first day of this month');
+	$end      = new DateTime($end_date);
+	$end->modify('first day of next month');
+	$interval = DateInterval::createFromDateString('1 month');
+	$period   = new DatePeriod($start, $interval, $end);
+	foreach ($period as $dt) {
+		$columns[] = $dt->format("M_Y");
+	}
+	foreach($columns as $col){
+		$fields[$col] = array(
+			$col => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		);
+	}
+	foreach($fields as $field){
+		$schema['essa_'.$session_id.'_fees_frequency']['fields'] = array_merge($schema['essa_'.$session_id.'_fees_frequency']['fields'], $field);
+	}
+  
+	//----------------------------------------------------------------------FEE STRUCTURE--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_structure'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'fee_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'particulars' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+      'freq_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+      'frequency' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'amount' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+      'applies_to' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'facility' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'is_hostel' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'class_from' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => FALSE,
+      ),
+      'class_to' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => FALSE,
+      ),
+      'distance_from' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'not null' => FALSE,
+      ),
+      'distance_to' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'not null' => FALSE,
+      ),
+      'optional_sub' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('fee_id'),
+  );
+  
+  //----------------------------------------------------------------------FEE STUDENT--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_student'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'fee_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('fee_id','adm_no'),
+  );
+  $session = (string)variable_get('essa_sid');
+	$basic_info_table = 'essa_'.$session.'_basicinfo';
+	$binfo = db_query("
+    SELECT * from {$basic_info_table};
+  ");
+	foreach($binfo as $info){
+		$start_date = $info->academicyearstart;
+		$end_date = $info->academicyearend;
+	}
+  $start = new DateTime($start_date);
+	$start->modify('first day of this month');
+	$end      = new DateTime($end_date);
+	$end->modify('first day of next month');
+	$interval = DateInterval::createFromDateString('1 month');
+	$period   = new DatePeriod($start, $interval, $end);
+	foreach ($period as $dt) {
+		$columns[] = $dt->format("M_Y");
+	}
+	foreach($columns as $col){
+		$fields1[$col] = array(
+			$col => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+		);
+	}
+	foreach($fields1 as $field){
+		$schema['essa_'.$session_id.'_fees_student']['fields'] = array_merge($schema['essa_'.$session_id.'_fees_student']['fields'], $field);
+	}
+  
+  //----------------------------------------------------------------------FEE STUDENT PAYMENT--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_student_payment'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'fee_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+			'month' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'receipt_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => TRUE,
+      ),
+			'amount' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+    ),
+    'primary key' => array('fee_id', 'month','adm_no','receipt_no'),
+  );
+  
+	//----------------------------------------------------------------------FEE STUDENT PAYMENT--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_student_advance'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'fee_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+			'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'receipt_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => TRUE,
+      ),
+			'amount' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'amount_remaining' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+      'refund_date' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'refund_remarks' => array(
+        'description' => 'TODO: please describe this field!',
+	      'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'translatable' => TRUE,
+      ),
+    ),
+    'primary key' => array('fee_id', 'adm_no','receipt_no'),
+  );
+  
+	//----------------------------------------------------------------------FEE STUDENT DUE--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_student_due'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'fee_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('fee_id', 'adm_no'),
+  );
+	foreach($fields1 as $field){
+		$schema['essa_'.$session_id.'_fees_student_due']['fields'] = array_merge($schema['essa_'.$session_id.'_fees_student_due']['fields'], $field);
+	}
+  
+	//----------------------------------------------------------------------FEE FINE--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_student_fine'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'particulars' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+			'month' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'amount_to_be_paid' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'amount_paid' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'receipt_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'collection_date' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	//----------------------------------------------------------------------FEE Defaulter--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_defaulter'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'class' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'section' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'name' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+			'amount_due' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'fine_due' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('adm_no'),
+  );
+	//----------------------------------------------------------------------FEE PAYMENT HISTORY--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_payment_history'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'payment_date' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+      'amount' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'uid' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'edit_uid' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+      'type' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '250',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  
+	//----------------------------------------------------------------------FEE CONCESSION--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_concession'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'con_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => FALSE,
+      ),
+      'fee_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'amount' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'percent' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+      'concession_desc' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '200',
+		    'not null' => FALSE,
+		  ),
+    ),
+    'primary key' => array('con_id'),
+  );
+  
+	//----------------------------------------------------------------------FEE STUDENT CONCESSION--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_student_concession'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'con_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => FALSE,
+      ),
+      'amount' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+      'percentage' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+    ),
+    'primary key' => array('con_id','adm_no'),
+  );
+	$session = (string)variable_get('essa_sid');
+	$basic_info_table = 'essa_'.$session.'_basicinfo';
+	$binfo = db_query("
+    SELECT * from {$basic_info_table};
+  ");
+	foreach($binfo as $info){
+		$start_date = $info->academicyearstart;
+		$end_date = $info->academicyearend;
+	}
+  $start = new DateTime($start_date);
+	$start->modify('first day of this month');
+	$end      = new DateTime($end_date);
+	$end->modify('first day of next month');
+	$interval = DateInterval::createFromDateString('1 month');
+	$period   = new DatePeriod($start, $interval, $end);
+	foreach ($period as $dt) {
+		$columns[] = $dt->format("M_Y");
+	}
+	foreach($columns as $col){
+		$fields_con[$col] = array(
+			$col => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+		);
+	}
+	foreach($fields_con as $field){
+		$schema['essa_'.$session.'_fees_student_concession']['fields'] = array_merge($schema['essa_'.$session.'_fees_student_concession']['fields'], $field);
+	}
+  
+	//----------------------------------------------------------------------FEE STUDENT EXEMPTION--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_student_adjustement'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'fee_id' => array(
+        'description' => 'This is advance ID.',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'month' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+			'to_fee_id' => array(
+        'description' => 'This is the field where we save where the advance is adjusted',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'to_fine_id' => array(
+        'description' => 'This is the field where we save where the advance is adjusted',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'amount' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+      'reason' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+			'uid' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'edit_uid' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+    ),
+    'primary key' => array('id'),
+  );
+	
+	//----------------------------------------------------------------------FEE STAFF--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_staff'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'uid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+      'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'type' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'name' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'phone_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'email_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+      ),
+			'username' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('uid'),
+  );
+	
+	//----------------------------------------------------------------------FEE STAFF--------------------------------------------------------------
+  $schema['essa_'.$session_id.'_fees_refund'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'fee_id' => array(
+        'description' => 'This is advance ID.',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'uid' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'amount' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'receipt_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => TRUE,
+      ),
+			'refund_date' => array(
+	      'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'refund_remarks' => array(
+        'description' => 'TODO: please describe this field!',
+	      'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'translatable' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  
+  return $schema;
+}

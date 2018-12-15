@@ -1,0 +1,9 @@
+name = Student Profile Page Management
+description = Managing the profile pages of Students
+core = 7.x
+package = ESSA
+files[] = student_profile_page.module
+stylesheets[all][] = student_pp.css
+dependencies[] = views
+dependencies[] = date_api
+dependencies[] = date_views

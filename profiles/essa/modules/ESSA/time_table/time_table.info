@@ -1,0 +1,7 @@
+name = Time Table
+description = Setting up the school's timetable.
+core = 7.x
+package = ESSA
+files[] = time_table.module
+dependencies[] = school_master
+stylesheets[all][] = time_table.css

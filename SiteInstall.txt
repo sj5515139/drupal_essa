@@ -1,0 +1,10 @@
+Site Install
+
+#Admin Credential:-
+Username = admin
+Password = admin
+
+#Site Setup
+Import Database(Sql File) in PhpMyAdmin
+Copy entire code in a folder under localhost
+Goto Localhost URL

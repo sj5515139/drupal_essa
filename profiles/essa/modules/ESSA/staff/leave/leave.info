@@ -1,0 +1,12 @@
+name = Leave Management
+description = Managing Leaves of Employees.
+core = 7.x
+package = ESSA
+files[] = leave.module
+stylesheets[all][] = leave.css
+stylesheets[all][] = css/font-awesome.min.css
+dependencies[] = views
+dependencies[] = date_api
+dependencies[] = date_views
+dependencies[] = school_master
+dependencies[] = staff_recruitment

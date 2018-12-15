@@ -1,0 +1,385 @@
+<?php
+
+/**
+ *Implements hook_schema()
+ */
+function leave_schema(){
+  $session = (string)variable_get('essa_sid');
+	$schema['essa_'.$session.'_leave_types'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'leave_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+      'post_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+			'post_type' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'leave_type' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => FALSE,
+      ),
+      'leave_name' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => FALSE,
+      ),
+      'leave_desc' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '500',
+        'not null' => FALSE,
+      ),
+      'max_per_month' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+			'min_stretch' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+      'nod_per_year'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+			'half_day'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => FALSE,
+      ),
+			'half_day'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => FALSE,
+      ),
+			'half_day_rule'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('leave_id'),
+  );
+	
+	$schema['essa_'.$session.'_leave_staff'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+		 'id' => array(
+			 'description' => 'TODO: please describe this field!',
+			 'type' => 'serial',
+			 'unsigned' => TRUE,
+			 'not null' => TRUE,
+      ),
+			'leave_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+      'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'leave_status' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+			'total_leave'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'leave_taken'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+				'default' => 0,
+      ),
+			'leave_remaining'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'max_per_month' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+			'min_stretch' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id','leave_id','emp_id'),
+  );
+	$session = (string)variable_get('essa_sid');
+	
+	$bi_table = 'essa_'.$session.'_basicinfo';
+  $bi_db = db_query(
+		"SELECT * from {$bi_table}"
+	);
+  foreach($bi_db as $bi){
+    $strDateFrom = $bi->academicyearstart;
+    $strDateTo = $bi->academicyearend;
+  }
+  $start    = new DateTime($strDateFrom);
+	$start->modify('first day of this month');
+	$end      = new DateTime($strDateTo);
+	$end->modify('first day of next month');
+	$interval = DateInterval::createFromDateString('1 month');
+	$period   = new DatePeriod($start, $interval, $end);
+	$aryRange=array();
+	foreach ($period as $dt) {
+		array_push($aryRange,$dt->format("Y_m"));
+	}
+	
+	foreach($aryRange as $dates){
+    $date[$dates] = array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'float',
+      'not null' => TRUE,
+      'default' => 0,
+    );
+  }
+	$schema['essa_'.$session.'_leave_staff']['fields'] = array_merge($schema['essa_'.$session.'_leave_staff']['fields'], $date);
+	
+	$schema['essa_'.$session.'_leave_staff_history'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+		 'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+		 'req_timestamp'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => TRUE,
+      ),
+			'leave_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'no_of_days'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'no_of_working_days'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'from_date'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'to_date'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'reason'  => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+				'default' => 0,
+      ),
+			'leave_moderator' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'status' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => FALSE,
+      ),
+			'status_remark' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => FALSE,
+      ),
+			'half_day' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'status_moderator' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'remark_moderator' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '150',
+        'not null' => FALSE,
+      ),
+			'moderator_timestamp' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'status_principal' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'remark_principal' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '150',
+        'not null' => FALSE,
+      ),
+			'principal_timestamp' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'applied_on' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('emp_id','req_timestamp'),
+  );
+	
+	$schema['essa_'.$session.'_leave_half_day'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+		 'id' => array(
+			 'description' => 'TODO: please describe this field!',
+			 'type' => 'serial',
+			 'unsigned' => TRUE,
+			 'not null' => TRUE,
+      ),
+			'leave_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'emp_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id','leave_id','emp_id'),
+  );
+	
+	
+	foreach($aryRange as $dates){
+    $date[$dates] = array(
+      'description' => 'TODO: please describe this field!',
+      'type' => 'float',
+      'not null' => TRUE,
+      'default' => 0,
+    );
+  }
+	$schema['essa_'.$session.'_leave_half_day']['fields'] = array_merge($schema['essa_'.$session.'_leave_half_day']['fields'], $date);
+
+	
+	return $schema;
+}
+
+/**
+ *Implements hook_install
+ */
+function leave_install(){
+	$lmr_flag = 0;
+	$leave_moderator_role = db_query(
+		"SELECT * from role where name = 'Leave Moderator';"
+	);
+	foreach($leave_moderator_role as $lmr){
+		$lmr_flag = 1;
+	}
+	
+	if($lmr_flag == 0){
+		$role = new stdClass();
+		$role->name = 'Leave Moderator';
+		user_role_save($role);
+	}
+	
+	// $roles = db_query(
+		// "SELECT * from role where name = 'Leave Moderator';"
+	  // );
+	// foreach($roles as $role){
+		// $p_rid = $role->rid;
+	// }
+	// user_role_grant_permissions($p_rid, $permissions = array('approve_leave', 'administer_leave', 'leave_moderator'));
+	
+	$roles = db_query(
+		"SELECT * from role where name = 'Leave Moderator';"
+	);
+	foreach($roles as $role){
+		$p_rid = $role->rid;
+	}
+	user_role_grant_permissions($p_rid, $permissions = array('approve_leave', 'administer_leave', 'leave_moderator'));
+	
+	$roles = db_query(
+    "SELECT * from role where name = 'Staff';"
+  );
+	foreach($roles as $role){
+		$p_rid = $role->rid;
+	}
+	user_role_grant_permissions($p_rid, $permissions = array('apply_leave'));
+	
+	drupal_cron_run();
+}
+/**
+ *Implements hook_uninstall
+ */
+function leave_uninstall(){
+ drupal_flush_all_caches();
+}

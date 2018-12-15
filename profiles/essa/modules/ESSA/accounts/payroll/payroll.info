@@ -1,0 +1,10 @@
+name = Payroll
+description = Payroll management system
+core = 7.x
+package = ESSA Accounts
+files[] = payroll.module
+files[] = includes/payroll.views.inc
+stylesheets[all][] = payroll.css
+dependencies[] = views
+dependencies[] = school_master
+dependencies[] = staff_recruitment

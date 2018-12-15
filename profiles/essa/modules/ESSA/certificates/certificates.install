@@ -1,0 +1,201 @@
+<?php
+
+/**
+ *Implements hook_schema()
+ */
+function certificates_schema(){
+	$session_id = (string)variable_get('essa_sid');
+	
+  $schema['essa_'.$session_id.'_certificate_templates'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'cer_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => FALSE,
+      ),
+      'fid_header' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+			'body' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'translatable' => TRUE,
+		  ),
+      'fid_watermark' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+      'footer' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'translatable' => TRUE,
+		  ),
+      'created_by' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+      'last_modified_by' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+      'created_time' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+      'modified_time' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '10',
+        'not null' => FALSE,
+      ),
+			'rp_label1' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'rp_string1' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'rp_label2' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'rp_string2' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'rp_label3' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'rp_string3' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'rp_label4' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'rp_string4' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'rp_label5' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'rp_string5' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('cer_id'),
+  );
+	
+	$schema['essa_'.$session_id.'_certificates_replacement_values'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'cer_id' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+				'length' => '11',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'adm_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => TRUE,
+      ),
+			'class' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => TRUE,
+      ),
+			'section' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => TRUE,
+      ),
+      'rp_value1' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+			'rp_value2' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+			'rp_value3' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+			'rp_value4' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+			'rp_value5' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('cer_id','adm_no'),
+  );
+	
+	return $schema;
+}

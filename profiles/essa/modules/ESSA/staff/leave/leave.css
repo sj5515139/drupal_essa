@@ -1,0 +1,191 @@
+#od-form label, #leave-form label, #role-leave-form label, #each-leave-form label, #apply-leave-form label, #approve-leave-form label, #edit-leave-form-label, #half-day-form label{
+  display: inline-block;
+  width: 250px;
+}
+
+#approve-leave-form {
+  
+}
+
+.front #sidebar-right{
+  width: 30% !important;  
+}
+
+#edit-half-day label, #-leave-app-builder label, , #edit-half-day-rule-teaching label{
+  display: inline-block;
+  width: 200px;
+}
+.form-item-half-day-rule-teaching input{
+  float: left;
+  margin-right: 5px;
+}
+.form-item-half-day-rule-admin input{
+  float: left;
+  margin-right: 5px;
+}
+
+.form-item-half-day-form input{
+  float: left;
+  margin-right: 5px;
+}
+
+.leave_title{
+  width: 170px !important;
+  float: left;
+}
+
+.leave_content{
+  font-weight: 700;  
+}
+
+.leave_fs{
+  width: 31%;
+  position: relative;
+  display: inline-block;
+  vertical-align:top; 
+  margin: 15px;
+}
+
+.no_leave_req{
+  background: PURPLE;
+  padding: 10px;
+  color: WHITE;
+  font-weight: 800;
+}
+
+.approve_leave .form-submit{
+  background: GREEN;
+  float: left;
+}
+
+.reject_leave .form-submit{
+  background: RED !important;
+  float: right;
+}
+        
+.page-admin-staff-leave #overlay{
+  width: 50%;
+}
+
+.page-apply-leave #main-content{
+  width: 70%;
+  margin-left: 15%;
+}
+
+#role-leave-form .form-type-hierarchical-select label, #each-leave-form  .form-type-hierarchical-select label{
+  float: left;
+}
+
+table tbody td h3{
+  margin: 5px !important;
+}
+
+#leave-page table thead th, #leave-page table tbody td{
+  text-align: center !important;
+}
+
+#leave-page #delete_leave input[type="submit"]{
+  background: red !important;
+}
+
+
+.page-admin-staff-leave-settings #branding{
+  background-color: 	#008B8B !important;
+}
+
+.suggestion{
+  background: RED;
+  padding: 5px;
+  color: WHITE;
+}
+
+.test_class{
+  color: RED;
+}
+
+.page-admin-staff-leave-settings #main-content{
+  width: 70%;
+  margin-left: 15%;
+}
+
+.leave_reason{
+  max-width: 400px;
+}
+
+.page-leave-approve #overlay-close-wrapper{
+  display: none;
+}
+
+.page-leave-reject #overlay-close-wrapper{
+  display: none;
+}
+
+.leave_remaining{
+  background: #DCDCDC !important;
+  text-align: left !important;
+  color: 	#696969 !important;
+  font-weight: 800 !important;
+  margin-bottom: 0px !important;
+  margin-left: 40px !important;
+  padding-left: 20px !important;
+  margin-right: 40px !important;
+  font-size: 15px !important;
+}
+
+.leave_warning{
+  background:#FF6347;
+  text-align: center;
+  text-align: left !important;
+  vertical-align: middle; 
+  color: WHITE;
+  font-size: 15px !important;
+  margin-left: 40px !important;
+  margin-right: 40px !important;
+  font-weight: 600;
+  padding-left: 50px !important;
+  padding: 5px;
+  margin-bottom: 1px !important;
+}
+
+.form-item-from, .form-item-no-of-working-days{
+  margin-top: 10px !important;
+}
+
+.leave_success{
+  background:WHITE;
+  text-align: right !important;
+  color: GREEN !important;
+  font-size: 15px !important;
+  margin-left: 40px !important;
+  margin-right: 40px !important;
+  font-weight: 600;
+  padding-left: 50px !important;
+  padding: 5px;
+  margin-bottom: 1px !important;
+}
+
+.leave_error{
+  background:WHITE;
+  text-align: right !important;
+  color: MAROON;
+  font-size: 15px !important;
+  margin-left: 40px !important;
+  margin-right: 40px !important;
+  font-weight: 600;
+  padding-left: 50px !important;
+  padding: 5px;
+  margin-bottom: 1px !important;
+}
+
+#approve-leave-form table thead th, #approve-leave-form table tbody td{
+  text-align: center !important;
+}
+
+.page-admin-staff-leave-settings #overlay #main-content{
+  width: 100% !important;
+}
+
+.fa-suitcase{
+  font-size: 100px !important;
+  float: right;
+}

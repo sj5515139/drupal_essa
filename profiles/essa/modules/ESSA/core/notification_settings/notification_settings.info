@@ -1,0 +1,7 @@
+name = Notification Settings
+description = Customize the settings of Email messages and notifications.
+core = 7.x
+package = ESSA Core
+files[] = notification_settings.module
+stylesheets[all][] = notification_settings.css
+dependencies[] = notifications

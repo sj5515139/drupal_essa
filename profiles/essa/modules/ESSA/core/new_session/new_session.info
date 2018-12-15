@@ -1,0 +1,4 @@
+name = New Session
+description = Create new session variable and database tables for new session.
+core = 7.x
+package = ESSA Core

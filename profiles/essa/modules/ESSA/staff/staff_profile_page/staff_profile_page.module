@@ -1,0 +1,515 @@
+<?php
+
+/**
+ * Implements hook_admin_paths()
+ */
+function staff_profile_page_paths() {
+	$paths = array(
+		'user/%staff/leave/application' => TRUE,
+		'user/%staff/leave/*' => TRUE,
+	);
+	return $paths;
+}
+
+/** 
+* Implementing hook_menu
+*/
+function staff_profile_page_menu(){
+	$items = array();
+	$uri = $_SERVER['HTTP_HOST'] . '/' . request_uri();
+	
+	$session_id = (string)variable_get('essa_sid');
+	$staff_master_table = 'essa_'.$session_id.'_master_staff_table';
+	$uri = $_SERVER['HTTP_HOST'] . '/' . request_uri();
+	$staff = db_query("
+		SELECT * from {$staff_master_table} where type = 'Teaching';"
+	);
+	foreach($staff as $s){
+		$items['user/%staff/teacher_timetable'] = array(
+			'title' => 'Time Table',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('display_timetable',1),
+			'access callback' => TRUE,
+			'type' => MENU_LOCAL_ACTION,
+			'file' => 'display_timetable.admin.inc',
+		  'file path' => drupal_get_path('module','staff_profile_page').'/includes',
+			'weight' => 8,
+		);
+	}
+	
+	$items['user/%staff/leave'] = array(
+		'title' => 'Leave',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('display_leave',1),
+		'access callback' => TRUE,
+		'type' => MENU_LOCAL_ACTION,
+		'file' => 'display_leave.admin.inc',
+		'file path' => drupal_get_path('module','staff_profile_page').'/includes',
+		'weight' => 9,
+	);
+	
+	$items['user/%staff/staff_attendances'] = array(
+		 'title' => 'Attendance',
+	  'page callback' => 'display_attendance',
+		'page arguments' => array(1),
+		'access callback' => TRUE,
+		'type' => MENU_LOCAL_ACTION,
+		'file' => 'display_attendance.admin.inc',
+    'file path' => drupal_get_path('module','staff_profile_page').'/includes',
+		'weight' => 10,
+	);
+	
+	$items['user/%staff/payroll'] = array(
+		 'title' => 'Payroll',
+	  'page callback' => 'drupal_get_form',
+		'page arguments' => array('display_payroll',1),
+		'access callback' => TRUE,
+		'type' => MENU_LOCAL_ACTION,
+		'file' => 'payroll.admin.inc',
+    'file path' => drupal_get_path('module','staff_profile_page').'/includes',
+		'weight' => 10,
+	);
+	return $items;
+}
+
+function stf_load($user){
+	$role = db_query("
+		SELECT rid from users_roles where uid = :uid;", array(':uid' => $user)
+	);
+	
+	foreach($role as $r){
+		$rid = $r->rid;
+	}
+	 
+	$staff_role = db_query("
+		SELECT rid from role where name = 'Staff';"
+	);
+	foreach($staff_role as $sr){
+		$srid = $sr->rid;
+	}
+	if($rid == $srid){
+		return $user;
+	} else{
+		return FALSE;
+	}
+}
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function staff_profile_page_theme() {
+  return array(
+    'teacher_time_table_theme_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'leave_display_theme_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'leave_history_theme_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+  );
+}
+
+
+/**
+ *Implements hook_block_info()
+ */
+function staff_profile_page_block_info(){
+	$block['staff_general_details'] = array(
+		'info' => t('Staff General Details'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+  
+	$block['staff_additional_details'] = array(
+		'info' => t('Staff Additional Details'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+	
+  db_merge('block')
+  ->key(array('theme' => 'essa_theme', 'delta' => 'staff_general_details', 'module' => 'staff_profile_page'))
+  ->fields(array(
+    'region' => 'sidebar_left',
+    'pages' => 'user/*',
+    'status' => 1,
+    'visibility' => 1,
+	'title' => '<none>',
+  ))
+  ->execute();
+  
+  db_merge('block')
+  ->key(array('theme' => 'essa_theme', 'delta' => 'staff_additional_details', 'module' => 'staff_profile_page'))
+  ->fields(array(
+    'region' => 'content',
+    'pages' => 'user/*',
+    'status' => 1,
+    'visibility' => 1,
+	'title' => '<none>',
+  ))
+  ->execute();
+	return $block;
+}
+
+/**
+ *Implements hook_block_view()
+ */
+function staff_profile_page_block_view($delta = ''){
+	$rid = array();
+	switch($delta){
+		case 'staff_general_details' :
+			$session_id = (string)variable_get('essa_sid');
+			$staff_master_table = 'essa_'.$session_id.'_master_staff_table';
+			$uri = $_SERVER['HTTP_HOST'] . '/' . request_uri();
+			$pos = strrpos($uri, "/");
+			$uid = substr($uri,$pos+1);
+			
+			$staff_role = db_query("
+				SELECT rid from role where name = 'Staff';"
+			);
+			foreach($staff_role as $sr){
+				$srid = $sr->rid;
+			}
+			
+			if(is_numeric($uid)){
+				$uid = $uid;
+			}else{
+				$staff = db_query("
+				  SELECT * from {$staff_master_table} where emp_id = :emp_id;", array(':emp_id' => $uid)
+				);
+				foreach($staff as $s){
+					$uid = $s->uid;
+				}
+			}
+			
+			$role = db_query("
+				SELECT rid from users_roles where uid = :uid;", array(':uid' => $uid)
+			);
+			foreach($role as $r){
+				$rid[] = $r->rid;
+			}
+			
+			if(in_array($srid, $rid)){
+				$staff = db_query("
+				  SELECT * from {$staff_master_table} where uid = :uid;", array(':uid' => $uid)
+				);
+				foreach($staff as $s){
+					$emp_id = $s->emp_id;
+					$gender = $s->gender;
+					$fname = $s->fname;
+					$lname = $s->lname;
+					$type = $s->type;
+					$grade = $s->grade;
+					$joining_dt = $s->joining_date;
+					$dob = $s->dob;
+					$email = $s->email;
+					$cno = $s->mobile_no;
+				}
+				
+				$staff_profile_pic = db_query("
+				  SELECT * from users where name = :emp_id;", array(':emp_id' => $emp_id)
+				);
+				foreach($staff_profile_pic as $pic){
+					$staff_pic = $pic->picture;
+				}
+				
+				if($staff_pic != 0){
+					$staff_file_path = db_query("
+					  SELECT * from file_managed where fid = :fid;", array(':fid' => $staff_pic)
+					);
+					foreach($staff_file_path as $path){
+						$pic_name = $path->filename;
+					}
+					global $base_url;
+					$profile_pic = $base_url.'/'.variable_get('file_public_path', conf_path() . '/files').'/pictures/'.$pic_name;
+				}else{
+					global $base_url;
+					if($gender == 'M'){
+						$profile_pic = $base_url.'/'.variable_get('file_public_path', conf_path() . '/files').'/pictures/male.jpg';
+						
+					}else{
+						$profile_pic = $base_url.'/'.variable_get('file_public_path', conf_path() . '/files').'/pictures/female.png';
+					}
+				}
+				
+				$output = '<div style = "text-align:center;"><img src = "'.$profile_pic.'" id = "profile-pic"></div>';	
+				$output .= '<div class="staff-basic-info">';
+				$output .= '<h1 style = "text-align:center;"><b>'.$fname.' '.$lname.'</b></h1>';
+				$output .= '<div class = "staff-info" style = "line-height: 0em;"><div>';
+				$output .= '<p><span id = "detail_title_staff"> Type </span></p><h3><b>'.$type.'</b></h3>';
+				$output .= '<p><span id = "detail_title_staff"> Grade </span></p><h3><b>'.$grade.'</b></h3>';
+				$output .= '<p><span id = "detail_title_staff"> Date of Joining </span></p><h3><b>'.$joining_dt.'</b></h3>';
+				$output .= '<p><span id = "detail_title_staff"> Date of Birth </span></p><h3><b>'.$dob.'</b></h3>';
+				//$output .= '<p><span id = "detail_title"> Email </span></p><h3><b>'.$email.'</b></h3>';
+				$output .= '<p><span id = "detail_title_staff"> Contact No. </span></p><h3><b>'.$cno.'</b></h3>';
+				$output .= '</div></div>';
+				$output .= '</div>';
+				$block['subject'] = 'Staff General Details';
+				$block['content'] = array(
+					'#markup' => $output,
+				);
+				return $block;
+			}
+			break;
+		
+		case 'staff_additional_details':
+			$session_id = (string)variable_get('essa_sid');
+			$staff_master_table = 'essa_'.$session_id.'_master_staff_table';
+			$uri = $_SERVER['HTTP_HOST'] . '/' . request_uri();
+			$pos = strrpos($uri, "/");
+			$uid = substr($uri,$pos+1);
+			$staff_role = db_query("
+				SELECT rid from role where name = 'Staff';"
+			);
+			foreach($staff_role as $sr){
+				$srid = $sr->rid;
+			}
+			
+			if(is_numeric($uid)){
+				$uid = $uid;
+			}else{
+				$staff = db_query("
+				  SELECT * from {$staff_master_table} where emp_id = :emp_id;", array(':emp_id' => $uid)
+				);
+				foreach($staff as $s){
+					$uid = $s->uid;
+				}
+			}
+			
+			$role = db_query("
+				SELECT rid from users_roles where uid = :uid;", array(':uid' => $uid)
+			);
+			foreach($role as $r){
+				$rid[] = $r->rid;
+			}
+			
+			if(is_numeric($uid) && in_array($srid, $rid)){
+				$staff = db_query("
+					SELECT * from {$staff_master_table} where uid = :uid;", array(':uid' => $uid)
+				);
+				foreach($staff as $detail){
+					$emp_id = $detail->emp_id;
+					$output = '<table>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Emp ID.'.'</th>';
+					$output .= '<td>'.$detail->emp_id.'</td>';
+					$output .= '<th>'.'Nick Name'.'</th>';
+					$output .= '<td>'.$detail->nickname.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Type'.'</th>';
+					$output .= '<td>'.$detail->type.'</td>';
+					$output .= '<th>'.'Grade'.'</th>';
+					$output .= '<td>'.$detail->grade.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th colspan = "4">'.'Address'.'</th>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Line1'.'</th>';
+					$output .= '<td>'.$detail->ca_line1.'</td>';
+					$output .= '<th>'.'Line2'.'</th>';
+					$output .= '<td>'.$detail->ca_line2.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'City'.'</th>';
+					$output .= '<td>'.$detail->ca_city.'</td>';
+					$output .= '<th>'.'Pincode'.'</th>';
+					$output .= '<td>'.$detail->ca_pincode.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'State'.'</th>';
+					$output .= '<td>'.$detail->ca_state.'</td>';
+					$output .= '<th>'.'Country'.'</th>';
+					$output .= '<td>'.$detail->ca_country.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Phone No.'.'</th>';
+					$output .= '<td>'.$detail->phone_no.'</td>';
+					$output .= '<th>'.'Mobile No.'.'</th>';
+					$output .= '<td>'.$detail->mobile_no.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '</table>';
+					
+					$output .= '<h1 style = "text-align: center;">Academic/Professional Qualification</h1>';
+					
+					$output .= '<table>';
+					$output .= '<tr>';
+					$output .= '<th>'.'Qualification'.'</th>';
+					$output .= '<th>'.'Discipline/Subject'.'</th>';
+					$output .= '<th>'.'School/College'.'</th>';
+					$output .= '<th>'.'Board/University'.'</th>';
+					$output .= '<th>'.'Year of Passing'.'</th>';
+					$output .= '<th>'.'% of marks'.'</th>';
+					$output .= '<th>'.'Division'.'</th>';
+					$output .= '</tr>';
+					
+					if($detail->hs_discipline != NULL){
+						$output .= '<tr>';
+						$output .= '<th>'.'High School'.'</th>';
+						$output .= '<td>'.$detail->hs_discipline.'</td>';
+						$output .= '<td>'.$detail->hs_school.'</td>';
+						$output .= '<td>'.$detail->hs_board.'</td>';
+						$output .= '<td>'.$detail->hs_passing_year.'</td>';
+						$output .= '<td>'.$detail->hs_marks.'</td>';
+						$output .= '<td>'.$detail->hs_div.'</td>';
+						$output .= '</tr>';
+					}
+					
+					if($detail->inter_discipline != NULL){
+						$output .= '<tr>';
+						$output .= '<th>'.'Inter'.'</th>';
+						$output .= '<td>'.$detail->inter_discipline.'</td>';
+						$output .= '<td>'.$detail->inter_school.'</td>';
+						$output .= '<td>'.$detail->inter_board.'</td>';
+						$output .= '<td>'.$detail->inter_passing_year.'</td>';
+						$output .= '<td>'.$detail->inter_marks.'</td>';
+						$output .= '<td>'.$detail->inter_div.'</td>';
+						$output .= '</tr>';
+					}
+					
+					if($detail->grad_discipline != NULL){
+						$output .= '<tr>';
+						$output .= '<th>'.'Graduation'.'</th>';
+						$output .= '<td>'.$detail->grad_discipline.'</td>';
+						$output .= '<td>'.$detail->grad_school.'</td>';
+						$output .= '<td>'.$detail->grad_board.'</td>';
+						$output .= '<td>'.$detail->grad_passing_year.'</td>';
+						$output .= '<td>'.$detail->grad_marks.'</td>';
+						$output .= '<td>'.$detail->grad_div.'</td>';
+						$output .= '</tr>';
+					}
+					
+					if($detail->pgrad_discipline != NULL){
+						$output .= '<tr>';
+						$output .= '<th>'.'Post Graduation'.'</th>';
+						$output .= '<td>'.$detail->pgrad_discipline.'</td>';
+						$output .= '<td>'.$detail->pgrad_school.'</td>';
+						$output .= '<td>'.$detail->pgrad_board.'</td>';
+						$output .= '<td>'.$detail->pgrad_passing_year.'</td>';
+						$output .= '<td>'.$detail->pgrad_marks.'</td>';
+						$output .= '<td>'.$detail->pgrad_div.'</td>';
+						$output .= '</tr>';
+					}
+					
+					if($detail->bed_discipline != NULL){
+						$output .= '<tr>';
+						$output .= '<th>'.'B.Ed'.'</th>';
+						$output .= '<td>'.$detail->bed_discipline.'</td>';
+						$output .= '<td>'.$detail->bed_school.'</td>';
+						$output .= '<td>'.$detail->bed_board.'</td>';
+						$output .= '<td>'.$detail->bed_passing_year.'</td>';
+						$output .= '<td>'.$detail->bed_marks.'</td>';
+						$output .= '<td>'.$detail->bed_div.'</td>';
+						$output .= '</tr>';
+					}
+					
+					if($detail->ao_discipline != NULL){
+						$output .= '<tr>';
+						$output .= '<th>'.'Any Other'.'</th>';
+						$output .= '<td>'.$detail->ao_discipline.'</td>';
+						$output .= '<td>'.$detail->ao_school.'</td>';
+						$output .= '<td>'.$detail->ao_board.'</td>';
+						$output .= '<td>'.$detail->ao_passing_year.'</td>';
+						$output .= '<td>'.$detail->ao_marks.'</td>';
+						$output .= '<td>'.$detail->ao_div.'</td>';
+						$output .= '</tr>';
+					}
+					
+					$output .= '<tr>';
+					$output .= '<td colspan = "7"></th>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th colspan = "3">'.'Scholarship/Awards/Honours'.'</th>';
+					$output .= '<td colspan = "4">'.$detail->scholarship.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th colspan = "3">'.'Research Work/Publications'.'</th>';
+					$output .= '<td colspan = "4">'.$detail->research.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th colspan = "3">'.'Co-curricular Activities'.'</th>';
+					$output .= '<td colspan = "4">'.$detail->activities.'</td>';
+					
+					$output .= '<tr>';
+					$output .= '<th colspan = "3">'.'Sports/Games/Outdoor Activities'.'</th>';
+					$output .= '<td colspan = "4">'.$detail->sports.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '</table>';
+					
+					if($detail->lang1 != NULL){
+						$output .= '<h1 style = "text-align: center;">Proficiency In Languages</h1>';
+						$output .= '<table>';
+						$output .= '<tr>';
+						$output .= '<th>'.'Language'.'</th>';
+						$output .= '<th>'.'Mother Tongue'.'</th>';
+						$output .= '<th>'.'Read'.'</th>';
+						$output .= '<th>'.'Write'.'</th>';
+						$output .= '<th>'.'Speak'.'</th>';
+						$output .= '</tr>';
+							
+						if($detail->lang1 != NULL){
+							$output .= '<tr>';
+							$output .= '<th>'.$detail->lang1.'</th>';
+							if($detail->lang1_mothertongue == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							if($detail->lang1_read == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							if($detail->lang1_write == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							if($detail->lang1_speak == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							$output .= '</tr>';
+						}
+						
+						if($detail->lang2 != NULL){
+							$output .= '<tr>';
+							$output .= '<th>'.$detail->lang1.'</th>';
+							if($detail->lang2_mothertongue == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							if($detail->lang2_read == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							if($detail->lang2_write == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							if($detail->lang2_speak == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							$output .= '</tr>';
+						}
+						
+						if($detail->lang3 != NULL){
+							$output .= '<tr>';
+							$output .= '<th>'.$detail->lang1.'</th>';
+							if($detail->lang3_mothertongue == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							if($detail->lang3_read == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							if($detail->lang3_write == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							if($detail->lang3_speak == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							$output .= '</tr>';
+						}
+						
+						if($detail->lang4 != NULL){
+							$output .= '<tr>';
+							$output .= '<th>'.$detail->lang1.'</th>';
+							if($detail->lang4_mothertongue == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							if($detail->lang4_read == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							if($detail->lang4_write == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							if($detail->lang4_speak == 1){$output .= '<td>'.'YES'.'</td>';}else{ $output .= '<td>'.'NO'.'</td>';}
+							$output .= '</tr>';
+						}
+						$output .= '</table>';
+					}
+				}
+				$block['subject'] = 'Student Additional Details';
+				$block['content'] = array(
+					'#markup' => $output,
+				);
+				return $block;
+			}
+		break;
+	}
+}

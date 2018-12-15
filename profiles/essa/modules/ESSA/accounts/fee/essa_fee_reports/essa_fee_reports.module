@@ -1,0 +1,25 @@
+<?php
+/**
+ * @file
+ * Code for the ESSA Fee Reports feature.
+ */
+
+include_once 'essa_fee_reports.features.inc';
+
+/**
+ *Implements hook_menu.
+ */
+function essa_fee_reports_menu(){
+	$items['admin/fees/reports/due-report'] = array(
+	  'title' => t('Fee Due Till Date'),
+	  'description' => t('Displays fee due till date'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('due_report'),
+		'access arguments' => array('administer fees'),
+    'file' => 'due_report.admin.inc',
+    'file path' => drupal_get_path('module','essa_fee_reports'),
+		'type' => MENU_LOCAL_ACTION,
+	);
+	
+	return $items;
+}

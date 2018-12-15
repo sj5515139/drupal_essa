@@ -1,0 +1,506 @@
+<?php
+
+/**
+ *Implements hook_permission()
+ */
+function student_profile_page_permission(){
+  return array(
+    'student_remarks' => array(
+      'title' => t('Administer Student Remarks'),
+      'description' => t('Warning: Give to Class Teacher roles only.'),
+    ),
+		'view_student_remarks' => array(
+      'title' => t('View Student Remarks'),
+      'description' => t('Warning: Give to Class Teacher roles only.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_admin_paths()
+ */
+function student_profile_page_admin_paths() {
+  $paths = array(
+    'user/%student/fee_details' => TRUE,
+		'user/%student/remarks' => TRUE,
+  );
+  return $paths;
+}
+
+/** 
+* Implementing hook_menu
+*/
+function student_profile_page_menu(){
+	$session_id = (string)variable_get('essa_sid');
+	$class_table = 'essa_'.$session_id.'_class_list';
+	$timing_table = 'essa_'.$session_id.'_exam_timing';
+	$master_exam_table = 'essa_'.$session_id.'_exam_master';
+	$grade_table = 'essa_'.$session_id.'_exam_grade_settings';
+	$master_student_table = 'essa_'.$session_id.'_master_student_table';
+	
+	$items = array();
+	$uri = $_SERVER['HTTP_HOST'] . '/' . request_uri();
+	
+	$items['user/%student/timetable'] = array(
+		'title' => 'Time Table',
+	  'page callback' => 'drupal_get_form',
+		'page arguments' => array('display_timetable',1),
+		'access callback' => TRUE,
+		'type' => MENU_LOCAL_ACTION,
+		'file' => 'display_timetable.admin.inc',
+    'file path' => drupal_get_path('module','student_profile_page').'/includes',
+		'weight' => 8,
+	);
+	
+	$items['user/%student/attendance'] = array(
+		 'title' => 'Attendance',
+	  'page callback' => 'display_attendance',
+		'page arguments' => array(1),
+		'access callback' => TRUE,
+		'type' => MENU_LOCAL_ACTION,
+		'file' => 'display_attendance.admin.inc',
+    'file path' => drupal_get_path('module','student_profile_page').'/includes',
+		'weight' => 10,
+	);
+	
+	
+	$items['user/%student/schedule'] = array(
+		'title' => ' Schedule',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('display_schedule',1),
+		'access callback' => TRUE,
+		'type' => MENU_LOCAL_ACTION,
+		'file' => 'display_schedule.admin.inc',
+		'file path' => drupal_get_path('module','student_profile_page').'/includes',
+		'weight' => 9,
+	);
+	
+	// $exam_status_table = 'essa_'.$session_id.'_exam_status';
+	// $class_list_table = 'essa_'.$session_id.'_class_list';
+	
+	// $flag = 0;
+	// $status = array();
+	// $classes = db_query("SELECT * FROM {$class_list_table} ORDER BY weight;");
+	// foreach($classes as $class){
+		// $exams = db_query("SELECT * FROM {$master_exam_table}");
+		// foreach($exams as $exam){
+			// if(variable_get($exam->term.$exam->exam_code.$class->class_id.'_result_generate_status') == '1'){
+				// $flag = 1;
+			// }
+			// dsm(variable_get($exam->term.$exam->exam_code.$class->class_id.'_result_generate_status'));
+			
+			// if(variable_get($exam->term.'_'.$exam->exam_code.'_schedule_status') == 'publish' && $flag == 1){
+				// $items['user/%student/schedule%'.$exam->term.'%'.$exam->exam_code] = array(
+					// 'title' => $exam->exam_code.' Schedule',
+					// 'page callback' => 'drupal_get_form',
+					// 'page arguments' => array('display_schedule',1,2),
+					// 'access callback' => TRUE,
+					// 'type' => MENU_LOCAL_ACTION,
+					// 'file' => 'display_schedule.admin.inc',
+					// 'file path' => drupal_get_path('module','student_profile_page').'/includes',
+					// 'weight' => 9,
+				// );
+			// }
+		// }
+	// }
+	
+	$items['user/%student/result'] = array(
+		'title' => 'Result',
+	  'page callback' => 'drupal_get_form',
+		'page arguments' => array('display_result',1),
+		'access callback' => TRUE,
+		'type' => MENU_LOCAL_ACTION,
+		'file' => 'display_result.admin.inc',
+    'file path' => drupal_get_path('module','student_profile_page').'/includes',
+		'weight' => 9,
+	);
+	
+	
+	$items['user/%student/remarks'] = array(
+		 'title' => 'Remarks',
+	  'page callback' => 'drupal_get_form',
+		'page arguments' => array('remarks_form',1),
+		'access arguments' => array('view_student_remarks'),
+		'type' => MENU_LOCAL_ACTION,
+		'file' => 'remarks_form.admin.inc',
+    'file path' => drupal_get_path('module','student_profile_page').'/includes',
+		'weight' => 10,
+	);
+	
+	$items['user/%student/fee_details'] = array(
+		 'title' => 'Fee Details',
+	  'page callback' => 'drupal_get_form',
+		'page arguments' => array('display_fee_detail',1),
+		'access callback' => TRUE,
+		'type' => MENU_LOCAL_ACTION,
+		'file' => 'fee_detail.admin.inc',
+    'file path' => drupal_get_path('module','student_profile_page').'/includes',
+		'weight' => 10,
+	);
+	return $items;
+}
+
+function stud_load($user){
+	$role = db_query("
+		SELECT rid from users_roles where uid = :uid;", array(':uid' => $user)
+	);
+	
+	foreach($role as $r){
+		$rid = $r->rid;
+	}
+	 
+	$stud_role = db_query("
+		SELECT rid from role where name = 'Student';"
+	);
+	foreach($stud_role as $sr){
+		$srid = $sr->rid;
+	}
+	
+	if($rid == $srid){
+		return $user;
+	} else{
+		return FALSE;
+	}
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function student_profile_page_views_api() {
+  return array(
+    'api' => 3.0,
+    'path' => drupal_get_path('module', 'student_profile_page') . '/includes',
+  );
+}
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function student_profile_page_theme() {
+  return array(
+    'student_fee_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'student_time_table_theme_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'display_payment_history_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'display_due_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'remarks_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'this_student_marks_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'student_schedule_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+  );
+}
+
+
+/**
+ *Implements hook_block_info()
+ */
+function student_profile_page_block_info(){
+	$block['student_general_details'] = array(
+		'info' => t('Student General Details'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+  
+	$block['student_additional_details'] = array(
+		'info' => t('Student Additional Details'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+	
+  db_merge('block')
+  ->key(array('theme' => 'essa_theme', 'delta' => 'student_general_details', 'module' => 'student_profile_page'))
+  ->fields(array(
+    'region' => 'sidebar_left',
+    'pages' => 'user/*',
+    'status' => 1,
+    'visibility' => 1,
+	'title' => '<none>',
+  ))
+  ->execute();
+  
+  db_merge('block')
+  ->key(array('theme' => 'essa_theme', 'delta' => 'student_additional_details', 'module' => 'student_profile_page'))
+  ->fields(array(
+    'region' => 'content',
+    'pages' => 'user/*',
+    'status' => 1,
+    'visibility' => 1,
+	'title' => '<none>',
+  ))
+  ->execute();
+	return $block;
+}
+
+/**
+ *Implements hook_block_view()
+ */
+function student_profile_page_block_view($delta = ''){
+	
+	switch($delta){
+		case 'student_general_details' :
+			$session_id = (string)variable_get('essa_sid');
+			$student_master_table = 'essa_'.$session_id.'_master_student_table';
+			$uri = $_SERVER['HTTP_HOST'] . '/' . request_uri();
+			$pos = strrpos($uri, "/");
+			$uid = substr($uri,$pos+1);
+			$stud_role = db_query("
+				SELECT rid from role where name = 'Student';"
+			);
+			foreach($stud_role as $sr){
+				$srid = $sr->rid;
+			}
+			$role = db_query("
+				SELECT rid from users_roles where uid = :uid;", array(':uid' => $uid)
+			);
+			$rid = NULL;
+			foreach($role as $r){
+				$rid = $r->rid;
+			}
+			if(is_numeric($uid) && $rid == $srid){
+				$student_detail = db_query("
+				  SELECT * from {$student_master_table} where uid = :uid;", array(':uid' => $uid)
+				);
+				
+				foreach($student_detail as $detail){
+					$adm_no = $detail->adm_no;
+					$class = $detail->class;
+					$section = $detail->section;
+					$first_name = $detail -> first_name;
+					$middle_name = $detail->middle_name;
+					$last_name = $detail -> last_name;
+					$doa = $detail -> doa;
+					$dob = $detail -> dob;
+					$email = isset($detail -> s_email)?$detail -> s_email:NULL;
+					$cno = isset($detail -> r_phone)?$detail -> r_phone:NULL;
+					$gender = $detail->gender;
+				}
+				
+				$student_profile_pic = db_query("
+				  SELECT * from users where name = :adm_no;", array(':adm_no' => $adm_no)
+				);
+				foreach($student_profile_pic as $pic){
+					$stud_pic = $pic->picture;
+				}
+				
+				if($stud_pic != 0){
+					$student_file_path = db_query("
+					  SELECT * from file_managed where fid = :fid;", array(':fid' => $stud_pic)
+					);
+					foreach($student_file_path as $path){
+						$pic_name = $path->filename;
+					}
+					global $base_url;
+					$profile_pic = $base_url.'/'.variable_get('file_public_path', conf_path() . '/files').'/pictures/'.$pic_name;
+				}else{
+					global $base_url;
+					if($gender == 'Male'){
+						$profile_pic = $base_url.'/'.variable_get('file_public_path', conf_path() . '/files').'/pictures/boy.png';
+					}elseif($gender == 'Female'){
+						$profile_pic = $base_url.'/'.variable_get('file_public_path', conf_path() . '/files').'/pictures/girl.png';
+					}else{
+						$profile_pic = $base_url.'/'.variable_get('file_public_path', conf_path() . '/files').'/pictures/boy.png';
+					}
+				}
+				
+				$output = '<div style = "text-align:center;"><img src = "'.$profile_pic.'" id = "profile-pic"></div>';	
+				$output .= '<div class="student-basic-info">';
+				$output .= '<h1 style = "text-align:center;"><b>'.$first_name.' '.$middle_name.' '.$last_name.'</b></h1>';
+				$output .= '<div class = "student-info" style = "line-height: 0em;"><div>';
+				$output .= '<p><span id = "detail_title"> Class </span></p><h3><b>'.$class.' - '.$section.'</b></h3>';
+				$output .= '<p><span id = "detail_title"> Date of Admission </span></p><h3><b>'.$doa.'</b></h3>';
+				$output .= '<p><span id = "detail_title"> Date of Birth </span></p><h3><b>'.$dob.'</b></h3>';
+				//$output .= '<p><span id = "detail_title"> Email ID </span></p><h3><b>'.$email.'</b></h3>';
+				$output .= '<p><span id = "detail_title"> Contact No. </span></p><h3><b>'.$cno.'</b></h3>';
+				$output .= '</div></div>';
+				$output .= '</div>';
+				$block['subject'] = 'Student General Details';
+				$block['content'] = array(
+					'#markup' => $output,
+				);
+				return $block;
+			}	
+			break;
+		case 'student_additional_details':
+			$session_id = (string)variable_get('essa_sid');
+			$student_master_table = 'essa_'.$session_id.'_master_student_table';
+			$uri = $_SERVER['HTTP_HOST'] . '/' . request_uri();
+			$pos = strrpos($uri, "/");
+			$uid = substr($uri,$pos+1);
+			$stud_role = db_query("
+				SELECT rid from role where name = 'Student';"
+			);
+			foreach($stud_role as $sr){
+				$srid = $sr->rid;
+			}
+			$role = db_query("
+				SELECT rid from users_roles where uid = :uid;", array(':uid' => $uid)
+			);
+			$rid = NULL;
+			foreach($role as $r){
+				$rid = $r->rid;
+			}
+			if(is_numeric($uid) && $rid == $srid){
+				$student_detail = db_query("
+					SELECT * from {$student_master_table} where uid = :uid;", array(':uid' => $uid)
+				);
+				foreach($student_detail as $detail){
+					$adm_no = $detail->adm_no;
+					$class = $detail->class;
+					$section = $detail->section;
+					$bus_stop = $detail->stop_name;
+					
+					$output = '<table>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Admission no.'.'</th>';
+					$output .= '<td>'.$detail->adm_no.'</td>';
+					$output .= '<th>'.'Roll No.'.'</th>';
+					$output .= '<td>'.$detail->roll_no.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Father\'s Name'.'</th>';
+					$output .= '<td>'.$detail->father_name.'</td>';
+					$output .= '<th>'.'Mother\'s Name'.'</th>';
+					$output .= '<td>'.$detail->mother_name.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'House'.'</th>';
+					$output .= '<td>'.$detail->house.'</td>';
+					$output .= '<th>'.'Hostel'.'</th>';
+					$output .= '<td>'.$detail->room.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr class = "break">';
+					$output .= '<th colspan = "2" style = "background: #5F9EA0; color: WHITE; border: 1px solid #5F9EA0; border-bottom: WHITE;">Residential Address</th>';
+					$output .= '<th colspan = "2" style = "background: #5F9EA0; color: WHITE; border: 1px solid #5F9EA0; border-bottom: WHITE;">Correspondence Address</th>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Line1'.'</th>';
+					$output .= '<td>'.$detail->r_line1.'</td>';
+					$output .= '<th>'.'Line1'.'</th>';
+					$output .= '<td>'.$detail->c_line1.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Line2'.'</th>';
+					$output .= '<td>'.$detail->r_line2.'</td>';
+					$output .= '<th>'.'Line2'.'</th>';
+					$output .= '<td>'.$detail->c_line2.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'City'.'</th>';
+					$output .= '<td>'.$detail->r_city.'</td>';
+					$output .= '<th>'.'City'.'</th>';
+					$output .= '<td>'.$detail->c_city.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'State'.'</th>';
+					$output .= '<td>'.$detail->r_state.'</td>';
+					$output .= '<th>'.'State'.'</th>';
+					$output .= '<td>'.$detail->c_state.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Pincode'.'</th>';
+					$output .= '<td>'.$detail->r_pincode.'</td>';
+					$output .= '<th>'.'Pincode'.'</th>';
+					$output .= '<td>'.$detail->c_pincode.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Country'.'</th>';
+					$output .= '<td>'.$detail->r_country.'</td>';
+					$output .= '<th>'.'Country'.'</th>';
+					$output .= '<td>'.$detail->c_country.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Phone No.'.'</th>';
+					$output .= '<td>'.$detail->r_phone.'</td>';
+					$output .= '<th>'.'Phone No.'.'</th>';
+					$output .= '<td>'.$detail->c_phone.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Fax'.'</th>';
+					$output .= '<td>'.$detail->r_fax.'</td>';
+					$output .= '<th>'.'Fax'.'</th>';
+					$output .= '<td>'.$detail->c_fax.'</td>';
+					$output .= '</tr>';
+					
+					if($detail->ec1 != NULL && $detail->ec2 == NULL && $detail->ec3 == NULL && $detail->ec4 == NULL){
+						$output .= '<tr>';
+						$output .= '<th>'.'Emergency Contact No.'.'</th>';
+						$output .= '<td colspan = "3" style = "color: RED;">'.$detail->ec1.','.$detail->ec2.'</td>';
+						$output .= '</tr>';
+					}elseif($detail->ec1 != NULL && $detail->ec2 != NULL && $detail->ec3 == NULL && $detail->ec4 == NULL){
+						$output .= '<tr>';
+						$output .= '<th>'.'Emergency Contact No.'.'</th>';
+						$output .= '<td colspan = "3" style = "color: RED;">'.$detail->ec1.','.$detail->ec2.'</td>';
+						$output .= '</tr>';
+					}elseif($detail->ec1 != NULL && $detail->ec2 != NULL && $detail->ec3 != NULL && $detail->ec4 == NULL){
+						$output .= '<tr>';
+						$output .= '<th>'.'Emergency Contact No.'.'</th>';
+						$output .= '<td colspan = "3" style = "color: RED;">'.$detail->ec1.','.$detail->ec2.','.$detail->ec3.'</td>';
+						$output .= '</tr>';
+					}elseif($detail->ec1 != NULL && $detail->ec2 != NULL && $detail->ec3 != NULL && $detail->ec4 != NULL){
+						$output .= '<tr>';
+						$output .= '<th>'.'Emergency Contact No.'.'</th>';
+						$output .= '<td colspan = "3" style = "color: RED;">'.$detail->ec1.','.$detail->ec2.','.$detail->ec3.','.$detail->ec4.'</td>';
+						$output .= '</tr>';
+					}
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Student\'s Email'.'</th>';
+					$output .= '<td>'.$detail->s_email.'</td>';
+					$output .= '<th>'.'Parent\'s Email'.'</th>';
+					$output .= '<td>'.$detail->p_email.'</td>';
+					$output .= '</tr>';
+					
+					$output .= '<tr>';
+					$output .= '<th>'.'Bus Stop'.'</th>';
+					$output .= '<td>'.$bus_stop.'</td>';
+					$output .= '<th>'.'Room No.'.'</th>';
+					$output .= '<td>'.$detail->room.'</td>';
+					$output .= '</tr>';
+					$output .= '</table>';
+				}
+				$block['subject'] = 'Student Additional Details';
+				$block['content'] = array(
+					'#markup' => $output,
+				);
+				return $block;
+			}
+		break;
+	}
+}
+
+/**
+ *Supporting function to clean_string the array id.
+ */
+function clean_stud_class($string) {
+   $string = str_replace('.', '', $string); // Replaces all spaces with hyphens.
+	 $string = str_replace(' ', '', $string);
+   return preg_replace('/[^A-Za-z0-9\-]/', '', $string); // Removes special chars.
+}

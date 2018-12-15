@@ -1,0 +1,1021 @@
+<?php
+
+/**
+ * Implements hook_admin_paths()
+ */
+function leave_admin_paths() {
+	$paths = array(
+		'admin/staff/leave/approve_leave' => FALSE,
+		'leave/approve' => TRUE,
+		'leave/reject' => TRUE,
+		'user/%staff/leave/application' => TRUE,
+		'user/%staff/leave/*' => TRUE,
+		'admin/staff/leave/settings/staff_leave' => FALSE,
+		'admin/staff/leave/settings/half_day_rules' => TRUE,
+	);
+	return $paths;
+}
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function leave_theme() {
+  return array(
+    'leave_type_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'staff_leave_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'pending_leave_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'leave_moderator_action_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'leave_principal_approval_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'leave_principal_rejected_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'leave_principal_pending_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'leave_history_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'leave_application_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'staff_leave_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'leave_per_month_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+  );
+}
+
+/**
+ *Theme function
+ */
+function theme_leave_history_table(&$variables){
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Leave ID'),t('From'), t('To'), t('No. of Days'), t('No. of Working Days'),t('Requested on'),t('Status'),t('Status Remark'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ *Implements hook_permission()
+ */
+function leave_permission(){
+  return array(
+    'apply_leave' => array(
+      'title' => t('Apply for Leave'),
+      'description' => t('For staffs only.'),
+    ),
+		'approve_leave' => array(
+      'title' => t('Approve Leave'),
+      'description' => t('For principal only.'),
+    ),
+		'leave_moderator' => array(
+      'title' => t('Leave Moderator'),
+      'description' => t('Leave will be routed to them first, before principal takes any action.'),
+    ),
+    'administer_leave' => array(
+      'title' => t('Administer Leave'),
+      'description' => t('For admin only. It gives the permission to create & edit leave types'),
+    ),
+  );
+}
+
+/**
+ *Implements hook_menu.
+ */
+function leave_menu(){
+  $items = array();
+  
+  $items['admin/staff/leave'] = array(
+	  'title' => t('Leave'),
+	  'description' => t('Manage Leave types.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('leave_page'),
+	  'access arguments' => array('apply_leave'),
+		'file' => 'leave.admin.inc',
+    'file path' => drupal_get_path('module','leave').'/includes',
+	);
+  
+  $items['admin/staff/leave/settings'] = array(
+	  'title' => 'Settings',
+    'description' => t('Manage Leave types.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('leave_page'),
+	  'access arguments' => array('administer_leave'),
+		'file' => 'leave.admin.inc',
+    'file path' => drupal_get_path('module','leave').'/includes',
+    'weight' => 99,
+	);
+  
+  $session_id = (string)variable_get('essa_sid');
+	$leave_table = 'essa_'.$session_id.'_leave_types';
+	$leaves = db_query("
+    SELECT * from {$leave_table};
+  ");
+	
+  foreach($leaves as $leave){
+    $items['admin/staff/leave/settings/'.$leave->leave_id] = array(
+      'title' => $leave->leave_id,
+      'description' => t('Manage Leave types.'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('each_leave_form',4),
+      'access arguments' => array('administer_leave'),
+    	'file' => 'each_leave.admin.inc',
+      'file path' => drupal_get_path('module','leave').'/includes',
+    );
+  }
+	
+	$items['delete-leave'] = array(
+    'title' => 'Delete leave',
+    'page callback' => 'delete_leave_pagecallback',
+    'access arguments' => array('administer_leave'),
+    'file' => 'leave.admin.inc',
+    'file path' => drupal_get_path('module','leave').'/includes',
+  );
+    
+  
+  $items['admin/staff/leave/settings/create_leave_type'] = array(
+	  'title' => t('Create Leave Type'),
+	  'description' => t('Create Leave types.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('leave_form'),
+	  'access arguments' => array('administer_leave'),
+		'file' => 'create_leave.admin.inc',
+    'file path' => drupal_get_path('module','leave').'/includes',
+    'type' => MENU_LOCAL_ACTION,
+    'weight' => -100,
+	);
+  
+  $items['admin/staff/leave/settings/create_leave_type_per_role'] = array(
+	  'title' => t('Create Leave Type(Post-wise)'),
+	  'description' => t('Create Leave types.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('role_leave_form'),
+	  'access arguments' => array('administer_leave'),
+		'file' => 'create_leave_per_role.admin.inc',
+    'file path' => drupal_get_path('module','leave').'/includes',
+    'type' => MENU_LOCAL_ACTION,
+    'weight' => -99,
+	);
+  
+  
+  // $items['admin/staff/leave/settings/od'] = array(
+	  // 'title' => t('On Duty(OD)'),
+	  // 'description' => t('OD type.'),
+	  // 'page callback' => 'drupal_get_form',
+    // 'page arguments' => array('od_form'),
+	  // 'access arguments' => array('administer_leave'),
+		// 'file' => 'od.admin.inc',
+    // 'file path' => drupal_get_path('module','leave').'/includes',
+	// );
+
+	
+	// $items['admin/staff/leave/settings/sl'] = array(
+	  // 'title' => t('Special Leave(SL)'),
+	  // 'description' => t('SL type.'),
+	  // 'page callback' => 'drupal_get_form',
+    // 'page arguments' => array('sl_form'),
+	  // 'access arguments' => array('administer_leave'),
+		// 'file' => 'sl.admin.inc',
+    // 'file path' => drupal_get_path('module','leave').'/includes',
+	// );
+	
+	// $items['admin/staff/leave/settings/lwp'] = array(
+	  // 'title' => t('Leave Without Pay(LWP)'),
+	  // 'description' => t('SL type.'),
+	  // 'page callback' => 'drupal_get_form',
+    // 'page arguments' => array('lwp_form'),
+	  // 'access arguments' => array('administer_leave'),
+		// 'file' => 'lwp.admin.inc',
+    // 'file path' => drupal_get_path('module','leave').'/includes',
+	// );
+	
+	$items['admin/staff/leave/apply_leave'] = array(
+	  'title' => t('Apply for Leave'),
+	  'description' => t('Apply For Leave'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('apply_leave_form'),
+	  'access arguments' => array('apply_leave'),
+		'file' => 'apply_leave.admin.inc',
+    'file path' => drupal_get_path('module','leave').'/includes',
+	);
+	
+	$items['admin/staff/leave/approve_leave'] = array(
+	  'title' => t('Approve Leave'),
+	  'description' => t('Approve Leave'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('approve_leave_form'),
+	  'access arguments' => array('approve_leave'),
+		'file' => 'approve_leave.admin.inc',
+    'file path' => drupal_get_path('module','leave').'/includes',
+	);
+	
+	/*
+	$items['admin/staff/leave/approve_leave/leave_summary'] = array(
+	  'title' => t('Leave Summary'),
+	  'description' => t('Leave Summary'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('leave_summary_form'),
+	  'access arguments' => array('apply_leave'),
+		'file' => 'leave_summary.admin.inc',
+    'file path' => drupal_get_path('module','leave').'/includes',
+		'type' => MENU_LOCAL_ACTION,
+	);
+	*/
+	
+	$items['leave/approve'] = array(
+	  'title' => t('Approve Leave'),
+	  'description' => t('Approve Leave'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('approve_leave'),
+	  'access arguments' => array('approve_leave'),
+		'file' => 'approve_leave_page.admin.inc',
+    'file path' => drupal_get_path('module','leave').'/includes',
+		'type' => MENU_LOCAL_ACTION,
+	);
+	
+	
+	$items['leave/reject'] = array(
+	  'title' => t('Reject Leave'),
+	  'description' => t('Reject Leave'),
+	  'page callback' => 'drupal_get_form',
+	'page arguments' => array('reject_leave'),
+	  'access arguments' => array('approve_leave'),
+		'file' => 'reject_leave_page.admin.inc',
+    'file path' => drupal_get_path('module','leave').'/includes',
+		'type' => MENU_LOCAL_ACTION,
+	);
+	
+	$items['user/%staff/leave/application'] = array(
+		'title' => t('My Application'),
+		'description' => t('My Application'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('my_application',1),
+		'access arguments' => array('apply_leave'),
+		'file' => 'my_application.admin.inc',
+		'file path' => drupal_get_path('module','leave').'/includes',
+		'type' => MENU_CALLBACK,
+	);
+	
+	$session_id = (string)variable_get('essa_sid');
+	$leave_staff_history_table = 'essa_'.$session_id.'_leave_staff_history';
+	$leave_detail = db_query("
+		SELECT * from {$leave_staff_history_table}"
+	);
+	foreach($leave_detail as $ld){
+		$items['user/%staff/leave/'.$ld->emp_id.'%'.$ld->req_timestamp] = array(
+			'title' => t('Edit Application'),
+			'description' => t('Edit Application'),
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('edit_leave',3),
+			'access arguments' => array('apply_leave'),
+			'file' => 'edit_leave_application.admin.inc',
+			'file path' => drupal_get_path('module','leave').'/includes',
+			'type' => MENU_CALLBACK,
+		);
+		
+		$items['user/%staff/leave/delete/'.$ld->emp_id.'%'.$ld->req_timestamp] = array(
+			'title' => t('Delete Application'),
+			'description' => t('Delete Application'),
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('delete_leave',4),
+			'access arguments' => array('apply_leave'),
+			'file' => 'delete_leave_application.admin.inc',
+			'file path' => drupal_get_path('module','leave').'/includes',
+			'type' => MENU_CALLBACK,
+		);
+	}
+	
+	// $items['admin/staff/leave/settings/staff_leave'] = array(
+		// 'title' => t('Staff Leave'),
+		// 'description' => t('Staff Leave'),
+		// 'page callback' => 'drupal_get_form',
+		// 'page arguments' => array('staff_leave',),
+		// 'access arguments' => array('administer_leave'),
+		// 'file' => 'edit_staff_leave.admin.inc',
+		// 'file path' => drupal_get_path('module','leave').'/includes',
+		// 'weight' => -98,
+	// );
+	
+	$items['admin/staff/leave/settings/edit_staff_leave'] = array(
+		'title' => t('Edit Staff Leave'),
+		'description' => t('Edit Staff Leave'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('edit_staff_leave',),
+		'access arguments' => array('administer_leave'),
+		'file' => 'edit_staff_leave.admin.inc',
+		'file path' => drupal_get_path('module','leave').'/includes',
+		'weight' => -97,
+	);
+	
+	$items['admin/staff/leave/settings/leave_per_month'] = array(
+		'title' => t('Leave(Month-wise)'),
+		'description' => t('Leave(Month-wise)'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('leave_per_month',),
+		'access arguments' => array('administer_leave'),
+		'file' => 'leave_per_month.admin.inc',
+		'file path' => drupal_get_path('module','leave').'/includes',
+		'weight' => -95,
+	);
+	
+	$items['admin/staff/leave/settings/half_day_rules'] = array(
+		'title' => t('Half Day Rules'),
+		'description' => t('Half Day Rules'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('half_day_form',),
+		'access arguments' => array('administer_leave'),
+		'file' => 'half_day.admin.inc',
+		'file path' => drupal_get_path('module','leave').'/includes',
+		'weight' => -95,
+	);
+	
+	$items['leave_staff/autocomplete'] = array(
+    'description' => t('A callback for staffs autocomplete in leave form'),
+    'page callback' => 'leave_staff_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+	
+	$items['leave_moderator/autocomplete'] = array(
+    'description' => t('A callback for Leave Moderator autocomplete in leave form'),
+    'page callback' => 'lm_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+	drupal_cron_run();
+  return $items;
+}
+
+/**
+ * Implements autocomplete function
+ */
+function leave_staff_autocomplete($string = ''){
+	$session = variable_get('essa_sid');
+	$matches = array();
+	$staff_table = 'essa_'.$session.'_master_staff_table';
+	$staffs =  db_query(
+		"SELECT * from {$staff_table} where status = 1;"
+	);
+	foreach($staffs as $staff){
+		$autocomplete_string[] = $staff->emp_id;
+	}
+	
+	foreach($autocomplete_string as $phrases){
+		if(stristr($phrases, $string)){
+			$matches[$phrases] = $phrases;
+		}
+	}
+	
+	drupal_json_output($matches);
+}
+
+/**
+ * Implements autocomplete function
+ */
+function lm_autocomplete($string = ''){
+	$session_id = (string)variable_get('essa_sid');
+	$leave_staff_table = 'essa_'.$session_id.'_leave_staff';
+	$leave_table = 'essa_'.$session_id.'_leave_types';
+  $staff_master_table = 'essa_'.$session_id.'_master_staff_table';
+  
+	$leave_moderator_role = db_query(
+		"SELECT * from role where name = 'Leave Moderator';"
+	);
+	foreach($leave_moderator_role as $lmr){
+		$rid = $lmr->rid;
+ 	}
+	$leave_moderators = db_query(
+		"SELECT * from users_roles where rid = :rid;", array(':rid' => $rid)
+	);
+	foreach($leave_moderators as $lm){
+		$uids[] = $lm->uid;
+	}
+	
+	$lms = array();
+	foreach($uids as $uid){
+		$staff_lm = db_query(
+			"SELECT * from $staff_master_table where uid = :uid;", array(':uid' => $uid)
+		);
+		foreach($staff_lm as $slm){
+			$lms[] = $slm->fname.' '.$slm->lname.' ('.$slm->emp_id.')';
+		}
+	}
+	
+	foreach($lms as $lm){
+		$autocomplete_string[] = $lm;
+	}
+	
+	foreach($autocomplete_string as $phrases){
+		if(stristr($phrases, $string)){
+			$matches[$phrases] = $phrases;
+		}
+	}
+	drupal_json_output($matches);
+}
+
+
+/**
+ *Implements hook_cron()
+ */
+function leave_cron(){
+	$session_id = (string)variable_get('essa_sid');
+	$leave_table = 'essa_'.$session_id.'_leave_types';
+	$leave_staff_table = 'essa_'.$session_id.'_leave_staff';
+	$staff_table = 'essa_'.$session_id.'_master_staff_table';
+	$db_ls = array();
+	$ast = array();
+	$st_post = array();
+	$db_ls_post = array();
+	
+	$st = array();
+	$leaves = db_query("
+    SELECT * from {$leave_table};
+  ");
+	foreach($leaves as $l){
+		if($l->post_id == NULL){
+			$staffs = db_query("
+			  SELECT * from {$staff_table};
+			");
+			foreach($staffs as $staff){
+				$st[$l->leave_id.'*'.$staff->emp_id] = $l->leave_id.'*'.$staff->emp_id;
+			}
+		}
+	}
+	
+	foreach($st as $k => $v){
+		$el = explode('*', $k);
+		$leave_id = $el[0];
+		$emp_id = $el[1];
+		$leave_staffs = db_query("
+		  SELECT * from {$leave_staff_table} where leave_id = :li and emp_id = :ei;", array(':li' => $leave_id, ':ei' => $emp_id)
+		);
+		foreach($leave_staffs as $ls){
+			$db_ls[$ls->leave_id.'*'.$ls->emp_id] = $ls->leave_id.'*'.$ls->emp_id;
+		}
+	}
+	
+	foreach($st as $k=>$v){
+		if(!in_array($v, $db_ls)){
+			$el = explode('*', $k);
+			$leave_id = $el[0];
+			$emp_id = $el[1];
+		
+			insert_leave_staff($leave_id, $emp_id);
+		}
+	}
+	
+	$leaves = db_query("
+    SELECT * from {$leave_table};
+  ");
+	foreach($leaves as $l){
+		if($l->post_id != NULL && $l->leave_type == NULL){
+			
+			$staff_dept_table = 'essa_'.$session_id.'_staff_dept_'.strtolower($l->post_type);
+			$staffs = db_query("
+			  SELECT * from {$staff_dept_table} where post_id = :pi;", array(':pi' => $l->post_id)
+			);
+			foreach($staffs as $staff){
+				$st_post[$l->leave_id.'*'.$staff->emp_id] = $l->leave_id.'*'.$staff->emp_id;
+			}
+		}
+	}
+	
+	foreach($st_post as $k => $v){
+		$el = explode('*', $k);
+		$leave_id = $el[0];
+		$emp_id = $el[1];
+		$leave_staffs = db_query("
+		  SELECT * from {$leave_staff_table} where leave_id = :li and emp_id = :ei;", array(':li' => $leave_id, ':ei' => $emp_id)
+		);
+		foreach($leave_staffs as $ls){
+			$db_ls_post[$ls->leave_id.'*'.$ls->emp_id] = $ls->leave_id.'*'.$ls->emp_id;
+		}
+	}
+	
+	foreach($st_post as $k=>$v){
+		if(!in_array($v, $db_ls_post)){
+			$el = explode('*', $k);
+			$leave_id = $el[0];
+			$emp_id = $el[1];
+			$li = explode('-', $leave_id);
+			$leave_type = $li[0];
+			
+			insert_leave_staff($leave_id, $emp_id);
+		}
+	}
+	
+	$leaves = db_query("
+    SELECT * from {$leave_table};
+  ");
+	foreach($leaves as $l){
+		if($l->post_id != NULL && $l->leave_type != NULL){
+			
+			$staff_dept_table = 'essa_'.$session_id.'_staff_dept_'.strtolower($l->post_type);
+			$staffs = db_query("
+			  SELECT * from {$staff_dept_table} where post_id = :pi;", array(':pi' => $l->post_id)
+			);
+			foreach($staffs as $staff){
+				$st_post[$l->leave_id.'*'.$staff->emp_id] = $l->leave_id.'*'.$staff->emp_id;
+			}
+		}
+	}
+	
+	foreach($st_post as $k => $v){
+		$el = explode('*', $k);
+		$leave_id = $el[0];
+		$emp_id = $el[1];
+		$leave_staffs = db_query("
+		  SELECT * from {$leave_staff_table} where leave_id = :li and emp_id = :ei;", array(':li' => $leave_id, ':ei' => $emp_id)
+		);
+		foreach($leave_staffs as $ls){
+			$db_ls_post[$ls->leave_id.'*'.$ls->emp_id] = $ls->leave_id.'*'.$ls->emp_id;
+		}
+	}
+	
+	foreach($st_post as $k=>$v){
+		if(!in_array($v, $db_ls_post)){
+			$el = explode('*', $k);
+			$leave_id = $el[0];
+			$emp_id = $el[1];
+			$li = explode('-', $leave_id);
+			$leave_type = $li[0];
+	
+			$lvs = db_query("
+				SELECT * from {$leave_table} where leave_id = :li;", array(':li'=>$leave_id)
+			);
+			foreach($lvs as $lv){
+				$total_leave = $lv->nod_per_year;
+			}
+			
+			$lvs = db_query("
+				SELECT * from {$leave_staff_table} where leave_id = :li && emp_id = :ei;", array(':li'=>$leave_type, ':ei' => $emp_id)
+			);
+			foreach($lvs as $lv){
+				$leave_taken = $lv->leave_taken;
+			}
+			
+			$leave_remaining = $total_leave - $leave_taken;
+			db_update($leave_staff_table)
+				->fields(array(
+					'total_leave' => $total_leave,
+					'leave_remaining' => $leave_remaining,
+				))
+				->condition(db_and()
+					->condition('emp_id', $emp_id)
+					->condition('leave_id', $leave_type)
+				)
+				->execute();
+		}
+	}
+}
+
+function insert_leave_staff($leave_id, $emp_id){
+	$session_id = (string)variable_get('essa_sid');
+	$leave_staff_table = 'essa_'.$session_id.'_leave_staff';
+	$leave_table = 'essa_'.$session_id.'_leave_types';
+	
+	$lvs = db_query("
+		SELECT * from {$leave_table} where leave_id = :li;", array(':li'=>$leave_id)
+	);
+	foreach($lvs as $lv){
+		$total_leave = $lv->nod_per_year;
+	}
+	
+	db_insert($leave_staff_table)
+		->fields (array(
+		  'leave_id' => $leave_id,
+			'emp_id' => $emp_id,
+			'total_leave' => $total_leave,
+			'leave_remaining' => $total_leave,
+		)
+	)	
+	->execute();
+}
+
+/**
+ *Implements hook_block_info()
+ */
+function leave_block_info(){
+	$block['leave_application'] = array(
+		'info' => t('Leave Application'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+	return $block;
+}
+
+/**
+ *Implements hook_block_view()
+ */
+function leave_block_view($delta = ''){
+	$block['subject'] = 'Leave Application';
+	$block['content'] = array(
+		'#markup' => _leave_app_display(),
+	);
+	return $block;
+}
+
+function _leave_app_display(){
+	$leave_app = drupal_get_form('_leave_app_builder');
+  $rendered_form = drupal_render($leave_app);
+  return $rendered_form;
+}
+
+function _leave_app_builder($form, &$form_state){
+	$session_id = (string)variable_get('essa_sid');
+	$leave_staff_table = 'essa_'.$session_id.'_leave_staff';
+	$leave_table = 'essa_'.$session_id.'_leave_types';
+  $staff_master_table = 'essa_'.$session_id.'_master_staff_table';
+  global $user;
+  $staff_emp_id = db_query(
+		"SELECT * from $staff_master_table where uid = :uid;", array(':uid' => $user->uid)
+	);
+	foreach($staff_emp_id as $sei){
+		$emp_id = $sei->emp_id;
+	}
+  
+  $form['emp_id'] = array(
+    '#type' => 'value',
+    '#value' => $emp_id,
+  );
+  
+  $staff_leave_details = db_query(
+		"SELECT * from $leave_staff_table where emp_id = :emp_id;", array(':emp_id' => $emp_id)
+	);
+	foreach($staff_leave_details as $sld){
+    $leave_ids[] = $sld->leave_id;
+  }
+	
+  $leave_ids[] = 'OD';
+	$leave_ids[] = 'SL';
+	$leave_ids[] = 'LWP';
+	
+	foreach($leave_ids as $lid){
+		$staff_leave_names = db_query(
+			"SELECT * from $leave_table where leave_id = :li;", array(':li' => $lid)
+		);
+		foreach($staff_leave_names as $sln){
+			$lv_id = explode('-',$sln->leave_id);
+			$options[] = $sln->leave_name.'('.$lv_id[0].')';
+		}
+	}
+	
+	$form['leave'] = array(
+    '#type' => 'select',
+    '#title' => t('Select a Leave'),
+		'#description' => 'First select a Leave type',
+    '#required' => TRUE,
+    '#options' => drupal_map_assoc($options),
+    '#ajax' => array(
+      'event' => 'change',
+      'callback' => 'display_leave_remaining',
+      'wrapper' => 'ajax_wrapper',
+      'method' => 'replace',
+      'effect' => 'fade',
+    ),
+  );
+	
+	$form['ajax_wrapper'] = array(
+		'#type' => 'container',
+		'#prefix' => '<div id = "ajax_wrapper">',
+		'#suffix' => '</div>',
+	);
+  
+  $form['from'] = array(
+    '#type' => 'date_popup',
+		'#title' => t('Start Date'),
+	  '#date_format' => 'd/m/Y',
+	  '#required' => TRUE,
+		'#attributes' => array('placeholder' => 'From'), 
+  );
+  
+  $form['to'] = array(
+    '#type' => 'date_popup',
+		'#title' => t('End Date'),
+	  '#date_format' => 'd/m/Y',
+	  '#required' => TRUE,
+		'#attributes' => array('placeholder' => 'To'),
+		'#ajax' => array(
+      'event' => 'change',
+      'callback' => 'leave_warning',
+      'wrapper' => 'ajax_warning_wrapper',
+      'method' => 'replace',
+      'effect' => 'fade',
+    ),
+  );
+	
+	$form['ajax_warning_wrapper'] = array(
+		'#type' => 'container',
+		'#prefix' => '<div id = "ajax_warning_wrapper">',
+		'#suffix' => '</div>',
+	);
+	
+	$form['no_of_working_days'] = array(
+		'#type' => 'textfield',
+		'#title' => 'No. of Working Days',
+		'#size' => 2,
+		'#required' => TRUE,
+	);
+  
+  $form['half_day'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Half Day',
+		'#description' => '<p>If you apply for half day and total leave is more than one day, the last day of your leave will be considered as half day.</p>',
+  );
+	
+  $form['reason'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Reason'),
+		'#attributes' => array('placeholder' => 'Not more than 150 words.'), 
+		'#required' => TRUE,
+  );
+	
+	$uids  = array();
+	$leave_moderator_role = db_query(
+		"SELECT * from role where name = 'Leave Moderator';"
+	);
+	foreach($leave_moderator_role as $lmr){
+		$rid = $lmr->rid;
+ 	}
+	$leave_moderators = db_query(
+		"SELECT * from users_roles where rid = :rid;", array(':rid' => $rid)
+	);
+	foreach($leave_moderators as $lm){
+		$uids[] = $lm->uid;
+	}
+	
+	$lms = array('Principal');
+	foreach($uids as $uid){
+		$staff_lm = db_query(
+			"SELECT * from $staff_master_table where uid = :uid;", array(':uid' => $uid)
+		);
+		foreach($staff_lm as $slm){
+			$lms[] = $slm->fname.' '.$slm->lname.' ('.$slm->emp_id.')';
+		}
+	}
+	
+	$form['apply_to'] = array(
+		'#type' => 'select',
+		'#title' => 'Send for approval to',
+		'#options' =>drupal_map_assoc($lms),
+		'#required' => TRUE,
+	);
+  
+  $form['save'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+  );
+	
+  return $form;
+}
+
+/**
+ *Implements submit function
+ */
+function _leave_app_builder_validate($form, $form_state){
+	$session_id = (string)variable_get('essa_sid');
+  $leave_type_table = 'essa_'.$session_id.'_leave_types';
+	$leave_history_table = 'essa_'.$session_id.'_leave_staff_history';
+	$leave_staff_table = 'essa_'.$session_id.'_leave_staff';
+  $staff_master_table = 'essa_'.$session_id.'_master_staff_table';
+	$from = "(";
+	$to = ")";
+	$leave_id = getStringBetween($form_state['values']['leave'],$from,$to);
+	
+  $leave_record = db_query(
+		"SELECT * from $leave_type_table where leave_id = :li;", array(':li' => $leave_id)
+	);
+  foreach($leave_record as $lr){
+		
+	}
+  $emp_leave_record = db_query(
+		"SELECT * from $leave_staff_table where leave_id = :li and emp_id = :ei;", array(':li' => $leave_id, ':ei' => $form_state['values']['emp_id'])
+	);
+	foreach($emp_leave_record as $elr){
+		$leave_remaining = $elr->leave_remaining;
+	}
+	
+	/*
+	if($leave_remaining != NULL){
+		if($leave_remaining <= 0){
+			dsm('You have exceeded the leave limits.Please select another leave type.');
+		}
+	}
+	*/
+	$leaves = db_query(
+		"SELECT * from $leave_staff_table where emp_id = :emp_id and leave_id = :li;", array(':emp_id' => $form_state['values']['emp_id'], ':li' => $leave_id)
+	);
+	foreach($leaves as $leave){
+		$leave_remaining = $leave->leave_remaining;
+		$leave_taken = $leave->leave_taken;
+		$total_leave = $leave->total_leave;
+	}
+	
+	$datediff = strtotime($form_state['values']['to']) - strtotime($form_state['values']['from']);
+	$no_of_days = floor($datediff/(60*60*24))+1;
+	
+	if($total_leave != NULL){
+		$new_leave_remaining = $leave_remaining - $no_of_days;
+	}
+	
+	if($leave_remaining != NULL){
+		if($new_leave_remaining <= 0){
+			form_set_error('You have exceeded the leave limits.Please select another leave type.');
+			dsm('You have exceeded the leave limits.Please select another leave type.');
+		}
+	}
+}
+
+/**
+ *Implements submit function
+ */
+function _leave_app_builder_submit($form, $form_state){
+	$session_id = (string)variable_get('essa_sid');
+  $leave_type_table = 'essa_'.$session_id.'_leave_types';
+	$leave_history_table = 'essa_'.$session_id.'_leave_staff_history';
+  $staff_master_table = 'essa_'.$session_id.'_master_staff_table';
+	global $user;
+	$leave_moderator_role = db_query(
+		"SELECT * from role where name = 'Leave Moderator';"
+	);
+	foreach($leave_moderator_role as $lmr){
+		$lm_rid = $lmr->rid;
+ 	}
+	$leave_moderators = db_query(
+		"SELECT * from users_roles where rid = :rid and uid = :uid;", array(':rid' => $lm_rid,':uid' => $user->uid)
+	);
+	foreach($leave_moderators as $lm){
+		global $user;
+		$session_id = (string)variable_get('essa_sid');
+		$staff_master_table = 'essa_'.$session_id.'_master_staff_table';
+		$leave_type_table = 'essa_'.$session_id.'_leave_types';
+		$leave_history_table = 'essa_'.$session_id.'_leave_staff_history';
+		$application_time = date('m/d/Y h:i:s');
+		$timestamp = strtotime($application_time);
+		$from_dt = strtotime($form_state['values']['from']);
+		$to_dt = strtotime($form_state['values']['to']);
+		
+		$staff_emp_id = db_query(
+			"SELECT * from $staff_master_table where uid = :uid;", array(':uid' => $user->uid)
+		);
+		foreach($staff_emp_id as $sei){
+			$emp_id = $sei->emp_id;
+		}
+		
+		$datediff = strtotime($form_state['values']['to']) - strtotime($form_state['values']['from']);
+		$no_of_day = floor($datediff/(60*60*24))+1;
+		
+		$from = "(";
+		$to = ")";
+		$leave_id = getStringBetween($form_state['values']['leave'],$from,$to);
+		$leave_moderator = getStringBetween($form_state['values']['apply_to'],$from,$to);
+		$staff_name = db_query(
+			"SELECT * from $staff_master_table where emp_id = :ei;", array(':ei' => $leave_moderator)
+		);
+		foreach($staff_name as $sn){
+			$name = $sn->fname.' '.$sn->lname;
+		}
+		
+		db_insert($leave_history_table)
+			->fields (array(
+			  'req_timestamp' => $timestamp,
+				'leave_id' => $leave_id,
+		    'emp_id' => $emp_id,
+		    'from_date' => $from_dt,
+		    'to_date' => $to_dt,
+				'no_of_days' => $no_of_day,
+				'no_of_working_days' => $form_state['values']['no_of_working_days'],
+				'reason' => $form_state['values']['reason'],
+				'status' => 'Pending with Moderator',
+				'status_remark' => $name,
+				'leave_moderator' => $leave_moderator,
+				'half_day' => $form_state['values']['half_day'],
+			)
+		)	
+		->execute();
+	}
+	
+	$leave_principal_role = db_query(
+		"SELECT * from role where name = 'Principal';"
+	);
+	foreach($leave_principal_role as $lmr){
+		$p_rid = $lmr->rid;
+ 	}
+	
+	$principal = db_query(
+		"SELECT * from users_roles where rid = :rid and uid = :uid;", array(':rid' => $p_rid,':uid' => $user->uid)
+	);
+	foreach($principal as $princi){
+		
+		global $user;
+		$session_id = (string)variable_get('essa_sid');
+		$staff_master_table = 'essa_'.$session_id.'_master_staff_table';
+		$leave_type_table = 'essa_'.$session_id.'_leave_types';
+		$leave_history_table = 'essa_'.$session_id.'_leave_staff_history';
+		$application_time = date('m/d/Y h:i:s');
+		$timestamp = strtotime($application_time);
+		$from_dt = strtotime($form_state['values']['from']);
+		$to_dt = strtotime($form_state['values']['to']);
+		
+		$staff_emp_id = db_query(
+			"SELECT * from $staff_master_table where uid = :uid;", array(':uid' => $user->uid)
+		);
+		foreach($staff_emp_id as $sei){
+			$emp_id = $sei->emp_id;
+		}
+		
+		$datediff = strtotime($form_state['values']['to']) - strtotime($form_state['values']['from']);
+		$no_of_day = floor($datediff/(60*60*24))+1;
+		
+		$from = "(";
+		$to = ")";
+		$leave_id = getStringBetween($form_state['values']['leave'],$from,$to);
+		$leave_moderator = getStringBetween($form_state['values']['apply_to'],$from,$to);
+		
+		db_insert($leave_history_table)
+			->fields (array(
+			  'req_timestamp' => $timestamp,
+				'leave_id' => $leave_id,
+		    'emp_id' => $emp_id,
+		    'from_date' => $from_dt,
+		    'to_date' => $to_dt,
+				'no_of_days' => $no_of_day,
+				'no_of_working_days' => $form_state['values']['no_of_working_days'],
+				'reason' => $form_state['values']['reason'],
+				'status' => 'Pending with Principal',
+				'status_remark' => 'Principal',
+				'leave_moderator' => NULL,
+				'half_day' => $form_state['values']['half_day'],
+			)
+		)	
+		->execute();
+	}
+}
+
+/**
+ * Implementation of hook_mail().
+ */
+function leave_mail($key, &$message, $params){
+
+  // Set the mail content type to html to send an html e-mail (optional).
+  $message['headers']['Content-Type'] = 'text/html; charset=UTF-8; format=flowed';
+
+  // Grab the subject and body from params and add it to the message.
+  $message['subject'] = $params['subject'];
+  $message['body'][] = $params['body'];// Drupal 7
+  //$message['body'] = $params['body']; // Drupal 6, I think
+
+  switch ($key) {
+    case "my_module_mail_example":
+      // Make other changes here if desired...
+      break;
+  }
+
+}

@@ -1,0 +1,6 @@
+name = Secure Permissions
+description = Allowing school authority to set permissions relevant to school only.
+core = 7.x
+package = ESSA Core
+files[] = secure_permission.module
+scripts[] = secure_permission.js

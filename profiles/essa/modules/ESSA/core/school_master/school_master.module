@@ -1,0 +1,1567 @@
+<?php
+/**
+ *Implements hook_permission()
+ */
+function school_master_permission(){
+  return array(
+    'administer school' => array(
+      'title' => t('Administer School Administration'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+		'administer school settings' => array(
+      'title' => t('Administer School Settings'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+		'administer class' => array(
+      'title' => t('Administer Class'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+		'access staff' => array(
+      'title' => t('Access Staffs'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+	'school info' => array(
+      'title' => t('School Information'),
+      'description' => t('Warning: The permission is for all staffs; this permission has security implications.'),
+    ),
+	'administer subject' => array(
+      'title' => t('Manage Subjects'),
+      'description' => t('Warning: The permission is for all staffs; this permission has security implications.'),
+    ),
+	'administer transport settings' => array(
+      'title' => t('Administer Transport'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+	'administer optional subjects' => array(
+      'title' => t('Administer Optional Subject'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+	'allocate houses' => array(
+      'title' => t('Allocate Houses'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_admin_paths()
+ */
+function school_master_admin_paths() {
+  $paths = array(
+    'admin/settings/classes/roll-no' => FALSE,
+		'admin/settings/subjects' => FALSE,
+		'admin/settings/transport_setting' => FALSE,
+		'admin/settings/organisation_structure/allocate_academics' => FALSE,
+		'admin/settings/organisation_structure/allocate_admin' => FALSE,
+		'admin/settings/subjects/manage_optional_subjects' =>FALSE,
+		'admin/structure/dnp/organisation_structure_academics' => FALSE,
+		'admin/structure/dnp/organisation_structure_admin' => FALSE,
+		'delete-route' => TRUE,
+		'reset-route' => TRUE,
+		'subject_teacher_allocation' => TRUE,
+		'manage_optional_subject' => TRUE,
+  );
+	$session = variable_get('essa_sid');
+	$class_list_table = 'essa_'.$session.'_class_list';
+	$class_list = array();
+  
+	$class_list_db = db_query(
+		"SELECT class_id,weight from {$class_list_table} order by weight"
+	);
+  
+  foreach($class_list_db as $class){
+		$sub_url = array(
+			'admin/settings/subjects/'.$class->class_id => FALSE,
+		);
+		$paths = array_merge($paths, $sub_url);
+	}
+	
+	$class_list_db = db_query(
+		"SELECT class_id,weight from {$class_list_table} order by weight"
+	);
+  
+  foreach($class_list_db as $class){
+		//$items['admin/students/manage_transport/'.$class->class_id];
+		$voc = 'class_vocab';//replace this with the taxonomy term
+		$vocabulary = taxonomy_vocabulary_machine_name_load($voc);
+		$terms = taxonomy_get_tree($vocabulary->vid);
+		foreach($terms as $term){
+      if($term->name == $class->class_id){
+        $secs = taxonomy_get_children($term->tid);
+				foreach($secs as $sec){
+					$tr_url = array(
+						'admin/students/manage_transport/'.$class->class_id.'/'.$sec->name => FALSE,
+					);
+					$paths = array_merge($paths, $tr_url);
+				}
+			}
+		}
+	}
+	
+	$session_id = (string)variable_get('essa_sid');
+  $route_table = 'essa_'.$session_id.'_bus_routes';
+  $routes = db_query("
+    SELECT * from {$route_table};
+  ");
+	
+	foreach($routes as $route){
+		$edit_routes = array(
+			'edit_route/'.$route->route_id => TRUE,
+		);
+		$paths = array_merge($paths, $edit_routes);
+	}
+  return $paths;
+}
+
+/**
+ *Implements hook_menu().
+ */
+function school_master_menu(){
+  $items = array();
+  
+	$items['admin/settings'] = array(
+	  'title' => t('School'),
+	  'description' => t('Customising General School Settings.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('setting_form'),
+	  'access arguments' => array('school info'),
+	);
+	
+	$items['admin/settings/basic_info'] = array(
+	  'title' => t('Basic Info'),
+	  'description' => t('Customising General School Settings.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('basicinfo_form'),
+	  'access arguments' => array('school info'),
+		'file' => 'basicinfo.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/school',
+	);
+	
+	$items['admin/settings/transport_setting'] = array(
+	  'title' => t('Transport'),
+	  'description' => t('Customising Transport Settings.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('transport_form'),
+	  'access arguments' => array('administer transport settings'),
+		'file' => 'transport.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/school/transport',
+	);
+	
+	$items['admin/settings/transport_setting/create_route'] = array(
+	  'title' => t('Create Routes'),
+	  'description' => t('Create Bus Routes.'),
+		'weight' => -99,
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('create_route_form'),
+	  'access arguments' => array('administer transport settings'),
+		'file' => 'route.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/school/transport',
+		'type' => MENU_LOCAL_ACTION,
+	);
+	
+	$session_id = (string)variable_get('essa_sid');
+  $route_table = 'essa_'.$session_id.'_bus_routes';
+  $routes = db_query("
+    SELECT * from {$route_table};
+  ");
+	
+	foreach($routes as $route){
+    $items['admin/settings/transport_setting/'.$route->route_id] = array(
+      'title' => $route->route_name,
+      'page callback' => 'drupal_get_form',
+			'page arguments' => array('bus_stop_form', 3),
+			'access arguments' => array('administer transport settings'),
+			'file' => 'bus_stops.admin.inc',
+			'file path' => drupal_get_path('module','school_master').'/includes/school/transport',
+    );
+		
+		$items['edit_route/'.$route->route_id] = array(
+      'title' => 'Edit '.$route->route_name,
+      'page callback' => 'drupal_get_form',
+			'page arguments' => array('edit_route', 1),
+			'access arguments' => array('administer transport settings'),
+			'file' => 'edit_route.admin.inc',
+			'file path' => drupal_get_path('module','school_master').'/includes/school/transport',
+			'type' => MENU_CALLBACK,
+    );
+	}
+	
+	$items['delete-route'] = array(
+    'title' => 'Delete Route',
+    'page callback' => 'delete_route_pagecallback',
+    'access arguments' => array('administer transport settings'),
+    'file' => 'transport.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/school/transport',
+		'type' => MENU_CALLBACK,
+  );
+	
+	$items['reset-route'] = array(
+    'title' => 'Reset Route',
+    'page callback' => 'reset_route_pagecallback',
+    'access arguments' => array('administer transport settings'),
+    'file' => 'transport.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/school/transport',
+		'type' => MENU_CALLBACK,
+  );
+	
+	/*
+  $items['admin/administration'] = array(
+	  'title' => t('School Administration'),
+	  'description' => t('Managing School Administration'),
+	  'page callback' => 'administration_page',
+	  'access arguments' => array('administer school'),
+	);
+	*/
+	$items['admin/settings/organisation_structure'] = array(
+	  'title' => t('Management'),
+	  'description' => t('Manage Departments & Posts'),
+	  'page callback' => 'dnp_main',
+	  'access arguments' => array('school info'),
+	);
+	
+	$items['admin/settings/organisation_structure/academics'] = array(
+	  'title' => t('Academics'),
+	  'description' => t('Manage Departments & Posts'),
+	  'page callback' => 'dnp_academics',
+	  'access arguments' => array('administer school settings'),
+	);
+	
+	$items['admin/settings/organisation_structure/admin'] = array(
+	  'title' => t('Admin'),
+	  'description' => t('Manage Departments & Posts'),
+	  'page callback' => 'dnp_admin',
+	  'access arguments' => array('administer school settings'),
+	);
+	
+	$items['admin/settings/organisation_structure/allocate_academics'] = array(
+	  'title' => t('Academics Posts'),
+	  'description' => t('Manage Departments & Posts'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('allocate_academics'),
+	  'access arguments' => array('administer school settings'),
+		'file' => 'dnp.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/school',
+	);
+	
+	$items['admin/settings/organisation_structure/allocate_admin'] = array(
+	  'title' => t('Admin Posts'),
+	  'description' => t('Manage Departments & Posts'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('allocate_admin'),
+	  'access arguments' => array('administer school settings'),
+		'file' => 'dnp.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/school',
+	);
+	
+	// Permissions and role forms.
+  $items['admin/settings/organisation_structure/permissions'] = array(
+    'title' => 'Manage Permissions',
+    'description' => 'Determine access to features by selecting permissions for roles.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('user_admin_permissions'),
+    'access arguments' => array('administer school settings'),
+    'file' => 'user.admin.inc',
+		'file path' => drupal_get_path('module','user'),
+  );
+  
+	/*
+  $items['admin/students'] = array(
+	  'title' => t('Students'),
+	  'description' => t('Managing Students'),
+	  'page callback' => 'student_page',
+	  'access arguments' => array('access students'),
+	);
+	
+	$items['admin/staff'] = array(
+	  'title' => t('Staff'),
+	  'description' => t('Managing Staff'),
+	  'page callback' => 'staff_page',
+		'access arguments' => array('access staffs'),
+	);
+	*/
+	
+	$items['admin/settings/classes'] = array(
+    'title' => 'Classes',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('class_teacher'),
+		'access arguments' => array('school info'),
+    'file' => 'class_teacher.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/class',
+  );
+	
+	$items['admin/settings/classes/class-setup'] = array(
+    'title' => 'Manage Classes',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('class_setup'),
+		'access arguments' => array('administer class'),
+    'file' => 'class_setup.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/class',
+		'weight' => 1,
+		'type' => MENU_LOCAL_TASK,
+  );
+  
+	$items['admin/settings/classes/class-section'] = array(
+    'title' => 'Manage Sections',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('class_section'),
+		'access arguments' => array('administer class'),
+    'file' => 'class_section.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/class',
+		'weight' => 2,
+		'type' => MENU_LOCAL_TASK,
+  );
+	
+	$items['admin/settings/classes/class-teacher'] = array(
+    'title' => 'Manage Class Teacher',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('class_teacher'),
+		'access arguments' => array('administer class'),
+    'file' => 'class_teacher.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/class',
+		'weight' => 0,
+		'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+	
+	$items['admin/settings/classes/allot-class-teacher'] = array(
+    'title' => 'Manage Class Teacher',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('class_teacher'),
+		'access arguments' => array('administer class'),
+    'file' => 'class_teacher.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/class',
+		'weight' => 0,
+  );
+  
+	$items['admin/settings/subjects'] = array(
+    'title' => 'Subjects',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('subject_list_form'),
+		'access arguments' => array('administer subject'),
+    'file' => 'subject.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/class',
+  );
+	
+	$items['admin/students/manage_optional_subjects'] = array(
+    'title' => 'Manage Optional Subjects',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('op_sub_main'),
+    'access arguments' => array('administer optional subjects'),
+		'weight' => 5,
+  );
+	
+	$session = variable_get('essa_sid');
+	$class_list_table = 'essa_'.$session.'_class_list';
+	$class_list = array();
+  
+	$class_list_db = db_query(
+		"SELECT class_id,weight from {$class_list_table} order by weight"
+	);
+  
+  foreach($class_list_db as $class){
+		$items['admin/settings/subjects/'.$class->class_id] = array(
+      'title' => $class->class_id,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('subject_form', 3),
+			'access arguments' => array('administer subject'),
+      'file' => 'subject.admin.inc',
+			'weight' => $class->weight,
+      'file path' => drupal_get_path('module','school_master').'/includes/class',
+    );
+		
+	$items['admin/settings/subjects/'.$class->class_id.'/subject_teacher_allocation'] = array(
+    'title' => 'Subject Teacher Allocation',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sub_teacher_alloc',3),
+		'access arguments' => array('administer subject'),
+    'file' => 'subject_teacher.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/class',
+		'type' => MENU_LOCAL_ACTION,
+  );
+	
+	$items['admin/settings/subjects/'.$class->class_id.'/manage_optional_subject'] = array(
+    'title' => 'Manage Optional Subject',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('manage_optional_subject',3),
+		'access arguments' => array('administer subject'),
+    'file' => 'manage_optional_subject.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/class',
+		'type' => MENU_LOCAL_ACTION,
+  );
+  }
+	
+	$session = variable_get('essa_sid');
+	$class_list_table = 'essa_'.$session.'_class_list';
+	$class_list = array();
+  
+	$class_list_db = db_query(
+		"SELECT class_id,weight from {$class_list_table} order by weight"
+	);
+  
+	foreach($class_list_db as $class){
+		$items['admin/students/manage_optional_subjects/'.$class->class_id] = array(
+      'title' => $class->class_id,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('op_sub_sec', 3),
+      'access arguments' => array('administer optional subjects'),
+      'weight' => $class->weight,
+    );
+		$voc = 'class_vocab';//replace this with the taxonomy term
+		$vocabulary = taxonomy_vocabulary_machine_name_load($voc);
+		$terms = taxonomy_get_tree($vocabulary->vid);
+		foreach($terms as $term){
+      if($term->name == $class->class_id){
+        $secs = taxonomy_get_children($term->tid);
+				foreach($secs as $sec){
+					$items['admin/students/manage_optional_subjects/'.$class->class_id.'/'.$sec->name] = array(
+						  'title' => $sec->name,
+						  'page callback' => 'drupal_get_form',
+							'page arguments' => array('op_sub_list_form', 3,4),
+							'access arguments' => array('administer optional subjects'),
+							'file' => 'optional_subject.admin.inc',
+							'weight' => $class->weight,
+							'file path' => drupal_get_path('module','school_master').'/includes/class',
+						);
+					
+					$sub_table = 'essa_'.$session.'_subjects_'.$class->class_id;
+					$subjects = db_query("
+					  SELECT * from {$sub_table} where type = 'Optional';
+					");
+					foreach($subjects as $sub){
+						if($sub->type == 'Optional'){
+							$items['admin/students/manage_optional_subjects/'.$class->class_id.'/'.$sec->name.'/'.$sub->sub_id] = array(
+							  'title' => $sub->sub_name,
+							  'page callback' => 'drupal_get_form',
+								'page arguments' => array('student_sub_form', 3,4,5),
+								'access arguments' => array('administer optional subjects'),
+								'file' => 'optional_subject.admin.inc',
+								'weight' => $class->weight,
+								'file path' => drupal_get_path('module','school_master').'/includes/class',
+							);
+						}
+					}
+				}
+		  }
+		}
+  }
+	
+	$items['admin/students/manage_transport'] = array(
+    'title' => 'Manage Transport',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('student_transport_main'),
+    'access arguments' => array('administer transport settings'),
+		'weight' => 6,
+  );
+	
+	$class_list_db = db_query(
+		"SELECT class_id,weight from {$class_list_table} order by weight"
+	);
+  
+  foreach($class_list_db as $class){
+		$items['admin/students/manage_transport/'.$class->class_id] = array(
+      'title' => $class->class_id,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('student_transport_sec', 3),
+      'access arguments' => array('administer transport settings'),
+      'weight' => $class->weight,
+    );
+		$voc = 'class_vocab';//replace this with the taxonomy term
+		$vocabulary = taxonomy_vocabulary_machine_name_load($voc);
+		$terms = taxonomy_get_tree($vocabulary->vid);
+		foreach($terms as $term){
+      if($term->name == $class->class_id){
+        $secs = taxonomy_get_children($term->tid);
+				foreach($secs as $sec){
+					$items['admin/students/manage_transport/'.$class->class_id.'/'.$sec->name] = array(
+						'title' => $sec->name,
+					  'page callback' => 'drupal_get_form',
+						'page arguments' => array('student_transport_form', 3,4),
+						'access arguments' => array('administer transport settings'),
+						'weight' => $class->weight,
+						'file path' => drupal_get_path('module','school_master').'/includes/school/transport',
+						'file' => 'student_transport.admin.inc',
+					);
+				}
+		  }
+		}
+  }
+	
+	
+	$items['admin/students/manage_houses'] = array(
+    'title' => 'Manage Houses',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('student_house_main'),
+    'access arguments' => array('allocate houses'),
+		'weight' => 6,
+  );
+	
+	$class_list_db = db_query(
+		"SELECT class_id,weight from {$class_list_table} order by weight"
+	);
+  
+  foreach($class_list_db as $class){
+		$items['admin/students/manage_houses/'.$class->class_id] = array(
+      'title' => $class->class_id,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('student_house_sec', 3),
+      'access arguments' => array('allocate houses'),
+      'weight' => $class->weight,
+    );
+		$voc = 'class_vocab';//replace this with the taxonomy term
+		$vocabulary = taxonomy_vocabulary_machine_name_load($voc);
+		$terms = taxonomy_get_tree($vocabulary->vid);
+		foreach($terms as $term){
+      if($term->name == $class->class_id){
+        $secs = taxonomy_get_children($term->tid);
+				foreach($secs as $sec){
+					$items['admin/students/manage_houses/'.$class->class_id.'/'.$sec->name] = array(
+						'title' => $sec->name,
+					  'page callback' => 'drupal_get_form',
+						'page arguments' => array('student_house_form', 3,4),
+						'access arguments' => array('allocate houses'),
+						'weight' => $class->weight,
+						'file path' => drupal_get_path('module','school_master').'/includes/class',
+						'file' => 'student_houses.admin.inc',
+					);
+				}
+		  }
+		}
+  }
+	
+	$items['teachers/autocomplete'] = array(
+    'description' => t('A callback for teacher autocomplete in subjects form'),
+    'page callback' => 'teacher_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+	
+	$items['staff/autocomplete'] = array(
+    'description' => t('A callback for staff autocomplete in subjects form'),
+    'page callback' => 'staff_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+	/*
+	$items['admin/settings/classes/roll-no'] = array(
+    'title' => 'Generate Roll No.',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('generate_roll_no'),
+    'access arguments' => array('administer class'),
+		'file' => 'generate_roll_no.admin.inc',
+    'file path' => drupal_get_path('module','school_master').'/includes/class',
+  );
+  */
+	
+  return $items;
+}
+
+function op_sub_main($form, &$form_state){
+	$form = array();
+	global $user;
+	$flag = 0;
+	
+	$session = variable_get('essa_sid');
+	$class_table = 'essa_'.$session.'_class_list';
+	$mst_table = 'essa_'.$session.'_master_staff_table';
+	$ct_table = 'essa_'.$session.'_class_teacher';
+	$staff_detail = db_query(
+		"SELECT * from {$mst_table} where uid = :uid;", array(':uid' => $user->uid)
+	);
+	foreach($staff_detail as $sd){
+		$class_teacher = db_query(
+			"SELECT * from {$ct_table} where teacher_nickname = :nn;", array(':nn' => $sd->nickname)
+		);
+		foreach($class_teacher as $ct){
+			$flag = 1;
+			$class = $ct->class;
+			$sec = $ct->section;
+		}
+	}
+	if($flag == 1){
+		$path = url('admin/students/manage_optional_subjects/'.$class.'/'.$sec, array('absolute' => TRUE));
+		drupal_goto($path);
+	}else{
+		$class_db = db_query(
+			"SELECT * from {$class_table} order by weight"
+		);
+		$row = array();
+		foreach($class_db as $c){
+			$row[$c->class_id] = array(
+		    '#tree' =>TRUE,
+				
+		    $c->class_id => array(  //Generating unique array id for every form element
+					'c1' =>array(
+		        '#type' => 'markup',
+						'#markup' => l(t($c->class_id), 'admin/students/manage_optional_subjects/'.$c->class_id),
+		      ),
+		    ),
+		  );
+		}
+		
+		$form['classes'] = array(
+		  '#theme' => 'main_ops_theme_table',
+		  'rows' => $row,
+		);
+	}
+	return $form;
+}
+
+function student_transport_main($form, &$form_state){
+	$form = array();
+	$form = array();
+	global $user;
+	$flag = 0;
+	
+	$session = variable_get('essa_sid');
+	$class_table = 'essa_'.$session.'_class_list';
+	$mst_table = 'essa_'.$session.'_master_staff_table';
+	$ct_table = 'essa_'.$session.'_class_teacher';
+	$staff_detail = db_query(
+		"SELECT * from {$mst_table} where uid = :uid;", array(':uid' => $user->uid)
+	);
+	foreach($staff_detail as $sd){
+		$class_teacher = db_query(
+			"SELECT * from {$ct_table} where teacher_nickname = :nn;", array(':nn' => $sd->nickname)
+		);
+		foreach($class_teacher as $ct){
+			$flag = 1;
+			$class = $ct->class;
+			$sec = $ct->section;
+		}
+	}
+	if($flag == 1){
+		$path = url('admin/students/manage_transport/'.$class.'/'.$sec, array('absolute' => TRUE));
+		drupal_goto($path);
+	}else{
+		$session = variable_get('essa_sid');
+		$class_table = 'essa_'.$session.'_class_list';
+		$class_db = db_query(
+			"SELECT * from {$class_table} order by weight"
+		);
+		foreach($class_db as $c){
+			$row[$c->class_id] = array(
+		    '#tree' =>TRUE,
+						
+      $c->class_id => array(  //Generating unique array id for every form element
+					'c1' =>array(
+		        '#type' => 'markup',
+						'#markup' => l(t($c->class_id), 'admin/students/manage_transport/'.$c->class_id),
+		      ),
+		    ),
+		  );
+		}
+		
+		$form['classes'] = array(
+		  '#theme' => 'main_ops_theme_table',
+		  'rows' => $row,
+		);
+		return $form;
+	}
+}
+
+function student_house_main($form, &$form_state){
+	$form = array();
+	$form = array();
+	global $user;
+	$flag = 0;
+	
+	$session = variable_get('essa_sid');
+	$class_table = 'essa_'.$session.'_class_list';
+	$mst_table = 'essa_'.$session.'_master_staff_table';
+	$ct_table = 'essa_'.$session.'_class_teacher';
+	$staff_detail = db_query(
+		"SELECT * from {$mst_table} where uid = :uid;", array(':uid' => $user->uid)
+	);
+	foreach($staff_detail as $sd){
+		$class_teacher = db_query(
+			"SELECT * from {$ct_table} where teacher_nickname = :nn;", array(':nn' => $sd->nickname)
+		);
+		foreach($class_teacher as $ct){
+			$flag = 1;
+			$class = $ct->class;
+			$sec = $ct->section;
+		}
+	}
+	if($flag == 1){
+		$path = url('admin/students/manage_houses/'.$class.'/'.$sec, array('absolute' => TRUE));
+		drupal_goto($path);
+	}else{
+		$session = variable_get('essa_sid');
+		$class_table = 'essa_'.$session.'_class_list';
+		$class_db = db_query(
+			"SELECT * from {$class_table} order by weight"
+		);
+		foreach($class_db as $c){
+			$row[$c->class_id] = array(
+		    '#tree' =>TRUE,
+						
+      $c->class_id => array(  //Generating unique array id for every form element
+					'c1' =>array(
+		        '#type' => 'markup',
+						'#markup' => l(t($c->class_id), 'admin/students/manage_houses/'.$c->class_id),
+		      ),
+		    ),
+		  );
+		}
+		
+		$form['classes'] = array(
+		  '#theme' => 'main_ops_theme_table',
+		  'rows' => $row,
+		);
+		return $form;
+	}
+}
+
+function op_sub_list_form($form, &$form_state, $class, $sec){
+	$session = variable_get('essa_sid');
+	$sub_table = 'essa_'.$session.'_subjects_'.$class;
+	
+	$form['back'] = array(
+		'#type' => 'markup',
+		'#markup' => '<p class = "back_button">'.l(t('Back'), 'admin/students/manage_optional_subjects/'.$class).'</p>',
+	);
+	
+	$subjects = db_query("
+		SELECT * from {$sub_table} where type = 'Optional';
+	");	
+	foreach($subjects as $sub){
+		if($sub->type == 'Optional'){
+			$row[$sub->sub_id] = array(
+			  '#tree' =>TRUE,
+				
+			  $sub->sub_id => array(  //Generating unique array id for every form element
+					'c1' =>array(
+			      '#type' => 'markup',
+						'#markup' => l(t($sub->sub_name), 'admin/students/manage_optional_subjects/'.$class.'/'.$sec.'/'.$sub->sub_id),
+			    ),
+			  ),
+			);
+		}
+	}
+  
+	if(isset($row)){
+		$form['subjs'] = array(
+		  '#theme' => 'op_sub_theme_table',
+		  'rows' => $row,
+		);	
+	}else{
+		drupal_set_message('No subject has been created yet.','warning');
+	}
+	
+	return $form;
+}
+
+/**
+ *Implements page callback function - timetable_main
+ */
+function student_transport_sec($form, &$form_state, $class){
+	
+	$form = array();
+	$session = variable_get('essa_sid');
+	$class_table = 'essa_'.$session.'_class_list';
+	$class_db = db_query(
+		"SELECT * from {$class_table} where class_id = :id", array(':id' => $class)
+	);
+		
+	foreach($class_db as $c){
+		$form['back'] = array(
+			'#type' => 'markup',
+			'#markup' => '<p class = "back_button">'.l(t('Back'), 'admin/students/manage_transport/').'</p>',
+		);
+		switch($c->no_of_sec){
+			case 1:
+				$sections = array('A');
+				foreach($sections as $sec){
+					$row[$c->class_id.$sec] = array(
+						'#tree' =>TRUE,
+					
+						$c->class_id.$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_transport/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 2:
+				$sections = array('A', 'B');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+						
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+							  '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_transport/'.$c->class_id.'/'.$sec),
+						  ),
+					  ),
+					);	
+				}
+				break;
+			case 3:
+				$sections = array('A','B','C');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_transport/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 4:
+				$sections = array('A','B','C','D');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_transport/'.$c->class_id.'/'.$sec),
+					    ),
+						),
+					);	
+				}
+				break;
+			case 5:
+				$sections = array('A','B','C','D','E');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_transport/'.$c->class_id.'/'.$sec),
+						  ),
+						),
+					);	
+				}
+				break;
+			case 6:
+				$sections = array('A','B','C','D','E','F');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_transport/'.$c->class_id.'/'.$sec),
+						  ),
+						),
+					);	
+				}
+				break;
+			case 7:
+				$sections = array('A','B','C','D','E','F','G');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_transport/'.$c->class_id.'/'.$sec),
+						  ),
+						),
+					);	
+				}
+				break;
+			case 8:
+				$sections = array('A','B','C','D','E','F','G','H');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_transport/'.$c->class_id.'/'.$sec),
+						  ),
+						),
+					);	
+				}
+				break;
+		}
+	}
+	
+	$form['sections'] = array(
+	  '#theme' => 'class_sec_theme_table',
+		'rows' => $row,
+	);
+	
+	return $form;
+}
+
+/**
+ *Implements page callback function - timetable_main
+ */
+function student_house_sec($form, &$form_state, $class){
+	
+	$form = array();
+	$session = variable_get('essa_sid');
+	$class_table = 'essa_'.$session.'_class_list';
+	$class_db = db_query(
+		"SELECT * from {$class_table} where class_id = :id", array(':id' => $class)
+	);
+		
+	foreach($class_db as $c){
+		$form['back'] = array(
+			'#type' => 'markup',
+			'#markup' => '<p class = "back_button">'.l(t('Back'), 'admin/students/manage_houses/').'</p>',
+		);
+		switch($c->no_of_sec){
+			case 1:
+				$sections = array('A');
+				foreach($sections as $sec){
+					$row[$c->class_id.$sec] = array(
+						'#tree' =>TRUE,
+					
+						$c->class_id.$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_houses/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 2:
+				$sections = array('A', 'B');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+						
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+							  '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_houses/'.$c->class_id.'/'.$sec),
+						  ),
+					  ),
+					);	
+				}
+				break;
+			case 3:
+				$sections = array('A','B','C');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_houses/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 4:
+				$sections = array('A','B','C','D');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_houses/'.$c->class_id.'/'.$sec),
+					    ),
+						),
+					);	
+				}
+				break;
+			case 5:
+				$sections = array('A','B','C','D','E');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_houses/'.$c->class_id.'/'.$sec),
+						  ),
+						),
+					);	
+				}
+				break;
+			case 6:
+				$sections = array('A','B','C','D','E','F');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_houses/'.$c->class_id.'/'.$sec),
+						  ),
+						),
+					);	
+				}
+				break;
+			case 7:
+				$sections = array('A','B','C','D','E','F','G');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_houses/'.$c->class_id.'/'.$sec),
+						  ),
+						),
+					);	
+				}
+				break;
+			case 8:
+				$sections = array('A','B','C','D','E','F','G','H');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_houses/'.$c->class_id.'/'.$sec),
+						  ),
+						),
+					);	
+				}
+				break;
+		}
+	}
+	
+	$form['sections'] = array(
+	  '#theme' => 'class_sec_theme_table',
+		'rows' => $row,
+	);
+	
+	return $form;
+}
+
+/**
+ *Implements page callback function - timetable_main
+ */
+function op_sub_sec($form, &$form_state, $class){
+	$form = array();
+	$session = variable_get('essa_sid');
+	$class_table = 'essa_'.$session.'_class_list';
+	$class_db = db_query(
+		"SELECT * from {$class_table} where class_id = :id", array(':id' => $class)
+	);
+	
+	foreach($class_db as $c){
+		$form['back'] = array(
+			'#type' => 'markup',
+			'#markup' => '<p class = "back_button">'.l(t('Back'), 'admin/students/manage_optional_subjects/').'</p>',
+		);
+		switch($c->no_of_sec){
+			case 1:
+				$sections = array('A');
+				foreach($sections as $sec){
+					$row[$c->class_id.$sec] = array(
+						'#tree' =>TRUE,
+					
+						$c->class_id.$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_optional_subjects/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 2:
+				$sections = array('A', 'B');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_optional_subjects/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 3:
+				$sections = array('A','B','C');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_optional_subjects/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 4:
+				$sections = array('A','B','C','D');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_optional_subjects/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 5:
+				$sections = array('A','B','C','D','E');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_optional_subjects/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 6:
+				$sections = array('A','B','C','D','E','F');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_optional_subjects/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 7:
+				$sections = array('A','B','C','D','E','F','G');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_optional_subjects/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+			case 8:
+				$sections = array('A','B','C','D','E','F','G','H');
+				foreach($sections as $sec){
+					$row[$sec] = array(
+						'#tree' =>TRUE,
+					
+						$sec => array(  //Generating unique array id for every form element
+							'c1' =>array(
+						    '#type' => 'markup',
+								'#markup' => l(t($sec), 'admin/students/manage_optional_subjects/'.$c->class_id.'/'.$sec),
+					    ),
+					  ),
+					);	
+				}
+				break;
+		}
+	}
+  
+	$form['sections'] = array(
+    '#theme' => 'class_sec_theme_table',
+    'rows' => $row,
+  );
+	
+	return $form;
+}
+
+/**
+ * Theme callback for the form table.
+*/ 
+function theme_main_ops_theme_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Select a Class'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ * Theme callback for the form table.
+*/ 
+function theme_op_sub_theme_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Select a Subject'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ * Theme callback for the form table.
+*/ 
+function theme_class_sec_theme_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Choose a Section'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function school_master_theme() {
+  return array(
+    'class_set_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'st_att_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'class_list_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+    'class_section_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+    'academic_cal_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+    'schedule_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+    'schedule_table_saturday' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+    'class_sub_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+    'time_table_theme_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'bus_stop_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'dnp_academics_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'dnp_admin_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'student_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'main_ops_theme_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'class_sec_theme_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'op_sub_theme_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'op_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'student_transport_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'student_house_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'bus_routes_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'subject_teacher_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+  );
+}
+
+/**
+ * Implements autocomplete function
+ */
+function teacher_autocomplete($string = ''){
+	$session = variable_get('essa_sid');
+	$matches = array();
+	$teacher_table = 'essa_'.$session.'_master_staff_table';
+	$teachers =  db_query(
+		"SELECT * from {$teacher_table} where type = 'teaching' and status = 1;"
+	);
+	foreach($teachers as $teacher){
+		$autocomplete_string[] = $teacher->fname. ' ' .$teacher->lname.' ('.$teacher->nickname.')';
+	}
+	
+	foreach($autocomplete_string as $phrases){
+		if(stristr($phrases, $string)){
+			$matches[$phrases] = $phrases;
+		}
+	}
+	drupal_json_output($matches);
+}
+
+/**
+ * Implements autocomplete function
+ */
+function staff_autocomplete($string = ''){
+	$session = variable_get('essa_sid');
+	$matches = array();
+	$teacher_table = 'essa_'.$session.'_master_staff_table';
+	$teachers =  db_query(
+		"SELECT * from {$teacher_table} where status = 1;"
+	);
+	foreach($teachers as $teacher){
+		$autocomplete_string[] = $teacher->fname. ' ' .$teacher->lname.' ('.$teacher->emp_id.')';
+	}
+	
+	foreach($autocomplete_string as $phrases){
+		if(stristr($phrases, $string)){
+			$matches[$phrases] = $phrases;
+		}
+	}
+	drupal_json_output($matches);
+}
+
+function administration_page(){
+  return array();
+}
+
+function student_page(){
+  return array();
+}
+
+function class_list(){
+	
+}
+
+function dnp_main(){
+	
+	//******SURAJ******//
+	$a_uid = array();
+	$admin_rid = db_query("SELECT * FROM role WHERE name = 'administrator';");
+	foreach($admin_rid as $a_rid){
+		$ar = db_query("SELECT * FROM users_roles WHERE rid = :rid;", array(':rid' => $a_rid->rid));
+		foreach($ar as $u){
+			$a_uid[] = $u->uid;
+		}
+	}
+	global $user;
+	$flag = 0;
+	foreach($a_uid as $au){
+		if($au == $user->uid){
+			$flag = 1;
+		}
+	}
+	if($flag != 1){
+		drupal_goto("admin/settings/organisation_structure/allocate_academics");
+	}else{
+		drupal_goto("admin/structure/dnp");
+	}
+	//******SURAJ******//
+}
+
+function dnp_academics(){
+	drupal_goto("admin/structure/dnp/organisation_structure_academics");
+	//******SURAJ******//
+	/*
+	$a_uid = array();
+	$admin_rid = db_query("SELECT * FROM role WHERE name = 'administrator';");
+	foreach($admin_rid as $a_rid){
+		$ar = db_query("SELECT * FROM users_roles WHERE rid = :rid;", array(':rid' => $a_rid->rid));
+		foreach($ar as $u){
+			$a_uid[] = $u->uid;
+		}
+	}
+	global $user;
+	$flag = 0;
+	foreach($a_uid as $au){
+		if($au == $user->uid){
+			$flag = 1;
+		}
+	}
+	if($flag != 1){
+		drupal_goto("admin/settings/organisation_structure/allocate_academics");
+	}else{
+		drupal_goto("admin/structure/dnp/organisation_structure_academics");
+	}
+	*/
+	//******SURAJ******//
+	
+}
+
+function dnp_admin(){
+	drupal_goto("admin/structure/dnp/organisation_structure_admin");
+	//******SURAJ******//
+	/*
+	$a_uid = array();
+	$admin_rid = db_query("SELECT * FROM role WHERE name = 'administrator' or name = 'Principal' or name = 'School Admin';");
+	foreach($admin_rid as $a_rid){
+		$ar = db_query("SELECT * FROM users_roles WHERE rid = :rid;", array(':rid' => $a_rid->rid));
+		foreach($ar as $u){
+			$a_uid[] = $u->uid;
+		}
+	}
+	global $user;
+	$flag = 0;
+	foreach($a_uid as $au){
+		if($au == $user->uid){
+			$flag = 1;
+		}
+	}
+	if($flag != 1){
+		drupal_goto("admin/settings/organisation_structure/allocate_admin");
+	}else{
+		drupal_goto("admin/structure/dnp/organisation_structure_admin");
+	}
+	*/
+	//******SURAJ******//
+}
+
+function setting_form($form, &$form_state){
+	
+}
+
+/**
+ *Supporting function to clean_string the array id.
+ */
+function mod_sub_string($string) {
+   $string = str_replace('-', '', $string); // Replaces all spaces with hyphens.
+	 $string = str_replace(' ', '', $string);
+   return preg_replace('/[^A-Za-z0-9\-]/', '', $string); // Removes special chars.
+}
+
+/**
+ * Implementation of hook_mail().
+ */
+function school_master_mail($key, &$message, $params){
+
+  // Set the mail content type to html to send an html e-mail (optional).
+  $message['headers']['Content-Type'] = 'text/html; charset=UTF-8; format=flowed';
+
+  // Grab the subject and body from params and add it to the message.
+  $message['subject'] = $params['subject'];
+  $message['body'][] = $params['body'];// Drupal 7
+  //$message['body'] = $params['body']; // Drupal 6, I think
+
+  switch ($key) {
+    case "my_module_mail_example":
+      // Make other changes here if desired...
+      break;
+  }
+
+}

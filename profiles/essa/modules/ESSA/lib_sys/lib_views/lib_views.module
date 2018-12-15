@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Lib Views feature.
+ */
+
+include_once 'lib_views.features.inc';

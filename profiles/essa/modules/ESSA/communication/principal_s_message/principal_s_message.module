@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Principal's Message feature.
+ */
+
+include_once 'principal_s_message.features.inc';

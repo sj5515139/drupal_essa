@@ -1,0 +1,70 @@
+#edit-holiday .form-item-holiday{
+  display: inline-block;
+  margin-bottom: 15px;
+}
+
+#staff-attendance thead th{
+  text-align: center !important;  
+}
+
+#staff-attendance td{
+  text-align: center !important;
+}
+
+#staff-attendance h3, #past-staff-attendance tr td h3{
+  text-align: center;
+}
+
+#sta_att_title{
+  background: #D9853B;
+  padding: 5px;
+  padding-bottom: 8px;
+  color: WHITE;
+}
+
+.page-attendance #branding{
+  background-color: #558C89 !important;
+}
+
+#past-staff-attendance thead th{
+  text-align: center !important;
+}
+
+#past-staff-attendance td{
+  text-align: center !important;
+}
+
+#past-staff-attendance h3{
+  text-align: left;
+}
+
+#past-staff-attendance label{
+  display: inline-block;
+  width:  220px;  
+}
+
+#staff-attendance-report label{
+  display: inline-block;
+  width:  220px;  
+}
+
+#past-staff-attendance .form-item-ask-date{
+  margin-left: 30%;
+  margin-bottom: 15px;
+}
+
+.page-admin-staff-attendance #overlay{
+  margin-left: 15%;
+  width: 70%;
+}
+
+#sta_att_title{
+  background: RED;
+  padding: 5px;
+  padding-bottom: 8px;
+  color: WHITE;
+}
+
+.page-past-attendance #branding{
+  background-color: #7E8F7C !important;
+}

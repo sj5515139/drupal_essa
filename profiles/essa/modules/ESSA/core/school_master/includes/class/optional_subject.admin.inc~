@@ -1,0 +1,322 @@
+<?php
+/**
+ *Implements page callback function optional_subject_form
+ */
+function student_sub_form($form = array(), &$form_state, $class, $sec, $subj){
+  $session = variable_get('essa_sid');
+  $student_table = 'essa_'.$session.'_'.$class.'_'.$sec;
+  $op_sub_table = 'essa_'.$session.'_optional_subject_student';
+	$default = array();
+  $students = db_query("
+    SELECT * from {$op_sub_table} where sub_id = :si", array(':si' => $subj)
+  );
+  foreach($students as $student){
+    $default[$student->adm_no][$student->adm_no] = TRUE;
+  }
+  
+  $form['class'] = array(
+    '#type' => 'value',
+    '#value' => $class,
+  );
+  
+  $form['sec'] = array(
+    '#type' => 'value',
+    '#value' => $sec,
+  );
+  
+  $form['subj'] = array(
+    '#type' => 'value',
+    '#value' => $subj,
+  );
+  
+  $form['back'] = array(
+		'#type' => 'markup',
+		'#markup' => '<p class = "back_button">'.l(t('Back'), 'admin/administration/students/manage_optional_subjects/'.$class.'/'.$sec).'</p>',
+	);
+  
+  $students = db_query("
+    SELECT * from {$student_table} order by roll_no;
+  ");
+  
+  foreach($students as $student){
+    $row[$student->adm_no] = array(
+      '#tree' =>TRUE,
+			
+      $student->adm_no => array(  //Generating unique array id for every form element
+				'c1' =>array(
+          '#type' => 'checkbox',
+              '#checkall' => 'unique-class-for-each-checkboxes-column',
+          '#default_value' => isset($default[$student->adm_no][$student->adm_no])?$default[$student->adm_no][$student->adm_no]:FALSE,
+        ),
+        'c2' =>array(
+          '#type' => 'markup',
+					'#markup' => '<h3>'.$student->roll_no.'</h3>',
+        ),
+        'c3' =>array(
+          '#type' => 'markup',
+					'#markup' => '<h3>'.$student->first_name.' '.$student->last_name.'</h3>',
+        ),
+      ),
+    );
+  }
+  $form['fs']['students'] = array(
+    '#theme' => 'student_table',
+    'rows' => $row,
+  );
+  
+  
+  $form['fs']['save'] = array(
+    '#type' => 'submit',
+    '#value' => 'Save',
+  );
+  return $form;
+}
+
+function student_sub_form_submit($form, &$form_state){
+  $session_id = (string)variable_get('essa_sid');
+  $op_sub_table = 'essa_'.$session_id.'_optional_subject_student';
+  
+  foreach($form_state['values'] as $input){
+		if(is_array($input)){
+      foreach($input as $key=>$in){
+        $flag = 0;
+        $students = db_query("
+          SELECT * from {$op_sub_table} where class_id = :class_id and section = :sec and sub_id = :sub_id;", array(':class_id' => $form_state['values']['class'], ':sec' => $form_state['values']['sec'], ':sub_id' => $form_state['values']['subj'])
+        );
+        foreach($students as $student){
+          if($student->adm_no == $key){
+            $flag = 1;
+            $id = $student->id;
+          }
+        }
+        if($flag == 0){
+          if($in['c1'] != 0){
+            db_insert($op_sub_table)
+              -> fields(array(
+                'class_id' => $form_state['values']['class'],
+                'section' => $form_state['values']['sec'],
+                'sub_id' => $form_state['values']['subj'],
+                'adm_no' => $key,
+              )
+            )
+          ->execute();
+          }
+        }else{
+          if($in['c1'] == 0){
+            db_query("DELETE FROM $op_sub_table WHERE id = :id", array(':id' => $id));
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Theme callback for the form table.
+ */
+function theme_student_table(&$variables) {
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Select Student'),t('Roll No'),t('Name'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+  /*
+	
+		$weight = find_weight();
+      foreach($weight as $key => $value){
+        if($input == $key){
+          $w = $value;
+        }
+      }
+    if($input != '0'){
+			db_merge($class_list)
+				->key(array('class_id' => $k))
+        -> fields(array(
+          'class_id' => $k,
+          'weight' => $w,
+          'class_set_id' => '',
+      ))
+      ->execute();
+			
+			$vid = taxonomy_vocabulary_machine_name_load('class_vocab');
+			if(_get_taxonomy_term_id_by_name($input, $vid->vid) == false) {
+        taxonomy_term_save(
+            (object) array(
+                'name' => $input,
+                'vid' => $vid->vid,
+								'weight' => $w,
+            )
+        );
+			}
+    }else{
+			db_query("DELETE FROM {$class_list} WHERE class_id = :d", array(':d' => $k));
+			db_query("DELETE FROM {taxonomy_term_data} WHERE name = :d", array(':d' => $k));
+		}
+	
+	
+	
+	
+	
+	
+	
+	
+	$class_list_table = 'essa_'.$session.'_class_list';
+	$class_list = array();
+  
+  
+  $session = variable_get('essa_sid');
+	$class_list_table = 'essa_'.$session.'_class_list';
+	$class_list = array();
+  
+	$class_list_db = db_query(
+		"SELECT class_id,weight from {$class_list_table} order by weight"
+	);
+  
+  foreach($class_list_db as $class){
+    $voc = 'class_vocab';//replace this with the taxonomy term
+		$vocabulary = taxonomy_vocabulary_machine_name_load($voc);
+		$terms = taxonomy_get_tree($vocabulary->vid);
+		foreach($terms as $term){
+      if($term->name == $class->class_id){
+        $sec = taxonomy_get_children($term->tid);
+        dsm($sec);
+      }
+		}
+  }
+  
+  $form['title'] = array(
+		'#markup' => '<h2 id = "bulk_title" style = "margin-top: 3px;"> Select a class & section </h2>',
+	);
+
+  module_load_include('inc', 'hierarchical_select', 'includes/common');
+
+	$config = sa_hs_ops_setting();
+	$form['class'] =  array(
+    '#type' => 'hierarchical_select',
+    '#config' => $config,
+		'#required' => TRUE,
+    '#ajax' => array(
+            'event' => 'change',
+            'callback' => 'test_ajax',
+            'wrapper' => 'wrapper',
+            'method' => 'replace',
+            'effect' => 'fade',
+          ),
+  );
+  
+  
+  $form['go'] = array(
+    '#type' => 'button',
+    '#value' => 'Go',
+    '#ajax' => array(
+      'event' => 'click',
+      'callback' => 'sub_select_ajax',
+      'wrapper' => 'sub_wrapper',
+      'method' => 'replace',
+      'effect' => 'fade',
+    ),
+  );
+  
+  $form['container'] =  array(
+    '#type' => 'container',
+    '#prefix' => '<br><br><div id = "sub_wrapper">',
+    '#suffix' => '</div>'
+  );
+  
+  /*
+  $subjects = db_query("
+    SELECT * from {$sub_table} where type = 'Optional';
+  ");
+	foreach($subjects as $sub){
+		$subj[] = $sub->sub_name;
+	}
+  
+  $form['fs'] = array(
+    '#type' => 'fieldset',
+    
+  );
+  
+  $form['fs']['select_sub'] = array(
+    '#type' => 'select',
+    '#title' => t('Select a Subject'),
+    '#required' => TRUE,
+    '#options' => drupal_map_assoc($subj),
+  );
+  
+  $student_table = 'essa_'.$session.'_'.$class->name.'_'.$section->name;
+  $students = db_query("
+    SELECT * from {$student_table} order by roll_no;
+  ");
+  
+  foreach($students as $student){
+    $row[] = array(
+      '#tree' =>TRUE,
+			
+      $student->roll_no => array(  //Generating unique array id for every form element
+				'c1' =>array(
+          '#type' => 'checkbox'
+        ),
+        'c2' =>array(
+          '#type' => 'markup',
+					'#markup' => '<h3>'.$student->roll_no.'</h3>',
+        ),
+        'c3' =>array(
+          '#type' => 'markup',
+					'#markup' => '<h3>'.$student->first_name.' '.$student->last_name.'</h3>',
+        ),
+      ),
+    );
+  }
+  $form['fs']['students'] = array(
+    '#theme' => 'student_table',
+    'rows' => $row,
+  );
+  
+  
+  $form['fs']['save'] = array(
+    '#type' => 'submit',
+    '#value' => 'Save',
+    '#submit' => array('save_students'),
+  );
+  */
+  /*
+  return $form;
+}
+
+function sub_select_ajax($form, &$form_state){
+  $session = variable_get('essa_sid');
+  $class['class'] = taxonomy_term_load($form_state['values']['class'][0]);
+	$class['section'] = taxonomy_term_load($form_state['values']['class'][1]);
+  
+  return dsm($class);
+}
+
+function save_students($form, &$form_state){
+  dsm($form_state);
+}
+*/

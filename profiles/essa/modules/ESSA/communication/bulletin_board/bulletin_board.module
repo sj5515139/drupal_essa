@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Bulletin Board feature.
+ */
+
+include_once 'bulletin_board.features.inc';

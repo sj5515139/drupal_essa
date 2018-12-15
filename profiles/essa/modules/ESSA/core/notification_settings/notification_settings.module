@@ -1,0 +1,42 @@
+<?php
+/**
+ *Implements hook_permission()
+ */
+function notification_settings_permission(){
+  return array(
+    'notification_settings' => array(
+      'title' => t('Administer Notification Settings'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_admin_paths()
+ */
+function notification_settings_admin_paths() {
+  // $paths = array(
+    // 'admin/settings/classes/roll-no' => FALSE,
+  // );
+  // return $paths;
+}
+
+/**
+ *Implements hook_menu().
+ */
+function notification_settings_menu(){
+  $items = array();
+  
+	$items['admin/settings/notification_settings'] = array(
+	  'title' => t('Notification Settings'),
+	  'description' => t('Customising notification and messaging Settings.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('notification_settings_form'),
+	  'access arguments' => array('notification_settings'),
+		'file path' => drupal_get_path('module','notification_settings').'/includes',
+		'file' => 'notification_settings.admin.inc',
+	);
+	
+	
+  return $items;
+}

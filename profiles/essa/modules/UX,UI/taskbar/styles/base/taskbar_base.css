@@ -1,0 +1,164 @@
+#taskbar #taskbar-item-msgs .taskbar-item-extra{
+  width: 400px;
+}
+
+#taskbar #taskbar-item-msgs .taskbar-item-extra #edit-body-format{
+  display: none;
+}
+
+#taskbar .taskbar-item-extra{
+  box-shadow: inset 0px 0px 10px 0px #ABABAB,5px 5px 5px 1px #DDDDDD;
+  -webkit-box-shadow: inset 0px 0px 10px 0px #ABABAB,5px 5px 5px 1px #DDDDDD;
+  -moz-box-shadow: inset 0px 0px 10px 0px #ABABAB,5px 5px 5px 1px #DDDDDD;
+  -o-box-shadow: inset 0px 0px 10px 0px #ABABAB,5px 5px 5px 1px #DDDDDD;
+}
+
+#taskbar{
+  background: grey;
+  color: white;
+  font-weight: 900;
+  margin-bottom: 4px !important;
+}
+
+
+#taskbar-container {
+  bottom: 0;
+  height: 40px;
+  position: fixed;
+  width: 98%;
+  margin-left: 1%;
+  z-index: 99;
+  box-shadow: inset 0px 0px 10px 0px #ABABAB,5px 5px 5px 1px #DDDDDD;
+  -webkit-box-shadow: inset 0px 0px 10px 0px #ABABAB,5px 5px 5px 1px #DDDDDD;
+  -moz-box-shadow: inset 0px 0px 10px 0px #ABABAB,5px 5px 5px 1px #DDDDDD;
+  -o-box-shadow: inset 0px 0px 10px 0px #ABABAB,5px 5px 5px 1px #DDDDDD;
+}
+
+#taskbar{
+  background-color: #EBEEF4;
+  border: 4px WHITE ridge !important;
+  box-shadow: 2px 2px 20px grey;
+  height: 30px;
+  color: black;
+}
+
+#taskbar .taskbar-element a {
+  height: 30px;
+  color: black;
+  position: relative;
+  bottom: 7px;
+}
+
+#taskbar .taskbar-item-loading {
+  background: url(ajax-loader.gif) no-repeat 50% 50%;
+  height: 30px;
+  line-height: 10px;
+}
+
+.taskbar-region-inner h2{
+  background-color: GREY;
+  padding: 5px;
+  color: white;
+  font-weight: 600;
+}
+
+#taskbar-region-left {
+  float: left;
+}
+#taskbar-region-left .taskbar-item {
+  border-width: 0 1px 0 0;
+  line-height: 10px;
+}
+
+#taskbar-region-center {
+  float: left;
+}
+#taskbar-region-center{
+  position: absolute;
+  margin-left: 45%;
+}
+
+#taskbar-region-center .taskbar-item {
+  border-width: 0 1px 0 1px;
+}
+
+#taskbar-region-center .taskbar-item-extra {
+  right: -125px;
+}
+
+#taskbar-region-right {
+  float: right;
+}
+#taskbar-region-right .taskbar-item {
+  border-width: 0 0 0 1px;
+}
+
+.taskbar-item {
+  border: 0 solid rgba(29, 49, 91, 0.3);
+  position: relative;
+  float: left;
+  padding: 0 20px;
+}
+.taskbar-item-content {
+  cursor: pointer;
+  line-height: 30px;
+}
+.taskbar-item-titlebar {
+  background: url("close.png") no-repeat 3px 50% #ccc;
+  padding-left: 15px;
+  cursor: pointer;
+}
+
+.taskbar-item-extra {
+  background: #fff;
+  border: 1px solid #333;
+  display: none;
+  position: absolute;
+  bottom: 35px !important;
+  width: 250px;
+  max-height: 350px;
+  overflow-y: auto;
+  padding: 15px;
+}
+#taskbar-region-left .taskbar-item-extra {
+  left: 0;
+}
+#taskbar-region-right .taskbar-item-extra {
+  right: 0;
+}
+
+.taskbar-element {
+  float: left;
+  line-height: 44px;
+  padding-left: 7px;
+}
+.taskbar-item-content .taskbar-element:first-child {
+  padding-left: 0;
+}
+
+.taskbar-item-count {
+  background-color: rgba(255,0,0,.8);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 15px;
+  line-height: 10px;
+  padding: 5px;
+  position: absolute;
+  right: 5px;
+  top: -12px;
+}
+.taskbar-item-seperator {
+}
+
+.taskbar-provider-custom {
+  display: table-cell;
+  height: 24px;
+  vertical-align: middle;
+}
+
+#taskbar .item-list .unread {
+  font-style: italic;
+}
+
+/** Style the page differently if the taskbar is being shown. **/
+.with-taskbar {}

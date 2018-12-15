@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Student search feature.
+ */
+
+include_once 'student_search.features.inc';

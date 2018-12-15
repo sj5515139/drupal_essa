@@ -1,0 +1,6 @@
+name = Fee Report Page
+core = 7.x
+package = ESSA Accounts
+dependencies[] = homebox
+features[features_api][] = api:2
+features[homebox][] = fee_reports

@@ -1,0 +1,11 @@
+name = ESSA Print Setup
+core = 7.x
+package = ESSA
+dependencies[] = config_pages
+dependencies[] = entity
+dependencies[] = features
+dependencies[] = text
+features[config_pages_type][] = print_module_path
+features[features_api][] = api:2
+features[field_base][] = field_path
+features[field_instance][] = config_pages-print_module_path-field_path

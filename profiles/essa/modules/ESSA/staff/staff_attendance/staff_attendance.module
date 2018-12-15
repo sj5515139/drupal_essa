@@ -1,0 +1,188 @@
+<?php
+
+/**
+ * Implements hook_admin_paths()
+ */
+function staff_attendance_admin_paths() {
+  $paths = array(
+		'admin/staff/attendance/report' => FALSE,
+	);
+	return $paths;
+}
+
+/**
+ *Implements hook_permission()
+ */
+function staff_attendance_permission(){
+  return array(
+    'take_staff_attendance' => array(
+      'title' => t('Take Staff Attendance'),
+      'description' => t('Warning: Give to role that will be incharge for the staff attendance only.'),
+    ),
+		'access reports' => array(
+      'title' => t('Access Attendance Reports'),
+      'description' => t('Warning: Give to School Autorities roles only. Undue access can be threat to data security and integrity of the system'),
+    ),
+  );
+}
+
+/**
+ *Implements hook_menu()
+ */
+function staff_attendance_menu(){
+  $items = array();
+	
+	$items['admin/staff/attendance'] = array(
+		'title' => 'Attendance',
+	  'description' => 'Taking Staff attendance',
+    'page callback' => 'drupal_get_form',
+		'page arguments' => array('staff_attendance'),
+		'access arguments' => array('access reports'),
+    'file' => 'staff_attendance.admin.inc',
+    'file path' => drupal_get_path('module','staff_attendance').'/includes',
+	);
+	
+  $items['admin/staff/attendance/today_staff_attendance'] = array(
+		'title' => 'Today\'s Attendance',
+	  'description' => 'Taking staff attendance',
+    'page callback' => 'drupal_get_form',
+	  'page arguments' => array('staff_attendance'),
+		'file' => 'staff_attendance.admin.inc',
+    'file path' => drupal_get_path('module','staff_attendance').'/includes',
+	  'access arguments' => array('take_staff_attendance'),
+		'weight' => 8,
+		'type' => MENU_LOCAL_TASK,
+	);
+  
+  $items['admin/staff/attendance/past_staff_attendance'] = array(
+		'title' => 'Past Attendance',
+	  'description' => 'Taking staff attendance',
+    'page callback' => 'drupal_get_form',
+	  'page arguments' => array('past_staff_attendance'),
+    'file' => 'past_staff_attendance.admin.inc',
+    'file path' => drupal_get_path('module','staff_attendance').'/includes',
+	  'access arguments' => array('take_staff_attendance'),
+		'weight' => 9,
+		'type' => MENU_LOCAL_TASK,
+	);
+  
+	$items['admin/staff/attendance/report'] = array(
+		'title' => 'Report',
+	  'description' => 'Staff attendance Report',
+    'page callback' => 'drupal_get_form',
+		'page arguments' => array('staff_attendance_report'),
+    'file' => 'staff_attendance_report.admin.inc',
+    'file path' => drupal_get_path('module','staff_attendance').'/includes',
+	  'access arguments' => array('access reports'),
+		'weight' => 10,
+		'type' => MENU_LOCAL_TASK,
+	);
+  
+  return $items;
+}
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function staff_attendance_theme() {
+  return array(
+    'staff_attendance_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+    'past_staff_attendance_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'staff_att_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+  );
+}
+
+
+//*******Suraj*******//
+
+/**
+ *Implementing hook_cron function().
+ */
+
+function staff_attendance_cron(){
+	$session = variable_get('essa_sid');
+	$staff_table = 'essa_'.$session.'_master_staff_table';
+	$staff_attendance_table = 'essa_'.$session.'_staff_attendance';
+	$notification_table = 'essa_'.$session.'_notifications';
+	$sys_alert_table = 'essa_'.$session.'_system_alert';
+	$today_date = date('Y_m_d');
+	$flag = 0;
+	$staff_attendance = db_query("SELECT * FROM {$staff_attendance_table}");
+	$created_date = date("Y-m-d H:i:s");
+	$strtodate = strtotime($created_date);
+	foreach($staff_attendance as $sa){
+		$date = $sa->$today_date;
+		if($date == NULL){
+			$flag = 1;
+		}
+	}
+	if($flag == 1 && date('H_i_s') > '16_00_00' ){
+		//Sending notification to Attendance Incharge
+		$r_id1 = db_query("SELECT * FROM {role} WHERE name = :name;", array(':name' => 'Attendance Incharge'));
+		foreach($r_id1 as $rid1){
+			$u_id1 = db_query("SELECT * FROM {users_roles} WHERE rid = :rid;", array(':rid' => $rid1->rid));
+			foreach($u_id1 as $u1){
+				$staffs = db_query("SELECT * FROM {$staff_table} WHERE uid =:uid;", array(':uid' => $u1->uid));
+				foreach($staffs as $staff){
+					$staff_id = $staff->emp_id;
+					$staff_name = $staff->fname.' '.$staff->lname;
+				}
+				db_insert($notification_table)
+				->fields(array(
+					'uid' => $u1->uid,
+					'rid' => $u1->rid,
+					'message' => 'Attendence for date '.$today_date.' was entered by '.$staff_id.' - '.$staff_name.' was not taken on '.$today_date.'.',
+					'status' => '0',
+					'module' => 'staff',
+					'source_url' => 'admin/staff/attendance/today_staff_attendance',
+					'destination_url' => 'admin/staff/attendance/today_staff_attendance',
+					'timestamp' => $strtodate,
+				))
+				->execute();
+			}
+		}
+		//Sending notification to principal
+		$r_id = db_query("SELECT * FROM {role} WHERE name = :name;", array(':name' => 'Principal'));
+		foreach($r_id as $rid){
+			$u_id = db_query("SELECT * FROM {users_roles} WHERE rid = :rid;", array(':rid' => $rid->rid));
+			foreach($u_id as $u){
+				//Sending notification to principal
+				db_insert($notification_table)
+				->fields(array(
+					'uid' => $u->uid,
+					'rid' => $u->rid,
+					'message' => 'Attendence for date '.$today_date.' was entered by '.$staff_id.' - '.$staff_name.' was not taken on '.$today_date.'.',
+					'status' => '0',
+					'module' => 'staff',
+					'source_url' => 'admin/staff/attendance/today_staff_attendance',
+					'destination_url' => 'admin/staff/attendance/report',
+					'timestamp' => $strtodate,
+				))
+				->execute();
+			}
+		}
+		
+		//sending system alert
+		$created_date = date("Y-m-d H:i:s");
+		$strtodate = strtotime($created_date);
+		db_insert($sys_alert_table)
+		->fields(array(
+			'message' => 'Attendence for date '.$today_date.' was entered by '.$staff_id.' - '.$staff_name.' was not taken on '.$today_date.'.',
+			'priority' => 'L',
+			'module' => 'staff',
+			'source_url' => 'admin/staff/attendance',
+			'timestamp' => $strtodate,
+		))
+		->execute();
+	}
+}
+//*******Suraj*******//

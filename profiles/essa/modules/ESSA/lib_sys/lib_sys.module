@@ -1,0 +1,538 @@
+<?php
+
+/**
+ * Implements hook_views_api().
+ */
+function lib_sys_views_api() {
+  return array(
+    'api' => 3.0,
+    'path' => drupal_get_path('module', 'lib_sys') . '/includes',
+  );
+}
+
+/**
+ *Implements hook_permission()
+ */
+function lib_sys_permission(){
+  return array(
+    'access library' => array(
+      'title' => t('Access Library'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+		'administer library' => array(
+      'title' => t('Administer Library'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_admin_paths()
+ */
+function lib_sys_admin_paths() {
+  $paths = array(
+    'admin/library/books/entry_bulk' => FALSE,
+		'admin/library/books' => FALSE,
+		'admin/library/issue' => FALSE,
+  );
+	return $paths;
+}
+
+/**
+ *Implements hook_menu().
+ */
+function lib_sys_menu(){
+  $items = array();
+  
+  $items['admin/library'] = array(
+    'title' => 'Library',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('library'),
+    'access arguments' => array('access library'),
+		'file' => 'library.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes',
+  );
+  
+	/*
+  $items['admin/library/cupboards-shelfs'] = array(
+    'title' => 'Cupboard & Shelfs',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('c_n_s'),
+    'access arguments' => array('access library'),
+		'file' => 'c_n_s.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes',
+  );
+  */
+	
+	$items['admin/library/books'] = array(
+    'title' => 'Books',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('books_main'),
+    'access arguments' => array('administer library'),
+		'file' => 'books_main.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes/books',
+		'weight' => -10,
+  );
+	
+	$items['admin/library/books/entry'] = array(
+    'title' => 'Add New',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('books_add_new'),
+    'access arguments' => array('administer library'),
+		'file' => 'books_add_new.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes/books',
+		'weight' => 0,
+		'type' => MENU_LOCAL_ACTION,
+  );
+	
+	$items['admin/library/books/entry_bulk'] = array(
+    'title' => 'Bulk Upload',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('books_bu'),
+    'access arguments' => array('administer library'),
+		'file' => 'books_bu.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes/books',
+		'weight' => 1,
+		'type' => MENU_LOCAL_ACTION,
+  );
+	
+	$items['admin/library/books/entry_bulk/settings'] = array(
+    'title' => 'Settings',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('books_bu_settings'),
+    'access arguments' => array('administer library'),
+		'file' => 'books_bu_settings.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes/books',
+		'type' => MENU_LOCAL_ACTION,
+		'weight' => 11,
+  );
+	
+	$items['admin/library/books/barcode'] = array(
+    'title' => 'Print Barcode',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('books_barcode'),
+    'access arguments' => array('administer library'),
+		'file' => 'books_barcode.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes/books',
+		'weight' => 3,
+		'type' => MENU_LOCAL_ACTION,
+  );
+	
+	$items['admin/library/issue'] = array(
+    'title' => 'Issue',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('books_issue'),
+    'access arguments' => array('administer library'),
+		'file' => 'books_issue.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes',
+		'weight' => 0,
+		'type' => MENU_LOCAL_ACTION,
+  );
+	
+	$items['admin/library/return'] = array(
+    'title' => 'Return',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('books_return'),
+    'access arguments' => array('administer library'),
+		'file' => 'books_return.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes',
+		'weight' => 1,
+		'type' => MENU_LOCAL_ACTION,
+  );
+	
+	$items['admin/library/fine'] = array(
+    'title' => 'Manage Fine',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('edit_lib_fine'),
+    'access arguments' => array('administer library'),
+		'file' => 'edit_lib_fine.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes/fine',
+		'weight' => 9,
+		'type' => MENU_LOCAL_ACTION,
+  );
+	
+	$items['admin/library/fine/settings'] = array(
+    'title' => 'Settings',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('lib_settings'),
+    'access arguments' => array('administer library'),
+		'file' => 'lib_settings.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes/fine',
+		'weight' => 10,
+		'type' => MENU_LOCAL_ACTION,
+  );
+	
+	$items['admin/library/fine/delete'] = array(
+    'title' => 'Delete',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('edit_lib_fine'),
+    'access arguments' => array('administer library'),
+		'file' => 'edit_lib_fine.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes/fine',
+		'weight' => 9,
+		'type' => MENU_LOCAL_ACTION,
+  );
+	
+	$items['admin/library/fine/collection'] = array(
+    'title' => 'Collection',
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('lib_fine_collection'),
+    'access arguments' => array('administer library'),
+		'file' => 'lib_fine_collection.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes/fine',
+		'weight' => 8,
+		'type' => MENU_LOCAL_ACTION,
+  );
+	
+	$items['delete-student-lib-fine'] = array(
+    'title' => 'Delete Fine',
+    'page callback' => 'delete_student_lib_fine_pagecallback',
+    'access arguments' => array('collect fees'),
+    'file' => 'edit_lib_fine.admin.inc',
+    'file path' => drupal_get_path('module','lib_sys').'/includes/fine',
+		'#type' => MENU_CALLBACK,
+  );
+	
+	$items['uid/autocomplete'] = array(
+    'description' => t('A callback for all users autocomplete'),
+    'page callback' => 'lib_user_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+	
+	$items['acc_no/autocomplete'] = array(
+    'description' => t('A callback for all users autocomplete'),
+    'page callback' => 'acc_no_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ *Implements hook_cron
+ */
+function lib_sys_cron(){
+	$session_id = (string)variable_get('essa_sid');
+	$issue_table = 'essa_'.$session_id.'_lib_issue';
+	$fine_table = 'essa_'.$session_id.'_fees_student_fine';
+	$flag = 0;
+	$fine = variable_get('lib_fine_per_book');
+	$issue_period = variable_get('lib_issue_period');
+	$issues = db_query("
+		SELECT * from $issue_table where status = 'open';"
+	);
+	foreach($issues as $issue){
+		$issue_date = date('Y-m-d', $issue->issue_date);
+		// add 3 days to date
+		$NewDate=date('Y-m-d', strtotime($issue_date. ' + '.$issue_period.' days'));
+		if(strtotime($NewDate) < time()){
+			$fine_days = time()-strtotime($NewDate);
+			$no_of_days = floor($fine_days / (60 * 60 * 24));
+			$fine_amt = $no_of_days*$fine;
+			$flag = 0;
+			$month = date('M_Y', time());
+			$particulars = 'Library Fine - '.$issue->acc_no;
+			$students_fine = db_query("
+				SELECT * from {$fine_table} where adm_no = :an and particulars = :p;", array(':an' => $issue->user_id, ':p' => $particulars)
+			);
+			foreach($students_fine as $sf){
+				$flag = 1;
+				db_merge($fine_table)
+					->key(array('id' => $sf->id))
+					->fields (array(
+							'adm_no' => $issue->user_id,
+							'particulars' => $particulars,
+							'month' => $month,
+							'collection_date' => strtotime($NewDate),
+							'amount_to_be_paid' => $fine_amt,
+						)
+					)
+				->execute();
+				
+				db_merge($issue_table)
+					->key(array('issue_no' => $issue->issue_no, 'acc_no' => $issue->acc_no))
+					->fields (array(
+							'fine' => $fine_amt,
+						)
+					)
+				->execute();
+			}
+			
+			if($flag == 0){
+				if($fine > 0){
+					db_insert($fine_table)
+					->fields (array(
+							'adm_no' => $issue->user_id,
+							'particulars' => $particulars,
+							'month' => $month,
+							'collection_date' => strtotime($NewDate),
+							'amount_to_be_paid' => $fine_amt,
+						)
+					)
+					->execute();
+					
+					db_merge($issue_table)
+						->key(array('issue_no' => $issue->issue_no, 'acc_no' => $issue->acc_no))
+						->fields (array(
+								'fine' => $fine_amt,
+							)
+						)
+					->execute();
+				}
+			}
+		}
+		
+		$fine_on[$issue->acc_no] = $issue->user_id;
+	}
+}
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function lib_sys_theme() {
+  return array(
+    'book_issue_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'book_return_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'return_history_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'lib_fine_collection_table' => array(
+			// The renderable element is the form.
+			'render element' => 'form',
+		),
+  );
+}
+
+/**
+ *Theme function
+ */
+function theme_return_history_table(&$variables){
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Issue No.'), t('Acc. No.'),t('Title'), t('Author'), t('Publisher'), t('Year of Publication'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ *Theme function
+ */
+function theme_book_return_table(&$variables){
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t(''), t('Issue No.'), t('Acc. No.'),t('Title'), t('Author'), t('Publisher'), t('Year of Publication'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ *Theme function
+ */
+function theme_book_issue_table(&$variables){
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Acc. No.'),t('Title'), t('Author'), t('Publisher'), t('Year of Publication'), t(''));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ * Implements autocomplete function
+ */
+function acc_no_autocomplete($string = ''){
+	$session = variable_get('essa_sid');
+	$matches = array();
+	$books =  db_query(
+		"SELECT * from node where type = 'books'"
+	);
+	foreach($books as $book){
+		$bk = node_load($book->nid);
+		$autocomplete_string[] = $bk->field_acc_no_['und'][0]['value'];
+	}
+	
+	foreach($autocomplete_string as $phrases){
+		if(stristr($phrases, $string)){
+			$matches[$phrases] = $phrases;
+		}
+	}
+	drupal_json_output($matches);
+}
+
+/**
+ * Implements autocomplete function
+ */
+function lib_user_autocomplete($string = ''){
+	$session = variable_get('essa_sid');
+	$matches = array();
+	$teacher_table = 'essa_'.$session.'_master_staff_table';
+	$teachers =  db_query(
+		"SELECT * from {$teacher_table} where type = 'teaching'"
+	);
+	foreach($teachers as $teacher){
+		$autocomplete_string[] = $teacher->emp_id;
+	}
+	
+	$student_table = 'essa_'.$session.'_master_student_table';
+	$students =  db_query(
+		"SELECT * from {$student_table}"
+	);
+	foreach($students as $student){
+		$autocomplete_string[] = $student->adm_no;
+	}
+	
+	foreach($autocomplete_string as $phrases){
+		if(stristr($phrases, $string)){
+			$matches[$phrases] = $phrases;
+		}
+	}
+	drupal_json_output($matches);
+}
+
+/**
+ *Implements hook_form_alter.
+ */
+function lib_sys_form_alter(&$form, &$form_state, $form_id){
+  //dsm($form_id);
+  switch($form_id) {
+    case 'books_node_form':
+      $bid = 0;
+      $books = db_query("
+        SELECT * from node where type = 'books';
+      ");
+      foreach($books as $book){
+        $bid = $book->nid;
+      }
+      
+      if(!isset($bid)){
+        $books = db_query("
+          SELECT * from node;
+        ");
+        foreach($books as $book){
+          $bid = $book->nid;
+        }
+      }
+      
+      $form['field_bc'][LANGUAGE_NONE][0]['value']['#default_value'] = $bid;
+      array_unshift($form['#submit'], 'book_submit');
+    /*
+      $node = new stdClass(); // We create a new node object
+      $node->type = "books"; // Or any other content type you want
+      $node->title = "Hello Bull!!!";
+      $node->language = LANGUAGE_NONE; // Or any language code if Locale module is enabled. More on this below *
+      //$node->path = array('alias' => 'your node path'); // Setting a node path
+      node_object_prepare($node); // Set some default values.
+      $node->uid = 1; // Or any id you wish
+      
+      // Let's add standard body field
+      $node->body[$node->language][0]['value'] = 'This is a body text';
+      $node->body[$node->language][0]['summary'] = 'Here goes a summary';
+      $node->body[$node->language][0]['format'] = 'filtered_html'; // If field has a format, you need to define it. Here we define a default filtered_html format for a body field
+      
+      // Let's add standard body field
+      $node->field_author[$node->language][0]['value'] = 'Abraham';
+      
+      // Let's add standard body field
+      $node->field_bc[$node->language][0]['value'] = $bid;
+      
+      $node = node_submit($node); // Prepare node for a submit
+      node_save($node); // After this call we'll get a nid
+    */
+    break;
+  }
+}
+
+function book_submit($form, &$form_state){
+  //dsm($form_state);
+  variable_set('book_id',$form_state['values']['title']);
+}
+
+/**
+* Altering Date Popup to remove labels and description for specific field
+*/
+function lib_sys_date_popup_process_alter(&$element, &$form_state, $context) {
+  unset($element['date']['#description']);
+  unset($element['date']['#title']);
+	unset($element['time']['#title']);
+	unset($element['time']['#description']);
+  return $element;   
+}

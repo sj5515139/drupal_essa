@@ -1,0 +1,136 @@
+#student-attendance-report-form thead th{
+  text-align: center;
+}
+
+#student-attendance-report-form tbody td{
+  text-align: center;
+}
+
+#student-attendance-report-form tbody tr td h3{
+  margin-bottom: 0px !important;
+  text-align: center;
+}
+
+#past-student-attendance tbody tr td h3{
+  margin-bottom: 0px !important;
+  text-align: center;
+}
+
+tbody td h3{
+  margin-bottom: 0px !important;
+}
+  
+#edit-fs1{
+  width: 30%;
+  float: left;
+  margin-right: 20px;
+}
+
+#edit-fs2{
+  width: 25%;
+  float: left;
+  margin-right: 20px;
+}
+
+#edit-fs3{
+  width: 30%;
+  float: left;
+  margin-right: 10px;
+}
+
+#student-attendance-report-form label{
+  display: inline-block;
+  width:  200px;  
+}
+
+.page-admin-students-attendance-report #overlay{
+  width: 1000px !important;
+}
+
+.page-admin-students-attendance-report #overlay thead th{
+  text-align: center;
+}
+
+.page-admin-students-attendance-report #overlay tbody tr{
+  text-align: center;
+  width: 100%;
+}
+
+.page-admin-students-attendance-report #overlay tbody tr a{
+  font-size: 20px;
+  font-weight: 900;
+  height:100%;
+  width:100%;
+}
+
+.page-admin-students-attendance-report #overlay table tr td {
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.page-admin-students-attendance-report .form-type-hierarchical-select{
+  padding-left: 10px !important;
+}
+
+.form-item-holiday{
+  display: inline-block;
+  margin-bottom: 20px !important;
+}
+
+#student-attendance{
+  margin-left: 15%;
+  width: 70%;
+}
+
+#student-attendance thead th{
+  text-align: center !important;
+}
+
+#student-attendance td{
+  text-align: center !important;
+}
+
+#student-attendance h3{
+  text-align: left;
+}
+
+#stu_att_title{
+  background: PURPLE;
+  padding: 5px;
+  padding-bottom: 8px;
+  color: WHITE;
+}
+
+.page-attendance #branding{
+  background-color: #558C89 !important;
+}
+
+#past-student-attendance thead th{
+  text-align: center !important;
+}
+
+#past-student-attendance td{
+  text-align: center !important;
+}
+
+#past-student-attendance h3{
+  text-align: left;
+}
+
+#past-student-attendance label{
+  display: inline-block;
+  width:  220px;  
+}
+
+#sta_att_title{
+  background: #D9853B;
+  padding: 5px;
+  padding-bottom: 8px;
+  color: WHITE;
+}
+
+.page-admin-students-attendance-past-attendance #overlay{
+  margin-left: 15%;
+  width: 70%;
+}

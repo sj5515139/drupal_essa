@@ -1,0 +1,952 @@
+<?php
+/**
+* Implements hook_schema.
+*/
+function exam_schema(){
+	$session = variable_get('essa_sid');
+	//*******************************Exam Master*****************************************
+	
+	$schema['essa_'.$session.'_exam_master'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'exam_name' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '100',
+		    'not null' => FALSE,
+		  ),
+			'date_from' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'date_to' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'class_from' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+			'class_to' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+			'term' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+			'weight' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'float',
+		  ),
+			'no_of_sitting' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '5',
+		    'not null' => FALSE,
+		  ),
+			'status' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '2',
+		    'not null' => FALSE,
+				'default' => '1',
+		  ),
+			'di_status' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+				'default' => '1',
+		  ),
+		),
+		'primary key' => array('exam_code','term'),
+	);
+	
+	
+	//*******************************GRADE SETTINGS*****************************************
+	$schema['essa_'.$session.'_exam_grade_settings'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'id' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'grade' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '20',
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'marks_from' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'float',
+				'not null' => FALSE,
+			),
+			'marks_to' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'float',
+				'not null' => FALSE,
+			),
+			'grade_point' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'float',
+				'not null' => FALSE,
+			),
+		),
+		'primary key' => array('id'),
+	);
+	
+	//*******************************FULL MARKS*****************************************
+	$schema['essa_'.$session.'_exam_full_marks'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+			'term_id' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '20',
+				'not null' => TRUE,
+			),
+			'exam_code' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '20',
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'class' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => TRUE,
+			),
+			'subject_id' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'varchar',
+				'length' => '50',
+				'not null' => TRUE,
+			),
+			'full_marks' => array(
+				'description' => 'TODO: please describe this field!',
+				'type' => 'float',
+				'not null' => FALSE,
+			),
+		),
+		'primary key' => array('term_id', 'exam_code','class','subject_id'),
+	);
+	
+	//**********************************Imp Dates***********************************
+	$schema['essa_'.$session.'_exam_imp_dates'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+				'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'title' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'deadline' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+				'default' => NULL,
+		  ),
+			'principal' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'paper_setter' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'paper_checker' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'teachers' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'subject_teacher' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'class_teacher' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'student' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'parent' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '1',
+				'default' => '0',
+		  ),
+			'body' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'text',
+				'default' => NULL,
+		  ),
+			'before' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+				'default' => NULL,
+		  ),
+		),
+		'primary key' => array('term_id','exam_code', 'class', 'title'),
+	);
+	
+	
+	//**********************************Exam Schedule***********************************
+	
+	$schema['essa_'.$session.'_exam_schedule'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		 'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'subject' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '100',
+		    'not null' => FALSE,
+		  ),
+			'date' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'sitting' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'time_from' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'time_to' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('term_id','exam_code','class','subject'),
+	);
+	
+	
+	//**********************************Exam Status***********************************
+	$schema['essa_'.$session.'_exam_status'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		 'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+		  ),
+			'sec' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => TRUE,
+		  ),
+			'timestamp' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'uid' => array(
+		    'description' => 'TODO: please describe this field!',
+				'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'generate_result_status' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+				'length' => 10,
+		    'not null' => FALSE,
+		  ),
+			'publish_result_status' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+				'length' => 10,
+		    'not null' => FALSE,
+		  ),
+			'send_for_review' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+				'length' => 10,
+		    'not null' => FALSE,
+		  ),
+			'publish_on' => array(
+		    'description' => 'TODO: please describe this field!',
+				'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('term_id','exam_code','class','sec'),
+	);
+	
+	//**********************************EXAM MARKS UPLOAD STATUS***********************************
+	$schema['essa_'.$session.'_exam_marks_upload_status'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		 'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+		  ),
+			'sec' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => TRUE,
+		  ),
+			'sub_id' => array(
+				'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '100',
+		    'not null' => TRUE,
+			),
+			'upload_status' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+				'length' => 10,
+		    'not null' => FALSE,
+		  ),
+			'timestamp' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'uid' => array(
+		    'description' => 'TODO: please describe this field!',
+				'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('term_id','exam_code','class','sec','sub_id'),
+	);
+	
+	//**********************************Exam Timing***********************************
+	
+	$schema['essa_'.$session.'_exam_timing'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'sitting' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'time_from' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'time_to' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('exam_code','class','sitting'),
+	);
+	
+	
+	//**********************************Paper Checker***********************************
+	
+	$schema['essa_'.$session.'_exam_paper_checkers'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'section' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'subject' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'teacher' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('term_id','exam_code','class','section','subject'),
+	);
+	
+	
+	//**********************************Paper Setter***********************************
+	
+	$schema['essa_'.$session.'_exam_paper_setter'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		'term_id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'section' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'subject' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'teacher' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('term_id','exam_code','class','section','subject'),
+	);
+	
+	
+	//**********************************Master Marks***********************************
+	/*
+	$schema['essa_'.$session.'_exam_master_marks'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'class' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '10',
+		    'not null' => FALSE,
+		  ),
+			'subject' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'total_marks' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'passing_marks' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('exam_code','class','subject'),
+	);
+	*/
+	
+	//**********************************Student Marks***********************************
+	
+	$schema['essa_'.$session.'_exam_student_marks'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		  'exam_code' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => TRUE,
+				'default' => '',
+		  ),
+			'adm_no' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'subject' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '50',
+		    'not null' => FALSE,
+		  ),
+			'marks' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'float',
+		    'not null' => FALSE,
+		  ),
+			'remarks' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'text',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('exam_code','adm_no','subject'),
+	);
+	
+	
+	//**********************************Exam terms***********************************
+	$schema['essa_'.$session.'_exam_terms'] = array(
+		'description' => 'TODO: please describe this table!',
+		'fields' => array(
+		  'id' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'serial',
+				'unsigned' => TRUE,
+        'not null' => TRUE,
+		  ),
+			'term_name' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '255',
+		    'not null' => FALSE,
+		  ),
+			'term_1' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'term_2' => array(
+		    'description' => 'TODO: please describe this field!',
+				'type' => 'int',
+		    'length' => '11',
+		    'not null' => FALSE,
+		  ),
+			'class_from' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+			'class_to' => array(
+		    'description' => 'TODO: please describe this field!',
+		    'type' => 'varchar',
+		    'length' => '20',
+		    'not null' => FALSE,
+		  ),
+		),
+		'primary key' => array('id'),
+	);
+
+	//**********************************WT Marks***********************************
+	/*
+	$schema['essa_'.$session.'_exam_marks_wt'] = array(
+      'description' => 'TODO: please describe this table!',
+      'fields' => array(
+        'adm_no' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'subject' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '100',
+          'not null' => FALSE,
+        ),
+        'class' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'section' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+      ),
+      'primary key' => array('adm_no', 'subject'),
+    );
+    */
+	
+		//**********************************TA Marks***********************************
+		/*
+    $schema['essa_'.$session.'_exam_marks_ta'] = array(
+      'description' => 'TODO: please describe this table!',
+      'fields' => array(
+        'adm_no' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'subject' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '100',
+          'not null' => FALSE,
+        ),
+        'class' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'section' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+      ),
+      'primary key' => array('adm_no','subject'),
+    );
+    */
+		
+		//**********************************Total Marks***********************************
+		/*
+    $schema['essa_'.$session.'_exam_marks_total'] = array(
+      'description' => 'TODO: please describe this table!',
+      'fields' => array(
+        'adm_no' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'subject' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '100',
+          'not null' => FALSE,
+        ),
+        'class' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'section' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+      ),
+      'primary key' => array('adm_no','subject'),
+    );
+		*/
+		
+		//**********************************WT subject wise marks***********************************
+		/*
+		$schema['essa_'.$session.'_exam_sub_marks_wt'] = array(
+      'description' => 'TODO: please describe this table!',
+      'fields' => array(
+        'exam_code' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'class' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'section' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'adm_no' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+      ),
+      'primary key' => array('adm_no', 'exam_code'),
+    );
+    */
+		
+		//**********************************TA subject wise marks***********************************
+		/*
+    $schema['essa_'.$session.'_exam_sub_marks_ta'] = array(
+      'description' => 'TODO: please describe this table!',
+      'fields' => array(
+        'exam_code' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'class' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'section' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'adm_no' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+      ),
+      'primary key' => array('adm_no', 'exam_code'),
+    );
+    */
+		
+		//**********************************Subject wise total marks***********************************
+		/*
+    $schema['essa_'.$session.'_exam_sub_marks_total'] = array(
+      'description' => 'TODO: please describe this table!',
+      'fields' => array(
+        'exam_code' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'class' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'section' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+        'adm_no' => array(
+          'description' => 'TODO: please describe this field!',
+          'type' => 'varchar',
+          'length' => '50',
+          'not null' => FALSE,
+        ),
+      ),
+      'primary key' => array('adm_no', 'exam_code'),
+    );
+		*/
+
+	return $schema;
+}
+
+/**
+ *Implements hook_install
+ */
+function exam_install(){
+  variable_set('visualization', 'highcharts');
+	$ec_flag = 0;
+	$ec_role = db_query(
+		"SELECT * from role where name = 'Exam Controller';"
+	);
+	foreach($ec_role as $ecr){
+		$ec_flag = 1;
+	}
+	
+	if(!is_dir("sites/default/files/exam/")){
+		mkdir("sites/default/files/exam/");
+	}
+	
+	if($ec_flag == 0){
+		$role = new stdClass();
+		$role->name = 'Exam Controller';
+		user_role_save($role);
+	}
+	db_query("INSERT INTO `essa_2016_17_exam_grade_settings` (`id`, `grade`, `marks_from`, `marks_to`, `grade_point`)
+	VALUES
+	(1, 'A1', 91, 100, 10),
+	(2, 'A2', 81, 90, 9),
+	(3, 'B1', 71, 80, 8),
+	(4, 'B2', 61, 70, 7),
+	(5, 'C1', 51, 60, 6),
+	(6, 'C2', 41, 50, 5),
+	(7, 'D', 33, 40, 4),
+	(8, 'E1', 21, 32, 3),
+	(9, 'E2', 0, 20, 2);");
+}

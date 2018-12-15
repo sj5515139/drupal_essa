@@ -1,0 +1,146 @@
+<?php
+
+/**
+ *Implements hook_schema()
+ */
+function lib_sys_schema(){
+	$session_id = (string)variable_get('essa_sid');
+	
+	//********************************* Defining schema for library books *****************************************
+  $schema['essa_'.$session_id.'_lib_issue'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'issue_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+				'length' => '11',
+        'not null' => TRUE,
+      ),
+      'acc_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+			'user_id' => array(
+	      'description' => 'TODO: please describe this field!',
+	      'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+		  ),
+      'issue_date' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+      'return_no' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '25',
+        'not null' => FALSE,
+      ),
+			'return_date' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'fine' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'float',
+        'not null' => FALSE,
+      ),
+			'status' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '55',
+        'not null' => FALSE,
+      ),
+			'uid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'timestamp' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'issued_by' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '50',
+        'not null' => FALSE,
+      ),
+			'issued_by_uid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'nid' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'int',
+        'length' => '11',
+        'not null' => FALSE,
+      ),
+			'title' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+		),
+    'primary key' => array('issue_no','acc_no'),
+  );
+	
+	return $schema;
+}
+
+/**
+ *Implements hook install
+ */
+function lib_sys_install(){
+	
+	//********************************* Creating role for librarian *****************************************
+	$role_list = array();
+  $existing_roles = db_query("select * from role");
+  foreach($existing_roles as $existing_role){
+    $role_list[] = $existing_role->name;
+  }
+	$cur_role = 'Librarian';
+	if(!in_array($cur_role, $role_list)){
+    $role = new stdClass();
+    $role->name = $cur_role;
+    user_role_save($role);
+	}
+	
+	$vocab_list = array();
+  $existing_vocabs = db_query("select * from taxonomy_vocabulary");
+  foreach($existing_vocabs as $existing_vocab){
+    $vocab_list[] = $existing_vocab->machine_name;
+  }
+	
+	$vocab = 'book_availability';
+	if(in_array($vocab, $vocab_list)){
+		$vid = taxonomy_vocabulary_machine_name_load('book_availability');
+		$term1 = array(
+			'name' => 'Available', 
+			'description' => '', 
+			'vid' => $vid->vid,
+		);
+		$term1 = (object) $term1;
+		taxonomy_term_save($term1);
+		$vid = taxonomy_vocabulary_machine_name_load('book_availability');
+		$term1 = array(
+			'name' => 'Issued', 
+			'description' => '', 
+			'vid' => $vid->vid,
+		);
+		$term1 = (object) $term1;
+		taxonomy_term_save($term1);
+	}
+}

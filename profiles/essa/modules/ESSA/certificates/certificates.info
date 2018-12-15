@@ -1,0 +1,9 @@
+name = Certificates
+description = Creating certificate template and generating ot for all students.
+core = 7.x
+package = ESSA
+files[] = certificates.module
+stylesheets[all][] = certificates.css
+dependencies[] = views
+dependencies[] = student_admission
+dependencies[] = school_master

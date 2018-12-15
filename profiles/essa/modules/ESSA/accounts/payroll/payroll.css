@@ -1,0 +1,111 @@
+#salary-head label, #edit-salary-head label, #incentive label, #deductions label, #bonus label, #generate-payslip label{
+  width:  200px;
+  display: inline-block;
+  padding-right: 10px;
+  margin-right: 20px !important;
+}
+
+#generate-payslip .form-item-month label{
+  float: left;
+}
+
+#generate-payslip .form-item-month{
+  float: left;
+  margin-top: -5px;
+}
+
+#edit-cnt{
+  //height: 300px !important;
+  width: 100%;
+  overflow: auto !important;
+  color: RED;
+}
+
+#incentive .form-type-checkbox, #deductions .form-type-checkbox, #bonus .form-type-checkbox{
+  float: left;
+  width: 280px;
+}
+
+.form-item-emp-id-filter{
+  width: 48%;
+  float: left !important;
+}
+
+.form-item-sal-id-filter{
+  width: 47%;
+  float: right;
+}
+
+#add-salary-type label, #emp-salary label, #batch-increment label{
+  width:  240px;
+  display: inline-block;
+  padding-right: 10px;
+  margin-right: 20px !important;
+}
+
+.form-item-title{
+  width: 60%;
+  float: left;
+}
+
+#add-salary-type #edit-submit{
+  margin-bottom: -10px !important;
+}
+
+#add-salary-type, #edit-salary-head{
+  margin-top: 30px;
+  margin-left: 10%;
+}
+
+.page-edit-emp-sal #overlay{
+  width: 60%;
+}
+
+#salary-head{
+  margin-left: 10%;
+}
+
+.page-admin-accounts-payroll-salary-structure-add-new #overlay{
+  width: 40%;
+}
+
+.page-admin-accounts-payroll-emp-sal-batch-increment #overlay, .page-admin-accounts-payroll-emp-sal-incentive #overlay,
+.page-admin-accounts-payroll-emp-sal-deduction #overlay, .page-admin-accounts-payroll-emp-sal-bonus #overlay{
+  width: 60%;
+}
+
+.page-admin-accounts-payroll-salary-structure- #overlay{
+  width: 60%;
+}
+
+#salary-structure, #salary-category{
+  width: 70%;
+  margin-left: 15%;
+}
+
+#delete_sal input[type="submit"]{
+  background: red !important;
+  margin-bottom: 5px;
+}
+
+#delete_sh input[type="submit"]{
+  background: red !important;
+  margin-bottom: 5px;
+}
+
+.views-field-title{
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+#generate-payslip .fieldset-wrapper .form-wrapper{
+	width:50%;
+}
+
+#generate-payslip .fieldset-wrapper .overflow-fix{
+	width:100%;
+}
+#generate-payslip .fieldset-wrapper{
+	display:flex;
+}

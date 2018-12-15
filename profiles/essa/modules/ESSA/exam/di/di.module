@@ -1,0 +1,121 @@
+<?php
+
+/**
+ *Implements hook_permission()
+ */
+function di_permission(){
+  return array(
+    'create_di' => array(
+      'title' => t('Create Descriptive Indicators'),
+      'description' => t('For all staffs.'),
+    ),
+	);
+}
+/**
+ *Implements hook_menu().
+ */
+function di_menu(){
+	$items = array();
+	$session = variable_get('essa_sid');
+	$session_id = variable_get('essa_sid');
+	$items['admin/exam/settings/report-card-format'] = array(
+		'title' => 'Report Card',
+	  'description' => 'Exams',
+	  'page callback' => 'drupal_get_form',
+		'page arguments' => array('report_card'),
+		'access arguments' => array('create_di'),
+		'file' => 'report_card.admin.inc',
+    'file path' => drupal_get_path('module','di').'/includes',
+	);
+	
+	$items['admin/exam/settings/report-card-format/set-group'] = array(
+		'title' => 'Create Class Group',
+	  'description' => 'Exams',
+	  'page callback' => 'drupal_get_form',
+		'page arguments' => array('class_group'),
+		'access arguments' => array('create_exam'),
+		'file' => 'class_group.admin.inc',
+    'file path' => drupal_get_path('module','di').'/includes',
+	);
+	
+	$group_table = 'essa_'.$session.'_di_group_name';
+	$groups = db_query("SELECT * FROM {$group_table}");
+	foreach($groups as $grp){
+		$items['admin/exam/settings/report-card-format/'.$grp->id] = array(
+			'title' => $grp->group_name,
+			'description' => 'Exams',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('group_page'),
+			'access arguments' => array('create_di'),
+			'file' => 'group_page.admin.inc',
+			'file path' => drupal_get_path('module','di').'/includes',
+			'weight' => $grp->id,
+		);
+		$items['admin/exam/settings/report-card-format/'.$grp->id.'/create_section'] = array(
+			'title' => 'Create Section',
+			'description' => 'Exams',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('create_section',4),
+			'access arguments' => array('create_di'),
+			'file' => 'create_section.admin.inc',
+			'file path' => drupal_get_path('module','di').'/includes',
+		);
+		$section_table = 'essa_'.$session.'_di_group_section';
+		$sections = db_query("SELECT * FROM {$section_table} where group_id = :gi", array(':gi' => $grp->id));
+		foreach($sections as $secs){
+			$items['admin/exam/settings/report-card-format/'.$grp->id.'/'.$secs->id] = array(
+				'title' => $secs->section_name,
+				'description' => 'Exams',
+				'page callback' => 'drupal_get_form',
+				'page arguments' => array('section_page', 4, 5),
+				'access arguments' => array('create_di'),
+				'file' => 'section_page.admin.inc',
+				'file path' => drupal_get_path('module','di').'/includes',
+				'weight' => $secs->id,
+			);
+			
+			if($secs->is_marksheet != '1'){
+				$items['admin/exam/settings/report-card-format/'.$grp->id.'/'.$secs->id.'/create_di'] = array(
+					'title' => 'Create DI',
+					'description' => 'Create Discriptive Indicators',
+					'page callback' => 'drupal_get_form',
+					'page arguments' => array('create_di', 4, 5),
+					'access arguments' => array('create_di'),
+					'file' => 'create_di.admin.inc',
+					'file path' => drupal_get_path('module','di').'/includes',
+					'weight' => -99,
+				);
+				
+				$di_table = 'essa_'.$session.'_di_indicators';
+				$sa_table = 'essa_'.$session.'_di_sa';
+				$dis = db_query("SELECT * FROM {$sa_table} where group_id = :gi and section_id = :si",
+														 array(':gi' => $grp->id, ':si' => $secs->id));
+				foreach($dis as $di){
+					$items['admin/exam/settings/report-card-format/'.$grp->id.'/'.$secs->id.'/'.$di->sub_section.'/'.$di->serial_no] = array(
+						'title' => $di->sub_section.'-'.$di->serial_no,
+						'description' => 'Discriptive Indicators',
+						'page callback' => 'drupal_get_form',
+						'page arguments' => array('di', 4, 5, 6, 7),
+						'access arguments' => array('create_di'),
+						'file' => 'di.admin.inc',
+						'file path' => drupal_get_path('module','di').'/includes',
+					);
+				}
+			}
+		}
+	}
+	
+	return $items;
+}
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function di_theme() {
+  return array(
+    'di_grade_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+	);
+}

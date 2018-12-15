@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Fee Page feature.
+ */
+
+include_once 'fee_page.features.inc';

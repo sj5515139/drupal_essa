@@ -1,0 +1,12 @@
+<?php
+
+/**
+ * Implements hook_views_api().
+ */
+function essa_expose_tables_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'essa_expose_tables') . '/includes',
+  );
+}
+

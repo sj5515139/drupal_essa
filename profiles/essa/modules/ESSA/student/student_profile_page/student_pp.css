@@ -1,0 +1,111 @@
+#remarks-form label{
+	width: 250px;
+	display: inline-block;
+}
+
+.view-id-student_remarks .views-label-remarks{
+	font-size: 16px;
+	font-weight: 700;
+	display: block;
+}
+
+#display-fee-detail, .page-user-remarks #overlay{
+  width: 70%;
+  margin-left: 15%;
+}
+
+.profile h3{
+  display: none;
+}
+
+.profile dl{
+  display: none;
+}
+
+#block-student-profile-page-student-general-details h2:first-of-type{
+  display: none;
+}
+
+#detail_title{
+  display: inline-block;
+  width:  100% !important;
+  font-size: 16px !important;
+  font-weight: 100 !important;
+  background: #FF6347;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: center;
+  color: WHITE;
+  font-weight: 600 !important;
+}
+
+.student-info div{
+  border: 1px solid #FF6347;
+  padding: 10px 10px 0px 10px;
+  background: WHITE;
+}
+
+.student-info h3{
+  text-align: center;
+}
+
+.student-info p{
+  line-height: 0em;
+}
+
+#user-profile-form label{
+  display: inline-block;
+  padding-right: 10px;
+}
+
+#update-pic{
+  width: 100%;
+}
+
+
+#profile-pic{
+  width: 200px;
+  height:  200px;
+}
+
+#block-student-profile-page-student-general-details,.student-info,.student-basic-info{
+  width: 100% !important;  
+}
+
+
+.page-user- .action-links{
+  float: right;
+}
+
+#block-student-profile-page-student-additional-details .content tr{
+  border: 1px solid #5F9EA0;
+}
+
+#block-student-profile-page-student-additional-details .content th{
+  text-align: center;
+  border: 1px solid #f9f9f9;
+  font-weight: 800 !important;
+  vertical-align: middle;
+}
+
+#block-student-profile-page-student-additional-details .content td{
+  text-align: center;
+  border: 1px solid #5F9EA0 !important;
+  background: WHITE;
+  font-size: 18px !important;
+}
+
+#block-student-profile-page-student-additional-details tr{
+  border: none !important;
+}
+
+#display-timetable .form-type-textfield input{
+  height: 70px !important;
+  text-align: center;
+}
+
+#display-timetable td{
+  text-align: center;
+  font-weight: 900;
+  border: 1px solid BLACK;
+}

@@ -1,0 +1,16 @@
+tr.dnp-term-preview {
+  background-color: #EEE;
+}
+tr.dnp-term-divider-top {
+  border-bottom: none;
+}
+tr.dnp-term-divider-bottom {
+  border-top: 1px dotted #CCC;
+}
+.dnp-term-description {
+  margin: 5px 0 20px;
+}
+
+.page-admin-structure-dnp #overlay-tabs{
+  display: none !important;
+}

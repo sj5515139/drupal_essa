@@ -1,0 +1,1385 @@
+<?php
+
+/**
+ *Implements hook_permission()
+ */
+function fee_permission(){
+  return array(
+    'administer fees' => array(
+      'title' => t('Administer Fees'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+		'collect fees' => array(
+      'title' => t('Collect Fees'),
+      'description' => t('Warning: Give to trusted roles only; this permission has security implications.'),
+    ),
+  );
+}
+
+global $user;
+/**
+ *Implements hook_user_logout
+ */
+function fee_user_logout($user){
+	variable_del('pay_dt'.$user->uid);
+}
+
+/**
+ * Implements hook_admin_paths()
+ */
+function fee_admin_paths() {
+  $paths = array(
+    'admin/fees/fee_structure' => FALSE,
+		'admin/fees/payment/bank_collection' => FALSE,
+		'admin/fees/concession' => FALSE,
+		'admin/fees/fee_collection' => FALSE,
+		'admin/fees/fee_structure/due_date' =>FALSE,
+		'admin/fees/fee_structure/list' => FALSE,
+		'admin/fees/defaulter_list' => FALSE,
+		'admin/fees/fee_structure' => FALSE,
+		'admin/fees/payment/fee_collection' => FALSE,
+		'admin/fees/payment' => FALSE,
+		//'admin/fees/payment/adjustments' => FALSE,
+		//'admin/fees/collection_staff' => FALSE,
+		//'admin/fees/fee_incharge' => FALSE,
+		'admin/fees/payment/collection' => FALSE,
+		'admin/fees/payment/bank/collection' => FALSE,
+		'admin/fees/payment/school/collection' => FALSE,
+		'admin/fees/payment/bank/fee_collection' => FALSE,
+		'admin/fees/payment/school/fee_collection' => FALSE,
+		'admin/fees/payment/bank' => FALSE,
+		'admin/fees/payment/school' => FALSE,
+		'admin/fees/concession/delete-concession' => FALSE,
+		'admin/fees/fine' => FALSE,
+		'admin/fees/fine/edit-delete' => FALSE,
+		'edit-fee' => TRUE,
+		'delete-fee' => TRUE,
+		'delete-fine' => TRUE,
+		'delete-fee-structure' => TRUE,
+		'delete-fee-structure-pay' => TRUE,
+  );
+	
+	$session = variable_get('essa_sid');
+	$cs_table = 'essa_'.$session.'_class_section';
+	$sections =  db_query(
+		"SELECT * from {$cs_table};"
+	);
+	foreach($sections as $section){
+		$path_section = array('admin/fees/payment/'.$section->sections => FALSE);
+		$paths = array_merge($paths, $path_section);
+	}
+  
+	$student_table = 'essa_'.$session.'_master_student_table';
+	$students =  db_query(
+		"SELECT * from {$student_table} WHERE status = 1;"
+	);
+	foreach($students as $student){
+		$path_student = array('admin/fees/payment/'.$student->adm_no => FALSE);
+		//$paths = array_merge($paths, $path_student);
+	}
+	return $paths;
+}
+
+/**
+ *Calling the theme function for the form - hook_theme().
+ */
+function fee_theme() {
+  return array(
+    'fee_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'fee_payment_table' => array(
+      // The renderable element is the form.
+      'render element' => 'form',
+    ),
+		'student_fee_payment_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'student_fine_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'class_fee_payment_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'defaulter_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'concession_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'stud_con_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'payment_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'individual_payment_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'edit_payment_history_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'fees_staff_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'fee_collection_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'adjustment_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'advance_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'advance_adjustment_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'fee_advance_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'student_con_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'fine_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+		'remove_adjustment_table' => array(
+			// The renderable element is the form.
+      'render element' => 'form',
+		),
+  );
+}
+
+/**
+ *Theme function
+ */
+function theme_advance_table(&$variables){
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Advance ID'), t('Paricular'), t('Amount'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+  
+/**
+ *Implements hook_menu()
+ */
+function fee_menu(){
+  $items = array();
+  
+	/*
+  $items['admin/accounts'] = array(
+	  'title' => t('Accounts'),
+	  'description' => t('Managing School Accounts'),
+	  'page callback' => 'account_page',
+	  'access arguments' => array('administer fees'),
+	);
+  */
+  $items['admin/fees'] = array(
+	  'title' => t('Fees'),
+	  'description' => t('Managing Student Fees'),
+	  'page callback' => 'fee_page',
+	  'access arguments' => array('collect fees'),
+	);
+  
+  $items['admin/fees/fee_structure'] = array(
+	  'title' => t('Fee Structure'),
+	  'description' => t('Managing Fees Structure'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('fee_structure'),
+		'access arguments' => array('administer fees'),
+    'file' => 'fee_structure.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_structure',
+		'type' => MENU_LOCAL_ACTION,
+	);
+	
+	$items['delete-fee-structure'] = array(
+    'title' => 'Delete Fee Type',
+    'page callback' => 'delete_fee_type_pagecallback',
+    'access arguments' => array('collect fees'),
+    'file' => 'fee_structure.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_structure',
+  );
+	
+	$items['delete-fee-structure-pay'] = array(
+    'title' => 'Delete Fee Type',
+    'page callback' => 'delete_fee_pay_type_pagecallback',
+    'access arguments' => array('collect fees'),
+    'file' => 'fee_structure.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_structure',
+  );
+  
+  $items['admin/fees/fee_structure/list'] = array(
+	  'title' => 'List',
+    'description' => t('Manage Fees Structure.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('fee_structure'),
+	  'access arguments' => array('administer fees'),
+		'file' => 'fee_structure.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_structure',
+		'weight' => 99,
+    //'type' => MENU_CALLBACK,
+	);
+  
+  $items['admin/fees/fee_structure/set_frequency'] = array(
+	  'title' => t('Set Frequency'),
+	  'description' => t('Set Due Dates for each type of frequency.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('set_frequency'),
+		'access arguments' => array('administer fees'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'set_frequency.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_structure',
+    'weight' => 98,
+	);
+	
+  $items['admin/fees/fee_structure/create_fees'] = array(
+	  'title' => t('Create Fees'),
+	  'description' => t('Creating fees for fee structure.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('create_fees'),
+		'access arguments' => array('administer fees'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'create_fees.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_structure',
+    'weight' => 97,
+	);
+	
+	/*
+	$session_id = (string)variable_get('essa_sid');
+	$fees_table = 'essa_'.$session_id.'_fees_structure';
+	$fees = db_query("
+    SELECT * from {$fees_table};
+  ");
+	
+  foreach($fees as $fee){
+    $items['admin/fees/fee_structure/list/'.$fee->fee_id] = array(
+      'title' => $fee->particulars,
+      'description' => t('Manage Fees Structure.'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('edit_fee_form',5),
+      'access arguments' => array('administer fees'),
+    	'file' => 'edit_fee.admin.inc',
+      'file path' => drupal_get_path('module','fee').'/includes/fee_structure',
+    );
+	}
+	*/
+	
+	$items['adm_no/autocomplete'] = array(
+    'description' => t('A callback for teacher autocomplete in subjects form'),
+    'page callback' => 'adm_no_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+	
+	$items['admin/fees/payment'] = array(
+	  'title' => t('Collection'),
+	  'description' => t('Managing Fees Payment'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('fee_collection_bank'),
+		'access arguments' => array('collect fees'),
+		'weight' => -99,
+		'file' => 'fee_collection_bank.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'type' => MENU_LOCAL_ACTION,
+	);
+	
+	$items['admin/fees/payment/bank'] = array(
+	  'title' => t('Bank Collection'),
+	  'description' => t('Managing Student Fees Collection'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('fee_collection_bank'),
+		'access arguments' => array('collect fees'),
+    'file' => 'fee_collection_bank.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'weight' => 1,
+	);
+	
+	$items['admin/fees/payment/bank/collection'] = array(
+	  'title' => t('Fee Collection'),
+	  'description' => t('Managing Student Fees Collection'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('fee_collection_bank'),
+		'access arguments' => array('collect fees'),
+    'file' => 'fee_collection_bank.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'weight' => 1,
+	);
+	
+	$items['admin/fees/payment/bank/fee_collection'] = array(
+	  'title' => t('Month-wise Collection'),
+	  'description' => t('Individual Collection'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('fee_payment_bank'),
+		'access arguments' => array('collect fees'),
+    'file' => 'fee_payment_bank.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'weight' => 1,
+	);
+	
+	$items['admin/fees/payment/school'] = array(
+	  'title' => t('School Collection'),
+	  'description' => t('Managing Student Fees Collection'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('fee_collection_school'),
+		'access arguments' => array('collect fees'),
+    'file' => 'fee_collection_school.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'weight' => 1,
+	);
+	
+	$items['admin/fees/payment/school/collection'] = array(
+	  'title' => t('Fee Collection'),
+	  'description' => t('Managing Student Fees Collection'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('fee_collection_school'),
+		'access arguments' => array('collect fees'),
+    'file' => 'fee_collection_school.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'weight' => 1,
+	);
+	
+	$items['admin/fees/payment/school/fee_collection'] = array(
+	  'title' => t('Month-wise Collection'),
+	  'description' => t('Individual Collection'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('fee_payment_school'),
+		'access arguments' => array('collect fees'),
+    'file' => 'fee_payment_school.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'weight' => 1,
+	);
+	
+	
+	$items['admin/fees/payment/edit'] = array(
+	  'title' => t('Edit'),
+	  'description' => t('Individual Collection'),
+	  'page callback' => 'drupal_get_form',
+		'page arguments' => array('payment_history_edit'),
+		'access arguments' => array('collect fees'),
+		'weight' => -99,
+		'file' => 'payment_edit.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+	);
+	
+	$items['delete-fee'] = array(
+    'title' => 'Delete Fee',
+    'page callback' => 'delete_fee_pagecallback',
+    'access arguments' => array('collect fees'),
+    'file' => 'payment_edit.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'#type' => MENU_CALLBACK,
+  );
+	
+	$items['delete-fine'] = array(
+    'title' => 'Delete Fine',
+    'page callback' => 'delete_fine_pagecallback',
+    'access arguments' => array('collect fees'),
+    'file' => 'payment_edit.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'#type' => MENU_CALLBACK,
+  );
+	
+	$items['delete-student-fine'] = array(
+    'title' => 'Delete Fine',
+    'page callback' => 'delete_student_fine_pagecallback',
+    'access arguments' => array('collect fees'),
+    'file' => 'fine_edit.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes',
+		'#type' => MENU_CALLBACK,
+  );
+	
+	$items['edit-fee'] = array(
+	  'title' => t('Edit'),
+	  'description' => t('Individual Collection'),
+	  'page callback' => 'drupal_get_form',
+		'page arguments' => array('payment_history_table'),
+		'access arguments' => array('collect fees'),
+		'weight' => -99,
+		'file' => 'payment_edit.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'weight' => 3,
+	);
+	/*
+	$session = variable_get('essa_sid');
+	$student_table = 'essa_'.$session.'_master_student_table';
+	$students =  db_query(
+		"SELECT * from {$student_table} where status = 1;"
+	);
+	foreach($students as $student){
+		$items['admin/fees/payment/'.$student->adm_no] = array(
+			'title' => 'Payment for - '.$student->adm_no,
+		  'description' => t('A page for student fee payment.'),
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('student_fee_collection',4),
+			'access arguments' => array('administer fees'),
+			'file' => 'student_fee_collection.admin.inc',
+			'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		  'type' => MENU_CALLBACK,
+		);	
+	}
+	
+	$cs_table = 'essa_'.$session.'_class_section';
+	$sections =  db_query(
+		"SELECT * from {$cs_table};"
+	);
+	foreach($sections as $section){
+		//dsm($section);
+		$items['admin/fees/payment/'.$section->sections] = array(
+			'title' => 'Payment for - '.$section->sections,
+		  'description' => t('A page for student fee payment.'),
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('class_fee_collection',4),
+			'access arguments' => array('administer fees accounts'),
+			'file' => 'class_fee_collection.admin.inc',
+			'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		  'type' => MENU_CALLBACK,
+		);	
+	}
+	
+	$items['admin/fees/payment/bank_collection'] = array(
+	  'title' => t('Bank Collection'),
+	  'description' => t('Bank Collection'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('bank_collection'),
+		'access arguments' => array('collect fees'),
+		'file' => 'bank_collection.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+	);
+	*/
+	/*
+	$items['admin/fees/payment/fee_collection'] = array(
+	  'title' => t('Month-wise Collection'),
+	  'description' => t('Individual Collection'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('fee_payment'),
+		'access arguments' => array('collect fees'),
+    'file' => 'fee_payment.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'weight' => 1,
+	);
+	*/
+	$items['admin/fees/concession'] = array(
+	  'title' => t('Concession'),
+	  'description' => t('Concession'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('concession'),
+		'access arguments' => array('administer fees'),
+    'file' => 'concession.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_concession',
+		'type' => MENU_LOCAL_ACTION,
+	);
+	
+	$items['admin/fees/concession/list'] = array(
+	  'title' => t('List'),
+	  'description' => t('Concession'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('concession'),
+		'access arguments' => array('administer fees'),
+    'file' => 'concession.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_concession',
+		'weight' => 98,
+	);
+	
+	//admin/fees/concession/list/'.$con->con_id
+	$session = (string)variable_get('essa_sid');
+	$concession_table = 'essa_'.$session.'_fees_concession';
+  $fees_table = 'essa_'.$session.'_fees_structure';
+  
+  $concession = db_query("
+    SELECT * from {$concession_table};
+  ");
+  foreach($concession as $con){
+		$items['admin/fees/concession/list/'.$con->con_id] = array(
+      'title' => 'Edit',
+      'description' => t('Edit Concession Detail.'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('edit_con_form',4),
+      'access arguments' => array('administer fees'),
+    	'file' => 'edit_concession.admin.inc',
+			'file path' => drupal_get_path('module','fee').'/includes/fee_concession',
+    );
+	}
+	
+	$items['admin/fees/concession/create-concession'] = array(
+	  'title' => t('Create Concession'),
+	  'description' => t('Create concession link.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('create_concession'),
+		'access arguments' => array('administer fees'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'create_concession.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_concession',
+    'weight' => 96,
+	);
+	
+	$items['admin/fees/concession/student-concession-entire-session'] = array(
+	  'title' => t('Set Concession (Entire Session)'),
+	  'description' => t('Student concession link.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('student_concession_es'),
+		'access arguments' => array('administer fees'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'student_concession.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_concession',
+    'weight' => 20,
+	);
+	
+	$items['admin/fees/concession/student-concession-from-next-month'] = array(
+	  'title' => t('Set Concession (Month-wise)'),
+	  'description' => t('Student concession link.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('student_concession_fnm'),
+		'access arguments' => array('administer fees'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'student_concession.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_concession',
+    'weight' => 10,
+	);
+	
+	$items['admin/fees/concession/delete-concession'] = array(
+	  'title' => t('Remove Concession'),
+	  'description' => t('Remove Student concession.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('remove_concession'),
+		'access arguments' => array('administer fees'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'remove_student_concession.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_concession',
+    'weight' => 30,
+	);
+	
+	$items['delete-concession_type'] = array(
+	  'title' => t('Delete Concession'),
+	  'description' => t('Delete Concession type.'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('delete_concession'),
+		'access arguments' => array('administer fees'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'concession.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_concession',
+    'weight' => 30,
+	);
+	
+	$items['admin/fees/payment/adjustments'] = array(
+	  'title' => t('Adjustment'),
+	  'description' => t('Adjustment'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('adjustment'),
+		'access arguments' => array('collect fees'),
+    'file' => 'adjustment.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'weight' => 10,
+	);
+	
+	$items['admin/fees/payment/adjustments/adjust'] = array(
+	  'title' => t('Adjust'),
+	  'description' => t('Adjustment'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('adjustment'),
+		'access arguments' => array('collect fees'),
+    'file' => 'adjustment.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'weight' => 10,
+	);
+	
+	$items['admin/fees/payment/adjustments/delete'] = array(
+	  'title' => t('Delete'),
+	  'description' => t('Adjustment'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('delete_adjustment'),
+		'access arguments' => array('collect fees'),
+    'file' => 'delete_adjustment.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'weight' => 9,
+	);
+	
+	$items['admin/fees/payment/refund'] = array(
+	  'title' => t('Refund'),
+	  'description' => t('Refund'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('refund'),
+		'access arguments' => array('collect fees'),
+    'file' => 'refund.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes/fee_collection',
+		'weight' => 11,
+	);
+	
+	$items['admin/fees/fine'] = array(
+	  'title' => t('Fine'),
+	  'description' => t('Fine Management'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('fine_edit'),
+		'access arguments' => array('collect fees'),
+    'file' => 'fine_edit.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes',
+		'weight' => 990,
+		'type' => MENU_LOCAL_ACTION,
+	);
+	
+	$items['admin/fees/fine/apply-fine'] = array(
+	  'title' => t('Apply Fine'),
+	  'description' => t('Fine Management'),
+	  'page callback' => 'drupal_get_form',
+		'page arguments' => array('fine'),
+		'access arguments' => array('collect fees'),
+		'file' => 'fine.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes',
+		'weight' => 990,
+		'type' => MENU_LOCAL_ACTION,
+	);
+	
+	$items['admin/fees/fine/edit-delete'] = array(
+	  'title' => t('Edit/Delete'),
+	  'description' => t('Fine Management - edit/delete'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('fine_edit'),
+		'access arguments' => array('collect fees'),
+    'file' => 'fine_edit.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes',
+		'weight' => 990,
+	);
+	
+	$items['admin/fees/collection_staff'] = array(
+	  'title' => t('Collection Staffs'),
+	  'description' => t('Collection Staff'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('collection_staff'),
+		'access arguments' => array('administer fees'),
+    'file' => 'collection_staff.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes',
+		'weight' => 1000,
+		'type' => MENU_LOCAL_TASK,
+	);
+	
+	$items['admin/fees/fee_incharge'] = array(
+	  'title' => t('Fee Incharge'),
+	  'description' => t('Fee Incharge'),
+	  'page callback' => 'drupal_get_form',
+    'page arguments' => array('fee_incharge'),
+		'access arguments' => array('administer school settings'),
+    'file' => 'fee_incharge.admin.inc',
+    'file path' => drupal_get_path('module','fee').'/includes',
+		'weight' => 1010,
+		'type' => MENU_LOCAL_TASK,
+	);
+	
+	$items['adm_no/fee_autocomplete'] = array(
+    'description' => t('A callback for teacher autocomplete in subjects form'),
+    'page callback' => 'fee_adm_no_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+	return $items;
+}
+
+/**
+ * Implements autocomplete function
+ */
+function fee_adm_no_autocomplete($string = ''){
+	$session = variable_get('essa_sid');
+	$matches = array();
+	$student_table = 'essa_'.$session.'_master_student_table';
+	$students =  db_query(
+		"SELECT * from {$student_table} where status = 1;"
+	);
+	foreach($students as $student){
+		$autocomplete_string[] = $student->adm_no;
+	}
+	
+	foreach($autocomplete_string as $phrases){
+		if(stristr($phrases, $string)){
+			$matches[$phrases] = $phrases;
+		}
+	}
+	
+	drupal_json_output($matches);
+}
+
+function account_page(){
+  return '';
+}
+
+function fee_page(){
+  return '';
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function fee_views_api() {
+  return array(
+    'api' => 3.0,
+    'path' => drupal_get_path('module', 'fee') . '/includes',
+  );
+}
+
+/**
+ *Implements hook_cron()
+ */
+function fee_cron(){
+	$flag = variable_set('fee_flag',1);
+	$session_id = (string)variable_get('essa_sid');
+	$fees_table = 'essa_'.$session_id.'_fees_structure';
+	$fees_frequency = 'essa_'.$session_id.'_fees_frequency';
+	$fees_student = 'essa_'.$session_id.'_fees_student';
+	$fees_student_due = 'essa_'.$session_id.'_fees_student_due';
+	$student_table = 'essa_'.$session_id.'_master_student_table';
+	$op_sub_table = 'essa_'.$session_id.'_optional_subject_student';
+	$class_table = 'essa_'.$session_id.'_class_list';
+	$bus_table = 'essa_'.$session_id.'_bus_stops';
+	$fees = db_query("
+    SELECT * from {$fees_table};
+  ");
+	
+	$flag = variable_get('fee_flag');
+	if($flag == 1){
+		foreach($fees as $fee){
+			//------------------------------------------------For fee type that applies to all----------------------------------------------------------
+			if($fee->applies_to == 'All'){
+				$results = db_select($fees_frequency, 'n')
+			       ->fields('n')
+						 ->condition('freq_id', $fee->freq_id, '=')
+			       ->execute();
+				$freq = $results->fetchAssoc();
+				unset($freq['freq_id']);
+				unset($freq['freq_name']);	
+				$students = db_query("
+				  SELECT * from {$student_table} where status = 1;
+				");
+				foreach($students as $student){
+					foreach($freq as $key=>$fr){
+						if($fr!=NULL){
+							insert_fee($fee, $student, $key);
+						}
+					}
+				}
+			}
+			
+			//------------------------------------------------For fee type that applies to class-wise----------------------------------------------------------
+			if($fee->applies_to == 'Class-wise'){
+				$classes = db_query("
+				  SELECT * from {$class_table} where class_id = :ci;", array(':ci' => $fee->class_from)
+				);
+				foreach($classes as $class){
+					$class_from_weight = $class->weight;
+				}
+				$classes = db_query("
+				  SELECT * from {$class_table} where class_id = :ci;", array(':ci' => $fee->class_to)
+				);
+				foreach($classes as $class){
+					$class_to_weight = $class->weight;
+				}
+				$cls = db_query("
+				  SELECT * from {$class_table} where weight BETWEEN :wf AND :wt order by weight;", array(':wf' => $class_from_weight, ':wt' => $class_to_weight)
+				);
+				foreach($cls as $cl){
+					$sts = db_query("
+					  SELECT * from {$student_table} where class = :c AND status = 1;", array(':c' => $cl->class_id)
+					);
+					foreach($sts as $student){
+						$results = db_select($fees_frequency, 'n')
+			       ->fields('n')
+						 ->condition('freq_id', $fee->freq_id, '=')
+			       ->execute();
+						$freq = $results->fetchAssoc();
+						unset($freq['freq_id']);
+						unset($freq['freq_name']);
+						foreach($freq as $key=>$fr){
+							if($fr!=NULL){
+								insert_fee($fee, $student, $key);
+							}
+						}
+					}
+				}
+			}
+			//------------------------------------------------For fee type that applies to optional subjetgc----------------------------------------------------------
+			if($fee->applies_to == 'Optional'){
+				$classes = db_query("
+				  SELECT * from {$class_table} where class_id = :ci;", array(':ci' => $fee->class_from)
+				);
+				foreach($classes as $class){
+					$class_from_weight = $class->weight;
+				}
+				$classes = db_query("
+				  SELECT * from {$class_table} where class_id = :ci;", array(':ci' => $fee->class_to)
+				);
+				foreach($classes as $class){
+					$class_to_weight = $class->weight;
+				}
+				$cls = db_query("
+				  SELECT * from {$class_table} where weight BETWEEN :wf AND :wt order by weight;", array(':wf' => $class_from_weight, ':wt' => $class_to_weight)
+				);
+				foreach($cls as $cl){
+					$sts = db_query("
+					  SELECT * from {$op_sub_table} where class_id = :c;", array(':c' => $cl->class_id)
+					);
+					foreach($sts as $student){
+						$results = db_select($fees_frequency, 'n')
+			       ->fields('n')
+						 ->condition('freq_id', $fee->freq_id, '=')
+			       ->execute();
+						$freq = $results->fetchAssoc();
+						unset($freq['freq_id']);
+						unset($freq['freq_name']);
+						foreach($freq as $key=>$fr){
+							if($fr!=NULL){
+								insert_fee($fee, $student, $key);
+							}
+						}
+					}
+				}
+			}
+		
+			//------------------------------------------------For fee type that applies to Facility-Wise----------------------------------------------------------
+			if($fee->applies_to == 'Facility-Wise'){
+				if($fee->facility == 'Transport'){
+					$results = db_select($fees_frequency, 'n')
+						->fields('n')
+						->condition('freq_id', $fee->freq_id, '=')
+						->execute();
+					$freq = $results->fetchAssoc();
+					unset($freq['freq_id']);
+					unset($freq['freq_name']);
+					
+					foreach($freq as $fr => $dt){
+						if($dt != NULL){
+							$frequency[] = $fr;
+						}
+					}
+						
+					$distance = db_query("
+						SELECT * from {$bus_table} where distance_from_school BETWEEN :df AND :dt;", array(':df' => $fee->distance_from, ':dt' => $fee->distance_to)
+					);
+					foreach($distance as $dis){
+						$sts = db_query("
+						  SELECT * from {$student_table} where is_transport = 'Yes' and stop_id = :si AND status = 1;",array(':si' => $dis->bus_stop_id)
+						);
+						foreach($sts as $student){
+							$wef = $student->transport_wef;
+							$wet = $student->transport_wet;
+							$start    = new DateTime(date('Y-m-d',(strtotime($wef))));
+							$start->modify('first day of this month');
+							$end      = new DateTime(date('Y-m-d',(strtotime($wet))));
+							$end->modify('first day of next month');
+							$interval = DateInterval::createFromDateString('1 month');
+							$period   = new DatePeriod($start, $interval, $end);
+							$freq = NULL;
+							$freq_trans = NULL;
+							foreach ($period as $dt) {
+								$freq_trans[] = $dt->format("M_Y");
+							}
+							$freq = array_intersect($freq_trans, $frequency);
+							
+							foreach($freq as $key){
+								insert_fee($fee, $student, $key);
+							}
+						}
+					}
+				}else{
+					//dsm('Apply to Student who avails Hostel');
+					$classes = db_query("
+						SELECT * from {$class_table} where class_id = :ci;", array(':ci' => $fee->class_from)
+					);
+					foreach($classes as $class){
+						$class_from_weight = $class->weight;
+					}
+					$classes = db_query("
+					  SELECT * from {$class_table} where class_id = :ci;", array(':ci' => $fee->class_to)
+					);
+					foreach($classes as $class){
+						$class_to_weight = $class->weight;
+					}
+					$cls = db_query("
+					  SELECT * from {$class_table} where weight BETWEEN :wf AND :wt order by weight;", array(':wf' => $class_from_weight, ':wt' => $class_to_weight)
+					);
+					foreach($cls as $cl){
+						if($fee->is_hostel == 'Yes'){
+							$sts = db_query("
+							  SELECT * from {$student_table} where class = :c AND is_hostel = 'Yes' AND status = 1;", array(':c' => $cl->class_id)
+							);
+							foreach($sts as $student){
+								$results = db_select($fees_frequency, 'n')
+								   ->fields('n')
+									 ->condition('freq_id', $fee->freq_id, '=')
+								   ->execute();
+								$freq = $results->fetchAssoc();
+								unset($freq['freq_id']);
+								unset($freq['freq_name']);
+								foreach($freq as $key=>$fr){
+									if($fr!=NULL){
+										insert_fee($fee, $student, $key);
+									}
+								}
+							}
+						}else{
+							$sts = db_query("
+							  SELECT * from {$student_table} where class = :c AND is_hostel = 'No' OR is_hostel = NULL AND status = 1;", array(':c' => $cl->class_id)
+							);
+							foreach($sts as $student){
+								$results = db_select($fees_frequency, 'n')
+								   ->fields('n')
+									 ->condition('freq_id', $fee->freq_id, '=')
+								   ->execute();
+								$freq = $results->fetchAssoc();
+								unset($freq['freq_id']);
+								unset($freq['freq_name']);
+								foreach($freq as $key=>$fr){
+									if($fr!=NULL){
+										insert_fee($fee, $student, $key);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+/**
+ *Support function to insert fee in the database
+ */
+function insert_fee($fee, $student, $key){
+	$session_id = (string)variable_get('essa_sid');
+	$fees_student = 'essa_'.$session_id.'_fees_student';
+	$fees_student_due = 'essa_'.$session_id.'_fees_student_due';
+	$flag = 0;
+	$flag_key = 0;
+	$flag_stud =0;
+	
+	$fee_stud = db_query("
+    SELECT * from {$fees_student_due} where adm_no = :an and fee_id = :fi;",array(':an' => $student->adm_no, ':fi' => $fee->fee_id)
+  );
+	foreach($fee_stud as $fs){
+		$flag =1;
+		if($fs->$key == NULL){
+			$flag_key = 1;
+		}
+	}
+	if($flag_key == 1 || $flag == 0){
+		db_merge($fees_student_due)
+			->key(array('fee_id' => $fee->fee_id,'adm_no' => $student->adm_no))
+			->fields (array(
+				'fee_id' => $fee->fee_id,
+				'adm_no' => $student->adm_no,
+				$key => $fee->amount,
+			)
+		)
+		->execute();
+	}
+	
+	$flag=0;
+	$fee_stud = db_query("
+    SELECT * from {$fees_student} where adm_no = :an and fee_id = :fi;",array(':an' => $student->adm_no, ':fi' => $fee->fee_id)
+  );
+	foreach($fee_stud as $fs){
+		$flag =1;
+		if($fs->$key == NULL){
+			$flag_stud = 1;
+		}
+	}
+	if($flag_stud == 1 || $flag == 0){
+		db_merge($fees_student)
+			->key(array('fee_id' => $fee->fee_id,'adm_no' => $student->adm_no))
+			->fields (array(
+				'fee_id' => $fee->fee_id,
+				'adm_no' => $student->adm_no,
+				$key => $fee->amount,
+			)
+		)
+		->execute();
+	}
+}
+
+/**
+ *Theme function
+ */
+function theme_individual_payment_table(&$variables){
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Particulars'), t('Month'), t('Amount(In INR)'), t('Amount Paid'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+
+//advance_adjustment_table
+/**
+ *Theme function
+ */
+function theme_advance_adjustment_table(&$variables){
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Particulars'), t('Month'), t('Amount(In INR)'), t('Advance ID'), t('Amount Adjusted'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ *Theme function
+ */
+function theme_adjustment_table(&$variables){
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Particulars'), t('Month'), t('Amount(In INR)'), t('Amount Adjusted'));
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ *Theme function
+ */
+function theme_fees_staff_table(&$variables){
+  // Get the useful values.
+  $form = $variables['form'];
+  $rows = $form['rows'];
+  $header = array(t('Emp ID'), t('Name'), t('Phone No.'), t('Email ID'), t('Username'), t('Status'), '', '');
+  
+  // Setup the structure to be rendered and returned.
+  $content = array(
+    '#theme' => 'table',
+    '#rows' => array(),
+    '#header' => $header,
+  );
+  
+  // Traverse each row.  @see element_chidren().
+  foreach (element_children($rows) as $row_index) {
+    $row = array();
+    // Traverse each column in the row.  @see element_children().
+    foreach (element_children($rows[$row_index]) as $col_index) {
+      // Traverse each column in the row.  @see element_children().
+      foreach (element_children($rows[$row_index][$col_index]) as $col_index1) {
+      // Render the column form element.
+        $row[] = drupal_render($rows[$row_index][$col_index][$col_index1]);
+      }
+    }
+    // Add the row to the table.
+    $content['#rows'][] = $row;
+  }
+
+  // Redner the table and return.
+  return drupal_render($content);
+}
+
+/**
+ *Implements hook_block_info()
+ */
+function fee_block_info(){
+	$block['collection_staffs'] = array(
+		'info' => t('Collection Staffs'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+  
+	$block['fee_incharge'] = array(
+		'info' => t('Fee Incharge'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+	
+	return $block;
+}
+
+/**
+ *Implements hook_block_view()
+ */
+function fee_block_view($delta = ''){
+	
+	switch($delta){
+		case 'collection_staffs' :
+			$block['subject'] = 'Collection Staffs';
+			$block['content'] = array(
+				'#markup' => _collection_staff_display(),
+			);
+	
+			return $block;
+			break;
+		case 'fee_incharge':
+			$block['subject'] = 'Fee Incharge';
+			$block['content'] = array(
+				'#markup' => _fee_incharge_display(),
+			);
+	
+			return $block;
+		break;
+	}
+}
+
+function _collection_staff_display(){
+	$collection_staff_fieldset = drupal_get_form('_collection_staff_builder');
+  $rendered_form = drupal_render($collection_staff_fieldset);
+  return $rendered_form;
+}
+
+function _collection_staff_builder($form, &$form_state){
+	
+	$session_id = (string)variable_get('essa_sid');
+  $fee_staffs_table = 'essa_'.$session_id.'_fees_staff';
+  
+  $emp_id_check = NULL;
+  $fees_staff = db_query("
+    SELECT * from {$fee_staffs_table} where type = 'Fees Collector';"
+  );
+	foreach($fees_staff as $fs){
+		$users = db_query("
+		  SELECT * from users where uid = :uid;", array(':uid' => $fs->uid)
+		);	
+		foreach($users as $user){
+			$status = $user->status;
+		}
+		if($status == 0){
+			$status = 'Blocked';
+		}else{
+			$status = 'Active';
+		}
+    $row[$fs->uid] = array(
+      '#tree' =>TRUE,
+      $fs->uid => array(  //Generating unique array id for every form element
+        'c1' =>array(
+          '#type' => 'markup',
+          '#markup' => '<h3 style = "text-align: left !important;">'. $fs->emp_id .'</h3>',
+        ),
+        'c2' =>array(
+          '#type' => 'markup',
+          '#markup' => '<h3>'. $fs->name.'</h3>',
+        ),
+        'c3' =>array(
+          '#type' => 'markup',
+          '#markup' => '<h3>'. $fs->phone_no.'</h3>',
+        ),
+        'c4' =>array(
+          '#type' => 'markup',
+          '#markup' => '<h3>'.$fs->email_id.'</h3>',
+        ),
+				'c5' =>array(
+          '#type' => 'markup',
+          '#markup' => '<h3>'.$fs->username.'</h3>',
+        ),
+				'c6' =>array(
+          '#type' => 'markup',
+          '#markup' => '<h3>'.$status.'</h3>',
+        ),
+				'block/'.$fs->uid => array(
+			    '#type' => 'submit',
+			    '#submit' => array('block_fee_user'),
+			    '#value' => 'Block',
+					'#name' => $fs->uid,
+					'#prefix' => '<div class = "fee_user_block">',
+					'#suffix' => '</div>',
+				),
+				'unblock/'.$fs->uid => array(
+			    '#type' => 'submit',
+			    '#submit' => array('unblock_fee_user'),
+			    '#value' => 'Unblock',
+					'#name' => $fs->uid,
+					'#prefix' => '<div class = "fee_user_unblock">',
+					'#suffix' => '</div>',
+				),
+      ),
+    );
+  }
+  if(isset($row)){
+    $form['lts']['tab'] = array(
+      '#theme' => 'fees_staff_table',
+    	'rows' => $row,
+    );
+  }
+	
+	return $form;
+}
+
+function _fee_incharge_display(){
+	$fee_incharge_fieldset = drupal_get_form('_fee_incharge_builder');
+  $rendered_form = drupal_render($fee_incharge_fieldset);
+  return $rendered_form;
+}
+
+function _fee_incharge_builder($form, &$form_state){
+	$session_id = (string)variable_get('essa_sid');
+  $fee_staffs_table = 'essa_'.$session_id.'_fees_staff';
+  
+  $emp_id_check = NULL;
+  $fees_staff = db_query("
+    SELECT * from {$fee_staffs_table} where type = 'Fees Incharge';"
+  );
+	foreach($fees_staff as $fs){
+		$users = db_query("
+		  SELECT * from users where uid = :uid;", array(':uid' => $fs->uid)
+		);	
+		foreach($users as $user){
+			$status = $user->status;
+		}
+		if($status == 0){
+			$status = 'Blocked';
+		}else{
+			$status = 'Active';
+		}
+		
+    $row[$fs->uid] = array(
+      '#tree' =>TRUE,
+      $fs->uid => array(  //Generating unique array id for every form element
+        'c1' =>array(
+          '#type' => 'markup',
+          '#markup' => '<h3 style = "text-align: left !important;">'. $fs->emp_id .'</h3>',
+        ),
+        'c2' =>array(
+          '#type' => 'markup',
+          '#markup' => '<h3>'. $fs->name.'</h3>',
+        ),
+        'c3' =>array(
+          '#type' => 'markup',
+          '#markup' => '<h3>'. $fs->phone_no.'</h3>',
+        ),
+        'c4' =>array(
+          '#type' => 'markup',
+          '#markup' => '<h3>'.$fs->email_id.'</h3>',
+        ),
+				'c5' =>array(
+          '#type' => 'markup',
+          '#markup' => '<h3>'.$fs->username.'</h3>',
+        ),
+				'c6' =>array(
+          '#type' => 'markup',
+          '#markup' => '<h3>'.$status.'</h3>',
+        ),
+				'block/'.$fs->uid => array(
+			    '#type' => 'submit',
+			    '#submit' => array('block_fee_user'),
+			    '#value' => 'Block',
+					'#name' => $fs->uid,
+					'#prefix' => '<div class = "fee_user_block">',
+					'#suffix' => '</div>',
+				),
+				'unblock/'.$fs->uid => array(
+			    '#type' => 'submit',
+			    '#submit' => array('unblock_fee_user'),
+			    '#value' => 'Unblock',
+					'#name' => $fs->uid,
+					'#prefix' => '<div class = "fee_user_unblock">',
+					'#suffix' => '</div>',
+				),
+      ),
+    );
+  }
+  
+  if(isset($row)){
+    $form['lts']['tab'] = array(
+      '#theme' => 'fees_staff_table',
+    	'rows' => $row,
+    );
+  }
+	return $form;
+}

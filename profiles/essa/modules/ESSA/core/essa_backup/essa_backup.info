@@ -1,0 +1,8 @@
+name = ESSA Backup
+core = 7.x
+package = ESSA Core
+dependencies[] = backup_migrate
+dependencies[] = ctools
+features[backup_migrate_schedules][] = regular_backup
+features[ctools][] = backup_migrate:backup_migrate_exportables:1
+features[features_api][] = api:2

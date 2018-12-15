@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Notice Board View feature.
+ */
+
+include_once 'notice_board_view.features.inc';

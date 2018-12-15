@@ -1,0 +1,66 @@
+<?php
+/**
+ * @file
+ *   Simple source for Taskbar activity.
+ */
+
+/**
+ * Implements hook_taskbar_activity_source().
+ */
+function message_notification_taskbar_activity_source() {
+  return array(
+    array(
+      'name' => 'ESSA_message',
+      'description' => 'ESSA message notifications source',
+      'callbacks' => array(
+        'count' => 'message_notification_taskbar_activity_count',
+        'list' => 'message_notification_taskbar_activity_list',
+        'mark' => 'message_notification_taskbar_activity_mark',
+      ),
+    ),
+  );
+}
+
+/**
+ */
+function message_notification_taskbar_activity_count($unread = FALSE) {
+  
+	$count = 0;
+	global $user;
+	$notifications =  db_query(
+		"SELECT * from pm_index where recipient = :uid AND is_new = 1;", array(':uid' => $user->uid)
+	);
+  foreach($notifications as $notification){
+		$count++;
+  }
+  
+  return $count;
+}
+
+/**
+ */
+function message_notification_taskbar_activity_list($count = 5, $start = 0) {
+  $list = array();
+  $session = variable_get('essa_sid');
+  $notifications_table = 'essa_'.$session.'_notificaitons';
+	global $user;
+	$notifications =  db_query(
+		"SELECT * from pm_index where recipient = :uid AND is_new = 1;", array(':uid' => $user->uid)
+	);
+  foreach($notifications as $notification){
+    $messages =  db_query(
+    	"SELECT * from pm_message where mid = :mid;", array(':mid' => $notification->mid)
+    );
+    foreach($messages as $message){
+      $list[] = l(t($message->subject), 'messages/view/'.$notification->mid);
+    }
+  }
+  
+  return $list;
+}
+
+/**
+ */
+function message_notification_taskbar_activity_mark() {
+  //variable_set('essa_notification1','ok');
+}
